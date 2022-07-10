@@ -1,5 +1,7 @@
 # aquarium-rock
 
+![main](https://github.com/pretore/aquarium-rock/actions/workflows/cmake.yml/badge.svg?branch=main)
+
 Data structures in C.
 
 - ``rock_red_black_tree`` - _self-balancing binary tree_
