@@ -33,7 +33,7 @@ bool rock_array_invalidate(struct rock_array *object,
     }
     if (on_destroy) {
         for (size_t i = 0; i < object->capacity; i++) {
-            on_destroy(&object->data[i]);
+            on_destroy(rock_array_address(object, i));
         }
     }
     free(object->data);

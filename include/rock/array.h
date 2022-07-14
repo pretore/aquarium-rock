@@ -97,7 +97,7 @@ bool rock_array_shrink(struct rock_array *object);
 bool rock_array_add(struct rock_array *object, void *item);
 
 /**
- * @brief Add all the items at then end.
+ * @brief Add all the items at the end.
  * @param [in] object array instance.
  * @param [in] count number of values in items.
  * @param [in] items all of which we would like to add to the end of the array.
