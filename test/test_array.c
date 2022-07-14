@@ -39,6 +39,23 @@ static void check_invalidate_error_on_object_is_null(void **state) {
     rock_error = ROCK_ERROR_NONE;
 }
 
+static void array_on_destroy(void *item) {
+    assert_non_null(item);
+    function_called();
+}
+
+static void check_invalidate(void **state) {
+    rock_error = ROCK_ERROR_NONE;
+    struct rock_array object = {};
+    assert_true(rock_array_init(&object, sizeof(void *), 10));
+    assert_true(rock_array_invalidate(&object, array_on_destroy));
+    assert_true(rock_array_init(&object, sizeof(void *), 10));
+    object.count = 10;
+    expect_function_calls(array_on_destroy, 10);
+    assert_true(rock_array_invalidate(&object, array_on_destroy));
+    rock_error = ROCK_ERROR_NONE;
+}
+
 static void check_capacity_error_on_object_is_null(void **state) {
     rock_error = ROCK_ERROR_NONE;
     assert_false(rock_array_capacity(NULL, (void *)1));
@@ -589,6 +606,7 @@ int main(int argc, char *argv[]) {
             cmocka_unit_test(check_init_error_on_size_is_zero),
             cmocka_unit_test(check_init_error_on_memory_allocation_failed),
             cmocka_unit_test(check_invalidate_error_on_object_is_null),
+            cmocka_unit_test(check_invalidate),
             cmocka_unit_test(check_capacity_error_on_object_is_null),
             cmocka_unit_test(check_capacity_error_on_out_is_null),
             cmocka_unit_test(check_capacity),
