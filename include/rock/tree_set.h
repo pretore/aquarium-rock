@@ -24,7 +24,7 @@ struct rock_tree_set {
 };
 
 /**
- * @brief Initialise tree set instance.
+ * @brief Initialise tree set.
  * @param [in] object instance to be initialised.
  * @param [in] compare comparison which must return an integer less than,
  * equal to, or greater than zero if the <u>first item</u> is considered
@@ -39,7 +39,7 @@ bool rock_tree_set_init(struct rock_tree_set *object,
                                        const void *second));
 
 /**
- * @brief Invalidate the tree set instance.
+ * @brief Invalidate tree set.
  * <p>All the items contained within the tree set will have the given <i>on
  * destroy</i> callback invoked upon itself. The actual <u>tree set instance
  * is not deallocated</u> since it may have been embedded in a larger structure.
@@ -52,7 +52,7 @@ bool rock_tree_set_invalidate(struct rock_tree_set *object,
                               void (*on_destroy)(void *));
 
 /**
- * @brief Retrieve the count of items in the tree set.
+ * @brief Retrieve the count of items.
  * @param [in] object instance whose count we are to retrieve.
  * @param [out] out receive the count.
  * @return On success true, otherwise false if an error has occurred.
@@ -76,7 +76,7 @@ bool rock_tree_set_count(struct rock_tree_set *object, size_t *out);
 bool rock_tree_set_add(struct rock_tree_set *object, void *item);
 
 /**
- * @brief Remove item form the tree set.
+ * @brief Remove item from the tree set.
  * @param [in] object tree set instance.
  * @param [in] item to be removed.
  * @return On success true, otherwise false if an error has occurred.
@@ -88,7 +88,7 @@ bool rock_tree_set_add(struct rock_tree_set *object, void *item);
 bool rock_tree_set_remove(struct rock_tree_set *object, void *item);
 
 /**
- * @brief Check if tree set instance contains the given item.
+ * @brief Check if tree set contains the given item.
  * @param [in] object tree set instance.
  * @param [in] item to check if item is present.
  * @param [out] out receive true if item is present, otherwise false.
@@ -101,7 +101,7 @@ bool rock_tree_set_contains(struct rock_tree_set *object, void *item,
                             bool *out);
 
 /**
- * @brief First item in the tree set.
+ * @brief First item of the tree set.
  * @param [in] object tree set instance.
  * @param [out] out receive the first item.
  * @return On success true, otherwise false if an error has occurred.
@@ -112,7 +112,7 @@ bool rock_tree_set_contains(struct rock_tree_set *object, void *item,
 bool rock_tree_set_first(struct rock_tree_set *object, void **out);
 
 /**
- * @brief Last item in the tree set.
+ * @brief Last item of the tree set.
  * @param [in] object tree set instance.
  * @param [out] out receive the last item in the tree set.
  * @return On success true, otherwise false if an error has occurred.

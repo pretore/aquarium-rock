@@ -35,7 +35,7 @@ struct rock_tree_map {
 };
 
 /**
- * @brief Initialise tree map instance.
+ * @brief Initialise tree map.
  * @param [in] object instance to be initialised.
  * @param [in] compare comparison which must return an integer less than,
  * equal to, or greater than zero if the <u>first key</u> is considered
@@ -50,7 +50,7 @@ bool rock_tree_map_init(struct rock_tree_map *object,
                                        const struct rock_tree_map_entry_key *));
 
 /**
- * @brief Invalidate the tree map instance.
+ * @brief Invalidate tree map.
  * <p>All the entries contained within the tree map will have the given <i>on
  * destroy</i> callback invoked upon itself. The actual <u>tree map instance
  * is not deallocated</u> since it may have been embedded in a larger structure.
@@ -63,7 +63,7 @@ bool rock_tree_map_invalidate(struct rock_tree_map *object,
                               void (*on_destroy)(struct rock_tree_map_entry *));
 
 /**
- * @brief Retrieve the count of entries in the tree map.
+ * @brief Retrieve the count of entries.
  * @param [in] object instance whose count we are to retrieve.
  * @param [out] out receive the count.
  * @return On success true, otherwise false if an error has occurred.
@@ -140,7 +140,7 @@ bool rock_tree_map_contains(struct rock_tree_map *object,
                             bool *out);
 
 /**
- * @brief First entry in the tree map.
+ * @brief First entry of the tree map.
  * @param [in] object tree set instance.
  * @param [out] out receive the first entry.
  * @return On success true, otherwise false if an error has occurred.
@@ -152,7 +152,7 @@ bool rock_tree_map_first(struct rock_tree_map *object,
                          struct rock_tree_map_entry **out);
 
 /**
- * @brief Last entry in the tree map.
+ * @brief Last entry of the tree map.
  * @param [in] object tree set instance.
  * @param [out] out receive the last entry.
  * @return On success true, otherwise false if an error has occurred.

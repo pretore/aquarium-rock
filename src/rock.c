@@ -26,14 +26,7 @@ int rock_compare_size_t_ptr(const void *a, const void *b) {
 }
 
 int rock_compare_size_t(const void *a, const void *b) {
-    const size_t A = (size_t) a;
-    const size_t B = (size_t) b;
-    if (A == B) {
-        return 0;
-    } else if (A > B) {
-        return 1;
-    }
-    return (-1);
+    return rock_compare_void_ptr(a, b);
 }
 
 bool rock_add_size_t(const size_t a, const size_t b, size_t *out) {

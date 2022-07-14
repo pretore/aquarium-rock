@@ -1,4 +1,4 @@
-#include <stddef.h>
+#include <stdlib.h>
 #include <rock.h>
 
 #include "private/red_black_tree.h"

@@ -11,6 +11,7 @@ find_package(Threads REQUIRED)
 
 # Sources
 set(EXPORTED_HEADER_FILES
+        include/rock/array.h
         include/rock/error.h
         include/rock/red_black_tree.h
         include/rock/tree_map.h
@@ -18,7 +19,9 @@ set(EXPORTED_HEADER_FILES
         include/rock.h)
 set(SOURCES
         ${EXPORTED_HEADER_FILES}
+        src/private/array.h
         src/private/red_black_tree.h
+        src/array.c
         src/error.c
         src/red_black_tree.c
         src/rock.c
@@ -43,7 +46,7 @@ if(CMAKE_BUILD_TYPE STREQUAL "Debug")
             PUBLIC
                 "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>"
                 "$<INSTALL_INTERFACE:$<INSTALL_PREFIX>/${CMAKE_INSTALL_INCLUDEDIR}>")
-    set(LINK_FLAGS "-Wl,--wrap=pthread_rwlock_init,--wrap=pthread_rwlock_destroy,--wrap=pthread_rwlock_rdlock,--wrap=pthread_rwlock_wrlock,--wrap=pthread_rwlock_unlock,--wrap=pthread_mutex_init,--wrap=pthread_mutex_destroy,--wrap=pthread_mutex_lock,--wrap=pthread_mutex_unlock,--wrap=pthread_cond_init,--wrap=pthread_cond_destroy,--wrap=pthread_cond_wait,--wrap=pthread_cond_broadcast,--wrap=pthread_cond_signal,--wrap=nanosleep")
+    set(LINK_FLAGS "-Wl,--wrap=pthread_mutex_init,--wrap=pthread_mutex_destroy,--wrap=pthread_mutex_lock,--wrap=pthread_mutex_unlock,--wrap=pthread_cond_init,--wrap=pthread_cond_destroy,--wrap=pthread_cond_wait,--wrap=pthread_cond_broadcast,--wrap=pthread_cond_signal")
     # Unit Tests
     enable_testing()
     # rock-unit-test
@@ -94,6 +97,18 @@ if(CMAKE_BUILD_TYPE STREQUAL "Debug")
             PROPERTIES
                 LINK_FLAGS ${LINK_FLAGS})
     add_test(tree-map-unit-test tree-map-unit-test)
+    # array-unit-test
+    add_executable(array-unit-test test/test_array.c)
+    target_include_directories(array-unit-test
+            PRIVATE
+                "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/src>")
+    target_link_libraries(array-unit-test
+            PRIVATE
+                ${PROJECT_NAME})
+    set_target_properties(array-unit-test
+            PROPERTIES
+                LINK_FLAGS ${LINK_FLAGS})
+    add_test(array-unit-test array-unit-test)
 else()
     add_library(${PROJECT_NAME} "")
     target_sources(${PROJECT_NAME}

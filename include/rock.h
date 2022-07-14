@@ -5,6 +5,7 @@
 #include <stdbool.h>
 #include <stdint.h>
 
+#include <rock/array.h>
 #include <rock/error.h>
 #include <rock/red_black_tree.h>
 #include <rock/tree_map.h>

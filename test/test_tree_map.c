@@ -21,7 +21,7 @@ static void check_init_error_on_compare_is_null(void **state) {
     rock_error = ROCK_ERROR_NONE;
 }
 
-static void check_invalidate_on_object_is_null(void **state) {
+static void check_invalidate_error_on_object_is_null(void **state) {
     rock_error = ROCK_ERROR_NONE;
     assert_false(rock_tree_map_invalidate(NULL, (void *)1));
     assert_int_equal(ROCK_TREE_MAP_ERROR_OBJECT_IS_NULL, rock_error);
@@ -423,7 +423,7 @@ int main(int argc, char *argv[]) {
     const struct CMUnitTest tests[] = {
             cmocka_unit_test(check_init_error_on_object_is_null),
             cmocka_unit_test(check_init_error_on_compare_is_null),
-            cmocka_unit_test(check_invalidate_on_object_is_null),
+            cmocka_unit_test(check_invalidate_error_on_object_is_null),
             cmocka_unit_test(check_count_error_on_object_is_null),
             cmocka_unit_test(check_count_error_on_out_is_null),
             cmocka_unit_test(check_count),
