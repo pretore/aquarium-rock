@@ -1,4 +1,6 @@
 #include <stdlib.h>
+#include <math.h>
+#include <float.h>
 #include <rock.h>
 
 void rock_required(const void *object) {
@@ -27,6 +29,24 @@ int rock_compare_size_t_ptr(const void *a, const void *b) {
 
 int rock_compare_size_t(const void *a, const void *b) {
     return rock_compare_void_ptr(a, b);
+}
+
+bool rock_float_is_equal(const float a, const float b, bool *out) {
+    if (!out) {
+        rock_error = ROCK_ERROR_OUT_IS_NULL;
+        return false;
+    }
+    *out = fabsf(a - b) <= FLT_EPSILON;
+    return true;
+}
+
+bool rock_float_is_greater_than(const float a, const float b, bool *out) {
+    if (!out) {
+        rock_error = ROCK_ERROR_OUT_IS_NULL;
+        return false;
+    }
+    *out = (a - b) > FLT_EPSILON;
+    return true;
 }
 
 bool rock_add_size_t(const size_t a, const size_t b, size_t *out) {

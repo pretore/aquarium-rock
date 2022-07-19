@@ -165,7 +165,7 @@ bool rock_tree_map_last(struct rock_tree_map *object,
 
 /**
  * @brief Retrieve next entry.
- * @param [in] item current entry.
+ * @param [in] entry current entry.
  * @param [out] out receive the next entry.
  * @return On success true, otherwise false if an error has occurred.
  * @throws ROCK_TREE_MAP_ERROR_ENTRY_IS_NULL if entry is <i>NULL</i>.
@@ -177,12 +177,12 @@ bool rock_tree_map_next(struct rock_tree_map_entry *entry,
 
 /**
  * @brief Retrieve previous entry.
- * @param [in] item current entry.
+ * @param [in] entry current entry.
  * @param [out] out receive the previous entry.
  * @return On success true, otherwise false if an error has occurred.
  * @throws ROCK_TREE_MAP_ERROR_ENTRY_IS_NULL if entry is <i>NULL</i>.
  * @throws ROCK_TREE_MAP_ERROR_OUT_IS_NULL if out is <i>NULL</i>.
- * @throws ROCK_TREE_SET_ERROR_END_OF_SEQUENCE if there is no next entry.
+ * @throws ROCK_TREE_SET_ERROR_END_OF_SEQUENCE if there is no next previous.
  */
 bool rock_tree_map_prev(struct rock_tree_map_entry *entry,
                         struct rock_tree_map_entry **out);

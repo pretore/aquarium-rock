@@ -8,11 +8,13 @@ set(CMAKE_C_STANDARD 11)
 set(CMAKE_THREAD_PREFER_PTHREAD TRUE)
 set(THREADS_PREFER_PTHREAD_FLAG TRUE)
 find_package(Threads REQUIRED)
+find_package(Doxygen OPTIONAL_COMPONENTS dot mscgen dia)
 
 # Sources
 set(EXPORTED_HEADER_FILES
         include/rock/array.h
         include/rock/error.h
+        include/rock/hash_table.h
         include/rock/red_black_tree.h
         include/rock/tree_map.h
         include/rock/tree_set.h
@@ -20,13 +22,20 @@ set(EXPORTED_HEADER_FILES
 set(SOURCES
         ${EXPORTED_HEADER_FILES}
         src/private/array.h
+        src/private/hash_table.h
         src/private/red_black_tree.h
         src/array.c
         src/error.c
+        src/hash_table.c
         src/red_black_tree.c
         src/rock.c
         src/tree_map.c
         src/tree_set.c)
+
+if(DOXYGEN_FOUND)
+    set(DOXYGEN_EXTRACT_ALL YES)
+    doxygen_add_docs(doc ${EXPORTED_HEADER_FILES})
+endif()
 
 if(CMAKE_BUILD_TYPE STREQUAL "Debug")
     include(cmake/FetchCMocka.cmake)
@@ -40,6 +49,7 @@ if(CMAKE_BUILD_TYPE STREQUAL "Debug")
                 src/test/wrap.h)
     target_link_libraries(${PROJECT_NAME}
             PUBLIC
+                m
                 ${CMAKE_THREAD_LIBS_INIT}
                 ${CMOCKA_SHARED_LIBRARY})
     target_include_directories(${PROJECT_NAME}
@@ -109,6 +119,18 @@ if(CMAKE_BUILD_TYPE STREQUAL "Debug")
             PROPERTIES
                 LINK_FLAGS ${LINK_FLAGS})
     add_test(array-unit-test array-unit-test)
+    # hash-table-unit-test
+    add_executable(hash-table-unit-test test/test_hash_table.c)
+    target_include_directories(hash-table-unit-test
+            PRIVATE
+                "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/src>")
+    target_link_libraries(hash-table-unit-test
+            PRIVATE
+                ${PROJECT_NAME})
+    set_target_properties(hash-table-unit-test
+            PROPERTIES
+                LINK_FLAGS ${LINK_FLAGS})
+    add_test(hash-table-unit-test hash-table-unit-test)
 else()
     add_library(${PROJECT_NAME} "")
     target_sources(${PROJECT_NAME}
@@ -120,6 +142,7 @@ else()
                 "$<INSTALL_INTERFACE:$<INSTALL_PREFIX>/${CMAKE_INSTALL_INCLUDEDIR}>")
     target_link_libraries(${PROJECT_NAME}
             PUBLIC
+                m
                 ${CMAKE_THREAD_LIBS_INIT})
     set_target_properties(${PROJECT_NAME}
             PROPERTIES

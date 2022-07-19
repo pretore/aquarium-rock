@@ -13,11 +13,13 @@
 #define ROCK_ARRAY_ERROR_ARRAY_IS_EMPTY                         6
 #define ROCK_ARRAY_ERROR_COUNT_IS_ZERO                          7
 #define ROCK_ARRAY_ERROR_ITEMS_IS_NULL                          8
+#define ROCK_ARRAY_ERROR_ITEM_IS_OUT_OF_BOUNDS                  9
+#define ROCK_ARRAY_ERROR_END_OF_SEQUENCE                        10
 
 struct rock_array {
     void *data;
     size_t size;
-    size_t count;
+    size_t length;
     size_t capacity;
 };
 
@@ -58,14 +60,25 @@ bool rock_array_invalidate(struct rock_array *object,
 bool rock_array_capacity(struct rock_array *object, size_t *out);
 
 /**
- * @brief Retrieve the number of items.
+ * @brief Retrieve the length.
  * @param [in] object array instance.
- * @param [in] out receive the count.
+ * @param [in] out receive the number of items.
  * @return On success true, otherwise false if an error has occurred.
  * @throws ROCK_ARRAY_ERROR_OBJECT_IS_NULL if object is <i>NULL</i>.
  * @throws ROCK_ARRAY_ERROR_OUT_IS_NULL if out is <i>NULL</i>.
  */
-bool rock_array_count(struct rock_array *object, size_t *out);
+bool rock_array_get_length(struct rock_array *object, size_t *out);
+
+/**
+ * @brief Set the length.
+ * @param [in] object array instance.
+ * @param [in] length number of items in the array.
+ * @return On success true, otherwise false if an error has occurred.
+ * @throws ROCK_ARRAY_ERROR_OBJECT_IS_NULL if object is <i>NULL</i>.
+ * @throws ROCK_ARRAY_ERROR_MEMORY_ALLOCATION_FAILED if there is not enough
+ * memory to set the array length.
+ */
+bool rock_array_set_length(struct rock_array *object, size_t length);
 
 /**
  * @brief Retrieve the size of an item.
@@ -201,5 +214,57 @@ bool rock_array_get(struct rock_array *object, size_t at, void **out);
  * item contained within the array.
  */
 bool rock_array_set(struct rock_array *object, size_t at, const void *item);
+
+/**
+ * @brief First item of the array.
+ * @param [in] object array instance.
+ * @param [out] out receive first item in the array.
+ * @return On success true, otherwise false if an error has occurred.
+ * @throws ROCK_ARRAY_ERROR_OBJECT_IS_NULL if object is <i>NULL</i>.
+ * @throws ROCK_ARRAY_ERROR_OUT_IS_NULL if out is <i>NULL</i>.
+ * @throws ROCK_ARRAY_ERROR_ARRAY_IS_EMPTY if the array is empty.
+ */
+bool rock_array_first(struct rock_array *object, void **out);
+
+/**
+ * @brief Last item of the array.
+ * @param [in] object array instance.
+ * @param [out] out receive last item in the array.
+ * @return On success true, otherwise false if an error has occurred.
+ * @throws ROCK_ARRAY_ERROR_OBJECT_IS_NULL if object is <i>NULL</i>.
+ * @throws ROCK_ARRAY_ERROR_OUT_IS_NULL if out is <i>NULL</i>.
+ * @throws ROCK_ARRAY_ERROR_ARRAY_IS_EMPTY if the array is empty.
+ */
+bool rock_array_last(struct rock_array *object, void **out);
+
+/**
+ * @brief Retrieve next item.
+ * @param [in] object array instance.
+ * @param [in] item current item.
+ * @param [out] out receive the next item.
+ * @return On success true, otherwise false if an error has occurred.
+ * @throws ROCK_ARRAY_ERROR_OBJECT_IS_NULL if object is <i>NULL</i>.
+ * @throws ROCK_ARRAY_ERROR_ITEM_IS_NULL if item is <i>NULL</i>.
+ * @throws ROCK_ARRAY_ERROR_OUT_IS_NULL if out is <i>NULL</i>.
+ * @throws ROCK_ARRAY_ERROR_ITEM_IS_OUT_OF_BOUNDS if item is not contained
+ * within the array.
+ * @throws ROCK_ARRAY_ERROR_END_OF_SEQUENCE if there is no next item.
+ */
+bool rock_array_next(struct rock_array *object, void *item, void **out);
+
+/**
+ * @brief Retrieve previous item.
+ * @param [in] object array instance.
+ * @param [in] item current item.
+ * @param [out] out receive the previous item.
+ * @return On success true, otherwise false if an error has occurred.
+ * @throws ROCK_ARRAY_ERROR_OBJECT_IS_NULL if object is <i>NULL</i>.
+ * @throws ROCK_ARRAY_ERROR_ITEM_IS_NULL if item is <i>NULL</i>.
+ * @throws ROCK_ARRAY_ERROR_OUT_IS_NULL if out is <i>NULL</i>.
+ * @throws ROCK_ARRAY_ERROR_ITEM_IS_OUT_OF_BOUNDS if item is not contained
+ * within the array.
+ * @throws ROCK_ARRAY_ERROR_END_OF_SEQUENCE if there is no previous item.
+ */
+bool rock_array_prev(struct rock_array *object, void *item, void **out);
 
 #endif /* _ROCK_ARRAY_H_ */

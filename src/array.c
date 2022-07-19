@@ -32,7 +32,7 @@ bool rock_array_invalidate(struct rock_array *object,
         return false;
     }
     if (on_destroy) {
-        for (size_t i = 0; i < object->count; i++) {
+        for (size_t i = 0; i < object->length; i++) {
             on_destroy(rock_array_address(object, i));
         }
     }
@@ -93,7 +93,7 @@ bool rock_array_set_capacity(struct rock_array *object, const size_t capacity) {
     return true;
 }
 
-bool rock_array_count(struct rock_array *object, size_t *out) {
+bool rock_array_get_length(struct rock_array *object, size_t *out) {
     if (!object) {
         rock_error = ROCK_ARRAY_ERROR_OBJECT_IS_NULL;
         return false;
@@ -102,7 +102,22 @@ bool rock_array_count(struct rock_array *object, size_t *out) {
         rock_error = ROCK_ARRAY_ERROR_OUT_IS_NULL;
         return false;
     }
-    *out = object->count;
+    *out = object->length;
+    return true;
+}
+
+bool rock_array_set_length(struct rock_array *object, const size_t length) {
+    if (!object) {
+        rock_error = ROCK_ARRAY_ERROR_OBJECT_IS_NULL;
+        return false;
+    }
+    if (length > object->capacity
+        && !rock_array_adjust_capacity(object, length)) {
+        rock_required_true(ROCK_ARRAY_ERROR_MEMORY_ALLOCATION_FAILED
+                           == rock_error);
+        return false;
+    }
+    object->length = length;
     return true;
 }
 
@@ -125,7 +140,7 @@ bool rock_array_shrink(struct rock_array *object) {
         return false;
     }
     rock_required_true(rock_array_set_capacity(
-            object, object->count));
+            object, object->length));
     return true;
 }
 
@@ -145,7 +160,7 @@ bool rock_array_adjust_capacity(struct rock_array *object, const size_t count) {
     size_t capacity = 0;
     /* increase capacity by times and a half and then use the next even
      * number */
-    for (size_t b = object->capacity; count + object->count > b;) {
+    for (size_t b = object->capacity; count + object->length > b;) {
         size_t i = b >> 1;
         /* even numbers are desired */
         if ((b & 1) ^ (i & 1)) {
@@ -160,7 +175,7 @@ bool rock_array_adjust_capacity(struct rock_array *object, const size_t count) {
         capacity = b;
     }
     size_t out;
-    if (!capacity && !rock_add_size_t(count + object->count,
+    if (!capacity && !rock_add_size_t(count + object->length,
                                       object->capacity,
                                       &out)) {
         rock_required_true(ROCK_ERROR_OVERFLOW_OCCURRED == rock_error);
@@ -210,8 +225,8 @@ bool rock_array_add_all(struct rock_array *object, const size_t count,
                            == rock_error);
         return false;
     }
-    object->count += count;
-    for (size_t i = 0, at = object->count - count; i < count; i++, at++) {
+    object->length += count;
+    for (size_t i = 0, at = object->length - count; i < count; i++, at++) {
         rock_required_true(rock_array_set(object, at, items[i]));
     }
     return true;
@@ -222,11 +237,11 @@ bool rock_array_remove_last(struct rock_array *object) {
         rock_error = ROCK_ARRAY_ERROR_OBJECT_IS_NULL;
         return false;
     }
-    if (!object->count) {
+    if (!object->length) {
         rock_error = ROCK_ARRAY_ERROR_ARRAY_IS_EMPTY;
         return false;
     }
-    object->count -= 1;
+    object->length -= 1;
     return true;
 }
 
@@ -241,7 +256,7 @@ bool rock_array_insert(struct rock_array *object, const size_t at, void *item) {
         rock_error = ROCK_ARRAY_ERROR_OBJECT_IS_NULL;
         return false;
     }
-    if (at >= object->count) {
+    if (at >= object->length) {
         rock_error = ROCK_ARRAY_ERROR_INDEX_IS_OUT_OF_BOUNDS;
         return false;
     }
@@ -260,7 +275,7 @@ bool rock_array_insert_all(struct rock_array *object, const size_t at,
         rock_error = ROCK_ARRAY_ERROR_OBJECT_IS_NULL;
         return false;
     }
-    if (at >= object->count) {
+    if (at >= object->length) {
         rock_error = ROCK_ARRAY_ERROR_INDEX_IS_OUT_OF_BOUNDS;
         return false;
     }
@@ -279,8 +294,8 @@ bool rock_array_insert_all(struct rock_array *object, const size_t at,
     }
     memcpy(rock_array_address(object, count + at),
            rock_array_address(object, at),
-           object->size * (object->count - at));
-    object->count += count;
+           object->size * (object->length - at));
+    object->length += count;
     for (size_t i = 0; i < count; i++) {
         rock_required_true(rock_array_set(object, at + i, items[i]));
     }
@@ -292,7 +307,7 @@ bool rock_array_remove(struct rock_array *object, const size_t at) {
         rock_error = ROCK_ARRAY_ERROR_OBJECT_IS_NULL;
         return false;
     }
-    if (at >= object->count) {
+    if (at >= object->length) {
         rock_error = ROCK_ARRAY_ERROR_INDEX_IS_OUT_OF_BOUNDS;
         return false;
     }
@@ -306,7 +321,7 @@ bool rock_array_remove_all(struct rock_array *object, const size_t at,
         rock_error = ROCK_ARRAY_ERROR_OBJECT_IS_NULL;
         return false;
     }
-    if (at >= object->count) {
+    if (at >= object->length) {
         rock_error = ROCK_ARRAY_ERROR_INDEX_IS_OUT_OF_BOUNDS;
         return false;
     }
@@ -319,14 +334,14 @@ bool rock_array_remove_all(struct rock_array *object, const size_t at,
         rock_required_true(ROCK_ERROR_OVERFLOW_OCCURRED == rock_error);
         max = SIZE_MAX;
     }
-    if (max >= object->count) {
-        object->count = at;
+    if (max >= object->length) {
+        object->length = at;
     } else {
-        const size_t remainder = object->count - count - at;
+        const size_t remainder = object->length - count - at;
         memmove(rock_array_address(object, at),
                 rock_array_address(object, at + count),
                 object->size * remainder);
-        object->count -= count;
+        object->length -= count;
     }
     return true;
 }
@@ -340,7 +355,7 @@ bool rock_array_get(struct rock_array *object, const size_t at, void **out) {
         rock_error = ROCK_ARRAY_ERROR_OUT_IS_NULL;
         return false;
     }
-    if (at >= object->count) {
+    if (at >= object->length) {
         rock_error = ROCK_ARRAY_ERROR_INDEX_IS_OUT_OF_BOUNDS;
         return false;
     }
@@ -354,7 +369,7 @@ bool rock_array_set(struct rock_array *object, const size_t at,
         rock_error = ROCK_ARRAY_ERROR_OBJECT_IS_NULL;
         return false;
     }
-    if (at >= object->count) {
+    if (at >= object->length) {
         rock_error = ROCK_ARRAY_ERROR_INDEX_IS_OUT_OF_BOUNDS;
         return false;
     }
@@ -363,6 +378,111 @@ bool rock_array_set(struct rock_array *object, const size_t at,
         memcpy(address, item, object->size);
     } else {
         memset(address, 0, object->size);
+    }
+    return true;
+}
+
+bool rock_array_first(struct rock_array *object, void **out) {
+    if (!object) {
+        rock_error = ROCK_ARRAY_ERROR_OBJECT_IS_NULL;
+        return false;
+    }
+    if (!out) {
+        rock_error = ROCK_ARRAY_ERROR_OUT_IS_NULL;
+        return false;
+    }
+    if (!object->length) {
+        rock_error = ROCK_ARRAY_ERROR_ARRAY_IS_EMPTY;
+        return false;
+    }
+    *out = object->data;
+    return true;
+}
+
+bool rock_array_last(struct rock_array *object, void **out) {
+    if (!object) {
+        rock_error = ROCK_ARRAY_ERROR_OBJECT_IS_NULL;
+        return false;
+    }
+    if (!out) {
+        rock_error = ROCK_ARRAY_ERROR_OUT_IS_NULL;
+        return false;
+    }
+    if (!object->length) {
+        rock_error = ROCK_ARRAY_ERROR_ARRAY_IS_EMPTY;
+        return false;
+    }
+    *out = rock_array_address(object, object->length - 1);
+    return true;
+}
+
+bool rock_array_next(struct rock_array *object, void *item, void **out) {
+    if (!object) {
+        rock_error = ROCK_ARRAY_ERROR_OBJECT_IS_NULL;
+        return false;
+    }
+    if (!item) {
+        rock_error = ROCK_ARRAY_ERROR_ITEMS_IS_NULL;
+        return false;
+    }
+    if (!out) {
+        rock_error = ROCK_ARRAY_ERROR_OUT_IS_NULL;
+        return false;
+    }
+    if (!object->length) {
+        rock_error = ROCK_ARRAY_ERROR_END_OF_SEQUENCE;
+        return false;
+    }
+    const void *begin = object->data;
+    const void *end = rock_array_address(object, object->length - 1);
+    if (begin > item || end < item) {
+        rock_error = ROCK_ARRAY_ERROR_ITEM_IS_OUT_OF_BOUNDS;
+        return false;
+    }
+    size_t at = (item - begin) / object->size;
+    if (!rock_add_size_t(1, at, &at)) {
+        rock_required_true(ROCK_ERROR_OVERFLOW_OCCURRED == rock_error);
+        rock_error = ROCK_ARRAY_ERROR_END_OF_SEQUENCE;
+        return false;
+    }
+    if (!rock_array_get(object, at, out)) {
+        rock_required_true(ROCK_ARRAY_ERROR_INDEX_IS_OUT_OF_BOUNDS
+                           == rock_error);
+        rock_error = ROCK_ARRAY_ERROR_END_OF_SEQUENCE;
+        return false;
+    }
+    return true;
+}
+
+bool rock_array_prev(struct rock_array *object, void *item, void **out) {
+    if (!object) {
+        rock_error = ROCK_ARRAY_ERROR_OBJECT_IS_NULL;
+        return false;
+    }
+    if (!item) {
+        rock_error = ROCK_ARRAY_ERROR_ITEMS_IS_NULL;
+        return false;
+    }
+    if (!out) {
+        rock_error = ROCK_ARRAY_ERROR_OUT_IS_NULL;
+        return false;
+    }
+    if (!object->length) {
+        rock_error = ROCK_ARRAY_ERROR_END_OF_SEQUENCE;
+        return false;
+    }
+    const void *begin = object->data;
+    const void *end = rock_array_address(object, object->length - 1);
+    if (begin > item || end < item) {
+        rock_error = ROCK_ARRAY_ERROR_ITEM_IS_OUT_OF_BOUNDS;
+        return false;
+    }
+    size_t at = (item - begin) / object->size;
+    if (!rock_array_get(object, at - 1, out)) {
+        rock_required_true(ROCK_ARRAY_ERROR_INDEX_IS_OUT_OF_BOUNDS
+                           == rock_error);
+        rock_error = ROCK_ARRAY_ERROR_END_OF_SEQUENCE;
+        return false;
     }
     return true;
 }

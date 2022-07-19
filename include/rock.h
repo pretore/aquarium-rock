@@ -7,6 +7,7 @@
 
 #include <rock/array.h>
 #include <rock/error.h>
+#include <rock/hash_table.h>
 #include <rock/red_black_tree.h>
 #include <rock/tree_map.h>
 #include <rock/tree_set.h>
@@ -54,6 +55,26 @@ int rock_compare_size_t_ptr(const void *a, const void *b);
  * <u>greater than</u> <b>b</b>.
  */
 int rock_compare_size_t(const void *a, const void *b);
+
+/**
+ * @brief Are the two float values are considered equal.
+ * @param [in] a first float.
+ * @param [in] b second float.
+ * @param [out] out true if they are considered equal, false otherwise.
+ * @return On success true otherwise false if an error occurred.
+ * @throws ROCK_ERROR_OUT_IS_NULL if the out is <i>NULL</i>.
+ */
+bool rock_float_is_equal(float a, float b, bool *out);
+
+/**
+ * @brief Is the first value considered greater than then second value.
+ * @param [in] a first float.
+ * @param [in] b second float.
+ * @param [out] out true if a is considered greater than b, false otherwise.
+ * @return On success true otherwise false if an error occurred.
+ * @throws ROCK_ERROR_OUT_IS_NULL if the out is <i>NULL</i>.
+ */
+bool rock_float_is_greater_than(float a, float b, bool *out);
 
 /**
  * @brief Add two size_t values together and check for overflow.
