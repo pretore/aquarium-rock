@@ -3,6 +3,7 @@
 #include <setjmp.h>
 #include <cmocka.h>
 #include <string.h>
+#include <seagrass.h>
 #include <rock.h>
 
 #include "private/hash_table.h"
@@ -41,7 +42,7 @@ static size_t hash_code(const void *object) {
 }
 
 static bool is_equal(const void *a, const void *b) {
-    return 0 == rock_compare_void_ptr(a, b);
+    return 0 == seagrass_void_ptr_compare(a, b);
 }
 
 static void check_init(void **state) {
@@ -52,7 +53,7 @@ static void check_init(void **state) {
     assert_ptr_equal(is_equal, object.is_equal);
     assert_int_equal(sizeof(struct rock_hash_table_entry), object.array.size);
     bool result;
-    assert_true(rock_float_is_equal(0.6, object.lf, &result));
+    assert_true(seagrass_float_is_equal(0.6, object.lf, &result));
     assert_true(result);
     assert_int_equal(0, object.count);
     assert_true(rock_hash_table_invalidate(&object, NULL));
@@ -60,7 +61,7 @@ static void check_init(void **state) {
     assert_ptr_equal(hash_code, object.hash_code);
     assert_ptr_equal(is_equal, object.is_equal);
     assert_int_equal(sizeof(struct rock_hash_table_entry), object.array.size);
-    assert_true(rock_float_is_equal(0.75, object.lf, &result));
+    assert_true(seagrass_float_is_equal(0.75, object.lf, &result));
     assert_true(result);
     assert_int_equal(0, object.count);
     assert_true(rock_hash_table_invalidate(&object, NULL));

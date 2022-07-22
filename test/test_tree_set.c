@@ -3,6 +3,7 @@
 #include <setjmp.h>
 #include <cmocka.h>
 #include <string.h>
+#include <seagrass.h>
 #include <rock.h>
 
 #include "test/cmocka.h"
@@ -46,7 +47,7 @@ static void check_count(void **state) {
     rock_error = ROCK_ERROR_NONE;
     struct rock_tree_set object;
     assert_true(rock_tree_set_init(&object,
-                                   rock_compare_void_ptr));
+                                   seagrass_void_ptr_compare));
     size_t count;
     assert_true(rock_tree_set_count(&object, &count));
     assert_int_equal(object.tree.count, count);
@@ -74,7 +75,7 @@ static void check_add(void **state) {
     rock_error = ROCK_ERROR_NONE;
     struct rock_tree_set object = {};
     assert_true(rock_tree_set_init(&object,
-                                   rock_compare_void_ptr));
+                                   seagrass_void_ptr_compare));
     assert_int_equal(0, object.tree.count);
     assert_null(object.tree.root);
     assert_true(rock_tree_set_add(&object, check_add));
@@ -91,7 +92,7 @@ static void check_add_error_on_item_already_exists(void **state) {
     rock_error = ROCK_ERROR_NONE;
     struct rock_tree_set object = {};
     assert_true(rock_tree_set_init(&object,
-                                   rock_compare_void_ptr));
+                                   seagrass_void_ptr_compare));
     assert_int_equal(0, object.tree.count);
     assert_null(object.tree.root);
     assert_true(rock_tree_set_add(&object, &rock_error));
@@ -122,7 +123,7 @@ static void check_remove_error_on_item_not_found(void **state) {
     rock_error = ROCK_ERROR_NONE;
     struct rock_tree_set object = {};
     assert_true(rock_tree_set_init(&object,
-                                   rock_compare_void_ptr));
+                                   seagrass_void_ptr_compare));
     assert_false(rock_tree_set_remove(&object, (void *)1));
     assert_int_equal(ROCK_TREE_SET_ERROR_ITEM_NOT_FOUND, rock_error);
     assert_true(rock_tree_set_invalidate(&object, NULL));
@@ -133,7 +134,7 @@ static void check_remove(void **state) {
     rock_error = ROCK_ERROR_NONE;
     struct rock_tree_set object = {};
     assert_true(rock_tree_set_init(&object,
-                                   rock_compare_void_ptr));
+                                   seagrass_void_ptr_compare));
     assert_int_equal(0, object.tree.count);
     assert_true(rock_tree_set_add(&object, (void *)1));
     assert_int_equal(1, object.tree.count);
@@ -168,7 +169,7 @@ static void check_contains(void **state) {
     rock_error = ROCK_ERROR_NONE;
     struct rock_tree_set object = {};
     assert_true(rock_tree_set_init(&object,
-                                   rock_compare_void_ptr));
+                                   seagrass_void_ptr_compare));
     bool result;
     assert_true(rock_tree_set_contains(&object, (void *)1, &result));
     assert_false(result);
@@ -197,7 +198,7 @@ static void check_first_error_on_empty_tree_set(void **state) {
     rock_error = ROCK_ERROR_NONE;
     struct rock_tree_set object = {};
     assert_true(rock_tree_set_init(&object,
-                                   rock_compare_size_t));
+                                   (int (*)(const void *, const void *))seagrass_size_t_compare));
     size_t first;
     assert_false(rock_tree_set_first(&object, (void **)&first));
     assert_int_equal(ROCK_TREE_SET_ERROR_TREE_SET_IS_EMPTY, rock_error);
@@ -209,7 +210,7 @@ static void check_first(void **state) {
     rock_error = ROCK_ERROR_NONE;
     struct rock_tree_set object = {};
     assert_true(rock_tree_set_init(&object,
-                                   rock_compare_size_t));
+                                   (int (*)(const void *, const void *))seagrass_size_t_compare));
     assert_true(rock_tree_set_add(&object, (void*)100));
     size_t* first;
     assert_true(rock_tree_set_first(&object, (void **)&first));
@@ -239,7 +240,7 @@ static void check_last_error_on_empty_tree_set(void **state) {
     rock_error = ROCK_ERROR_NONE;
     struct rock_tree_set object = {};
     assert_true(rock_tree_set_init(&object,
-                                   rock_compare_size_t));
+                                   (int (*)(const void *, const void *))seagrass_size_t_compare));
     size_t first;
     assert_false(rock_tree_set_last(&object, (void **)&first));
     assert_int_equal(ROCK_TREE_SET_ERROR_TREE_SET_IS_EMPTY, rock_error);
@@ -251,7 +252,7 @@ static void check_last(void **state) {
     rock_error = ROCK_ERROR_NONE;
     struct rock_tree_set object = {};
     assert_true(rock_tree_set_init(&object,
-                                   rock_compare_size_t));
+                                   (int (*)(const void *, const void *))seagrass_size_t_compare));
     assert_true(rock_tree_set_add(&object, (void*)10));
     size_t* last;
     assert_true(rock_tree_set_last(&object, (void **)&last));
@@ -281,7 +282,7 @@ static void check_next_error_on_end_of_sequence(void **state) {
     rock_error = ROCK_ERROR_NONE;
     struct rock_tree_set object = {};
     assert_true(rock_tree_set_init(&object,
-                                   rock_compare_size_t));
+                                   (int (*)(const void *, const void *))seagrass_size_t_compare));
     assert_true(rock_tree_set_add(&object, (void*)10));
     size_t* last;
     assert_true(rock_tree_set_last(&object, (void **)&last));
@@ -295,7 +296,7 @@ static void check_next(void **state) {
     rock_error = ROCK_ERROR_NONE;
     struct rock_tree_set object = {};
     assert_true(rock_tree_set_init(&object,
-                                   rock_compare_size_t));
+                                   (int (*)(const void *, const void *))seagrass_size_t_compare));
     assert_true(rock_tree_set_add(&object, (void*)10));
     size_t* last;
     assert_true(rock_tree_set_last(&object, (void **)&last));
@@ -324,7 +325,7 @@ static void check_prev_error_on_end_of_sequence(void **state) {
     rock_error = ROCK_ERROR_NONE;
     struct rock_tree_set object = {};
     assert_true(rock_tree_set_init(&object,
-                                   rock_compare_size_t));
+                                   (int (*)(const void *, const void *))seagrass_size_t_compare));
     assert_true(rock_tree_set_add(&object, (void*)10));
     size_t* first;
     assert_true(rock_tree_set_first(&object, (void **)&first));
@@ -338,7 +339,7 @@ static void check_prev(void **state) {
     rock_error = ROCK_ERROR_NONE;
     struct rock_tree_set object = {};
     assert_true(rock_tree_set_init(&object,
-                                   rock_compare_size_t));
+                                   (int (*)(const void *, const void *))seagrass_size_t_compare));
     assert_true(rock_tree_set_add(&object, (void*)100));
     size_t* first;
     assert_true(rock_tree_set_first(&object, (void **)&first));

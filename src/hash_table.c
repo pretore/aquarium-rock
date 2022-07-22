@@ -2,6 +2,7 @@
 #include <math.h>
 #include <threads.h>
 #include <fenv.h>
+#include <seagrass.h>
 #include <rock.h>
 
 #include "private/hash_table.h"
@@ -25,19 +26,19 @@ bool rock_hash_table_init(struct rock_hash_table *object,
     }
     float lf = fabsf(load_factor);
     bool result;
-    rock_required_true(rock_float_is_greater_than(
+    seagrass_required_true(seagrass_float_is_greater_than(
             lf, ROCK_HASH_TABLE_LOAD_FACTOR_MAXIMUM, &result));
     if (result) {
         rock_error = ROCK_HASH_TABLE_ERROR_LOAD_FACTOR_IS_INVALID;
         return false;
     }
-    rock_required_true(rock_float_is_equal(
+    seagrass_required_true(seagrass_float_is_equal(
             ROCK_HASH_TABLE_LOAD_FACTOR_UNSPECIFIED, lf, &result));
     if (result) {
         lf = ROCK_HASH_TABLE_LOAD_FACTOR_DEFAULT;
     }
     (*object) = (struct rock_hash_table) {0};
-    rock_required_true(rock_array_init(
+    seagrass_required_true(rock_array_init(
             &object->array, sizeof(struct rock_hash_table_entry), 0));
     object->lf = lf;
     object->hash_code = hash_code;
@@ -65,7 +66,7 @@ rock_hash_table_invalidate(struct rock_hash_table *object,
     if (on_destroy) {
         on_destroy_callback = on_destroy;
     }
-    rock_required_true(rock_array_invalidate(
+    seagrass_required_true(rock_array_invalidate(
             &object->array,
             on_destroy ? rock_hash_table_on_destroy : NULL));
     (*object) = (struct rock_hash_table) {0};
@@ -96,11 +97,11 @@ bool rock_hash_table_rebuild_needed(struct rock_hash_table *object,
         return false;
     }
     size_t length;
-    rock_required_true(rock_array_get_length(
+    seagrass_required_true(rock_array_get_length(
             &object->array, &length));
-    rock_required_true(!feclearexcept(FE_ALL_EXCEPT));
+    seagrass_required_true(!feclearexcept(FE_ALL_EXCEPT));
     const size_t limit = llrintf((float) length * 0.1f);
-    rock_required_true(!fetestexcept(
+    seagrass_required_true(!fetestexcept(
             FE_INVALID | FE_DIVBYZERO | FE_OVERFLOW | FE_UNDERFLOW));
     *out = object->deleted > limit && object->count < object->deleted;
     return true;
@@ -112,18 +113,18 @@ bool rock_hash_table_rebuild(struct rock_hash_table *object) {
         return false;
     }
     size_t length;
-    rock_required_true(rock_array_get_length(
+    seagrass_required_true(rock_array_get_length(
             &object->array, &length));
     for (size_t i = 0; i < length; i++) {
         struct rock_hash_table_entry *entry;
-        rock_required_true(rock_array_get(
+        seagrass_required_true(rock_array_get(
                 &object->array, i, (void **) &entry));
         if (entry->key.data) {
             do {
                 const size_t at =
                         object->hash_code(entry->key.data) % length;
                 if (at < i) {
-                    rock_required_true(rock_hash_table_insert(
+                    seagrass_required_true(rock_hash_table_insert(
                             object, entry, true));
                     /* clear out duplicate entry */
                     *entry = ROCK_HASH_TABLE_ENTRY_EMPTY;
@@ -132,7 +133,7 @@ bool rock_hash_table_rebuild(struct rock_hash_table *object) {
                     break;
                 } else {
                     struct rock_hash_table_entry *other;
-                    rock_required_true(rock_array_get(
+                    seagrass_required_true(rock_array_get(
                             &object->array, at, (void **) &other));
                     rock_hash_table_entry_swap(entry, other);
                 }
@@ -150,9 +151,9 @@ bool rock_hash_table_rebuild(struct rock_hash_table *object) {
 
 void rock_hash_table_entry_swap(struct rock_hash_table_entry *restrict a,
                                 struct rock_hash_table_entry *restrict b) {
-    rock_required_true(a != b);
-    rock_required(a);
-    rock_required(b);
+    seagrass_required_true(a != b);
+    seagrass_required(a);
+    seagrass_required(b);
     struct rock_hash_table_entry tmp = *a;
     *a = *b;
     *b = tmp;
@@ -161,9 +162,9 @@ void rock_hash_table_entry_swap(struct rock_hash_table_entry *restrict a,
 bool
 rock_hash_table_entry_equals(const struct rock_hash_table_entry *restrict a,
                              const struct rock_hash_table_entry *restrict b) {
-    rock_required_true(a != b);
-    rock_required(a);
-    rock_required(b);
+    seagrass_required_true(a != b);
+    seagrass_required(a);
+    seagrass_required(b);
     return a->key.data == b->key.data
            && a->value.data == b->value.data;
 }
@@ -171,20 +172,20 @@ rock_hash_table_entry_equals(const struct rock_hash_table_entry *restrict a,
 bool rock_hash_table_insert(struct rock_hash_table *object,
                             struct rock_hash_table_entry *entry,
                             bool ignore_duplicates) {
-    rock_required(object);
-    rock_required(entry);
-    rock_required(entry->key.data);
+    seagrass_required(object);
+    seagrass_required(entry);
+    seagrass_required(entry->key.data);
 
     size_t length;
-    rock_required_true(rock_array_get_length(
+    seagrass_required_true(rock_array_get_length(
             &object->array, &length));
     const size_t at = object->hash_code(entry->key.data) % length;
 
     for (size_t i = 0; i < length; i++) {
         struct rock_hash_table_entry *dst;
-        rock_required_true(rock_array_get(&object->array,
-                                          (at + i) % length,
-                                          (void **) &dst));
+        seagrass_required_true(rock_array_get(&object->array,
+                                              (at + i) % length,
+                                              (void **) &dst));
         if (!dst->key.data) {
             *dst = *entry;
             return true;
@@ -212,26 +213,28 @@ bool rock_hash_table_add(struct rock_hash_table *object,
     }
     /* check if we need to resize the hash table */
     size_t length;
-    rock_required_true(rock_array_get_length(
+    seagrass_required_true(rock_array_get_length(
             &object->array, &length));
     size_t used;
-    if (!rock_add_size_t(1, object->count, &used)) {
-        rock_required_true(ROCK_ERROR_OVERFLOW_OCCURRED == rock_error);
+    if (!seagrass_size_t_add(1, object->count, &used)) {
+        seagrass_required_true(SEAGRASS_SIZE_T_ERROR_RESULT_IS_INCONSISTENT
+                               == seagrass_error);
         rock_error = ROCK_HASH_TABLE_ERROR_MEMORY_ALLOCATION_FAILED;
         return false;
     }
     size_t limit;
     const size_t current = length;
     do {
-        rock_required_true(!feclearexcept(FE_ALL_EXCEPT));
+        seagrass_required_true(!feclearexcept(FE_ALL_EXCEPT));
         limit = llrintf((float) length * object->lf);
-        rock_required_true(!fetestexcept(
+        seagrass_required_true(!fetestexcept(
                 FE_INVALID | FE_DIVBYZERO | FE_OVERFLOW | FE_UNDERFLOW));
         if (limit > used) {
             break;
         }
-        if (!rock_add_size_t(used, length, &length)) {
-            rock_required_true(ROCK_ERROR_OVERFLOW_OCCURRED == rock_error);
+        if (!seagrass_size_t_add(used, length, &length)) {
+            seagrass_required_true(SEAGRASS_SIZE_T_ERROR_RESULT_IS_INCONSISTENT
+                                   == seagrass_error);
             if (length < SIZE_MAX) {
                 length = SIZE_MAX;
                 continue;
@@ -247,7 +250,7 @@ bool rock_hash_table_add(struct rock_hash_table *object,
             rock_error = ROCK_HASH_TABLE_ERROR_MEMORY_ALLOCATION_FAILED;
             return false;
         }
-        rock_required_true(rock_hash_table_rebuild(object));
+        seagrass_required_true(rock_hash_table_rebuild(object));
     }
 
     struct rock_hash_table_entry entry = {
@@ -255,8 +258,8 @@ bool rock_hash_table_add(struct rock_hash_table *object,
             .value.data = value
     };
     if (!rock_hash_table_insert(object, &entry, false)) {
-        rock_required_true(ROCK_HASH_TABLE_ERROR_KEY_ALREADY_EXISTS
-                           == rock_error);
+        seagrass_required_true(ROCK_HASH_TABLE_ERROR_KEY_ALREADY_EXISTS
+                               == rock_error);
         return false;
     }
     object->count = used;
@@ -266,23 +269,23 @@ bool rock_hash_table_add(struct rock_hash_table *object,
 bool rock_hash_table_entry_find(struct rock_hash_table *object,
                                 const void *key,
                                 struct rock_hash_table_entry **out) {
-    rock_required(object);
-    rock_required(key);
-    rock_required(out);
+    seagrass_required(object);
+    seagrass_required(key);
+    seagrass_required(out);
     if (!object->count) {
         rock_error = ROCK_HASH_TABLE_ERROR_KEY_NOT_FOUND;
         return false;
     }
     size_t length;
-    rock_required_true(rock_array_get_length(
+    seagrass_required_true(rock_array_get_length(
             &object->array, &length));
     size_t at = object->hash_code(key) % length;
     size_t i;
     struct rock_hash_table_entry *entry;
     for (i = 0; i < length; i++) {
-        rock_required_true(rock_array_get(&object->array,
-                                          (at + i) % length,
-                                          (void **) &entry));
+        seagrass_required_true(rock_array_get(&object->array,
+                                              (at + i) % length,
+                                              (void **) &entry));
         if (rock_hash_table_entry_equals(entry,
                                          &ROCK_HASH_TABLE_ENTRY_DELETED)) {
             continue;
@@ -312,8 +315,8 @@ bool rock_hash_table_remove(struct rock_hash_table *object,
     }
     struct rock_hash_table_entry *entry;
     if (!rock_hash_table_entry_find(object, key, &entry)) {
-        rock_required_true(ROCK_HASH_TABLE_ERROR_KEY_NOT_FOUND
-                           == rock_error);
+        seagrass_required_true(ROCK_HASH_TABLE_ERROR_KEY_NOT_FOUND
+                               == rock_error);
         return false;
     }
     /* delete entry */
@@ -336,8 +339,8 @@ bool rock_hash_table_set(struct rock_hash_table *object,
     }
     struct rock_hash_table_entry *entry;
     if (!rock_hash_table_entry_find(object, key, &entry)) {
-        rock_required_true(ROCK_HASH_TABLE_ERROR_KEY_NOT_FOUND
-                           == rock_error);
+        seagrass_required_true(ROCK_HASH_TABLE_ERROR_KEY_NOT_FOUND
+                               == rock_error);
         return false;
     }
     entry->value.data = value;
@@ -361,8 +364,8 @@ bool rock_hash_table_get(struct rock_hash_table *object,
     }
     struct rock_hash_table_entry *entry;
     if (!rock_hash_table_entry_find(object, key, &entry)) {
-        rock_required_true(ROCK_HASH_TABLE_ERROR_KEY_NOT_FOUND
-                           == rock_error);
+        seagrass_required_true(ROCK_HASH_TABLE_ERROR_KEY_NOT_FOUND
+                               == rock_error);
         return false;
     }
     *out = entry->value.data;
@@ -387,8 +390,8 @@ bool rock_hash_table_contains(struct rock_hash_table *object,
     struct rock_hash_table_entry *entry;
     *out = rock_hash_table_entry_find(object, key, &entry);
     if (!*out) {
-        rock_required_true(ROCK_HASH_TABLE_ERROR_KEY_NOT_FOUND
-                           == rock_error);
+        seagrass_required_true(ROCK_HASH_TABLE_ERROR_KEY_NOT_FOUND
+                               == rock_error);
     }
     return true;
 }
@@ -408,11 +411,11 @@ bool rock_hash_table_first(struct rock_hash_table *object,
         return false;
     }
     size_t length;
-    rock_required_true(rock_array_get_length(
+    seagrass_required_true(rock_array_get_length(
             &object->array, &length));
     struct rock_hash_table_entry *entry;
     for (size_t i = 0; i < length; i++) {
-        rock_required_true(rock_array_get(
+        seagrass_required_true(rock_array_get(
                 &object->array, i, (void **) &entry));
         if (entry->key.data) {
             *out = entry;
@@ -420,7 +423,7 @@ bool rock_hash_table_first(struct rock_hash_table *object,
         }
     }
     /* inconsistent state; abort */
-    rock_required_true(false);
+    seagrass_required_true(false);
     return false;
 }
 
@@ -439,11 +442,11 @@ bool rock_hash_table_last(struct rock_hash_table *object,
         return false;
     }
     size_t length;
-    rock_required_true(rock_array_get_length(
+    seagrass_required_true(rock_array_get_length(
             &object->array, &length));
     struct rock_hash_table_entry *entry;
     for (size_t i = length; i; i--) {
-        rock_required_true(rock_array_get(
+        seagrass_required_true(rock_array_get(
                 &object->array, i - 1, (void **) &entry));
         if (entry->key.data) {
             *out = entry;
@@ -451,7 +454,7 @@ bool rock_hash_table_last(struct rock_hash_table *object,
         }
     }
     /* inconsistent state; abort */
-    rock_required_true(false);
+    seagrass_required_true(false);
     return false;
 }
 
@@ -473,7 +476,7 @@ bool rock_hash_table_next(struct rock_hash_table *object,
     struct rock_hash_table_entry *i = entry;
     do {
         if (!rock_array_next(&object->array, i, (void **) &i)) {
-            rock_required_true(
+            seagrass_required_true(
                     ROCK_ARRAY_ERROR_ITEM_IS_OUT_OF_BOUNDS == rock_error
                     || ROCK_ARRAY_ERROR_END_OF_SEQUENCE == rock_error);
             if (ROCK_ARRAY_ERROR_ITEM_IS_OUT_OF_BOUNDS == rock_error) {
@@ -508,7 +511,7 @@ bool rock_hash_table_prev(struct rock_hash_table *object,
     struct rock_hash_table_entry *i = entry;
     do {
         if (!rock_array_prev(&object->array, i, (void **) &i)) {
-            rock_required_true(
+            seagrass_required_true(
                     ROCK_ARRAY_ERROR_ITEM_IS_OUT_OF_BOUNDS == rock_error
                     || ROCK_ARRAY_ERROR_END_OF_SEQUENCE == rock_error);
             if (ROCK_ARRAY_ERROR_ITEM_IS_OUT_OF_BOUNDS == rock_error) {

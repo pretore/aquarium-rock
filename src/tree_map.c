@@ -1,4 +1,5 @@
 #include <stdlib.h>
+#include <seagrass.h>
 #include <rock.h>
 
 #include "test/cmocka.h"
@@ -16,7 +17,7 @@ rock_tree_map_init(struct rock_tree_map *object,
         return false;
     }
     (*object) = (struct rock_tree_map) {0};
-    rock_required_true(rock_red_black_tree_init(
+    seagrass_required_true(rock_red_black_tree_init(
             &object->tree,
             (int (*)(const void *, const void *)) compare));
     return true;
@@ -29,7 +30,7 @@ rock_tree_map_invalidate(struct rock_tree_map *object,
         rock_error = ROCK_TREE_MAP_ERROR_OBJECT_IS_NULL;
         return false;
     }
-    rock_required_true(rock_red_black_tree_invalidate(
+    seagrass_required_true(rock_red_black_tree_invalidate(
             &object->tree,
             (void (*)(void *)) on_destroy));
     return true;
@@ -44,7 +45,7 @@ bool rock_tree_map_count(struct rock_tree_map *object, size_t *out) {
         rock_error = ROCK_TREE_MAP_ERROR_OUT_IS_NULL;
         return false;
     }
-    rock_required_true(rock_red_black_tree_count(
+    seagrass_required_true(rock_red_black_tree_count(
             &object->tree, out));
     return true;
 }
@@ -64,19 +65,20 @@ bool rock_tree_map_add(struct rock_tree_map *object,
         rock_error = ROCK_TREE_MAP_ERROR_KEY_ALREADY_EXISTS;
         return false;
     }
-    rock_required_true(ROCK_RED_BLACK_TREE_ERROR_VALUE_NOT_FOUND
-                       == rock_error);
+    seagrass_required_true(ROCK_RED_BLACK_TREE_ERROR_VALUE_NOT_FOUND
+                           == rock_error);
     struct rock_tree_map_entry *entry;
     if (!rock_red_black_tree_node(sizeof(*entry),
                                   (void **) &entry)) {
-        rock_required_true(ROCK_RED_BLACK_TREE_ERROR_MEMORY_ALLOCATION_FAILED
-                           == rock_error);
+        seagrass_required_true(
+                ROCK_RED_BLACK_TREE_ERROR_MEMORY_ALLOCATION_FAILED
+                == rock_error);
         rock_error = ROCK_TREE_MAP_ERROR_MEMORY_ALLOCATION_FAILED;
         return false;
     }
     entry->key.data = key;
     entry->value.data = value;
-    rock_required_true(rock_red_black_tree_insert(
+    seagrass_required_true(rock_red_black_tree_insert(
             &object->tree,
             insertion_point,
             entry));
@@ -91,15 +93,15 @@ bool rock_tree_map_remove(struct rock_tree_map *object,
     }
     struct rock_tree_map_entry *entry;
     if (!rock_red_black_tree_find(&object->tree,
-                                 NULL,
-                                 &key,
-                                 (void **) &entry)) {
-        rock_required_true(ROCK_RED_BLACK_TREE_ERROR_VALUE_NOT_FOUND
-                           == rock_error);
+                                  NULL,
+                                  &key,
+                                  (void **) &entry)) {
+        seagrass_required_true(ROCK_RED_BLACK_TREE_ERROR_VALUE_NOT_FOUND
+                               == rock_error);
         rock_error = ROCK_TREE_MAP_ERROR_KEY_NOT_FOUND;
         return false;
     }
-    rock_required_true(rock_red_black_tree_delete(
+    seagrass_required_true(rock_red_black_tree_delete(
             &object->tree,
             entry));
     return true;
@@ -117,8 +119,8 @@ bool rock_tree_map_set(struct rock_tree_map *object,
                                   NULL,
                                   &key,
                                   (void **) &entry)) {
-        rock_required_true(ROCK_RED_BLACK_TREE_ERROR_VALUE_NOT_FOUND
-                           == rock_error);
+        seagrass_required_true(ROCK_RED_BLACK_TREE_ERROR_VALUE_NOT_FOUND
+                               == rock_error);
         rock_error = ROCK_TREE_MAP_ERROR_KEY_NOT_FOUND;
         return false;
     }
@@ -142,8 +144,8 @@ bool rock_tree_map_get(struct rock_tree_map *object,
                                   NULL,
                                   &key,
                                   (void **) &entry)) {
-        rock_required_true(ROCK_RED_BLACK_TREE_ERROR_VALUE_NOT_FOUND
-                           == rock_error);
+        seagrass_required_true(ROCK_RED_BLACK_TREE_ERROR_VALUE_NOT_FOUND
+                               == rock_error);
         rock_error = ROCK_TREE_MAP_ERROR_KEY_NOT_FOUND;
         return false;
     }
@@ -164,12 +166,12 @@ bool rock_tree_map_contains(struct rock_tree_map *object,
     }
     struct rock_tree_map_entry *entry;
     *out = rock_red_black_tree_find(&object->tree,
-                                  NULL,
-                                  &key,
-                                  (void **) &entry);
+                                    NULL,
+                                    &key,
+                                    (void **) &entry);
     if (!*out) {
-        rock_required_true(ROCK_RED_BLACK_TREE_ERROR_VALUE_NOT_FOUND
-                           == rock_error);
+        seagrass_required_true(ROCK_RED_BLACK_TREE_ERROR_VALUE_NOT_FOUND
+                               == rock_error);
     }
     return true;
 }
@@ -185,8 +187,8 @@ bool rock_tree_map_first(struct rock_tree_map *object,
         return false;
     }
     if (!rock_red_black_tree_first(&object->tree, (void **) out)) {
-        rock_required_true(ROCK_RED_BLACK_TREE_ERROR_TREE_IS_EMPTY
-                           == rock_error);
+        seagrass_required_true(ROCK_RED_BLACK_TREE_ERROR_TREE_IS_EMPTY
+                               == rock_error);
         rock_error = ROCK_TREE_MAP_ERROR_TREE_MAP_IS_EMPTY;
         return false;
     }
@@ -204,8 +206,8 @@ bool rock_tree_map_last(struct rock_tree_map *object,
         return false;
     }
     if (!rock_red_black_tree_last(&object->tree, (void **) out)) {
-        rock_required_true(ROCK_RED_BLACK_TREE_ERROR_TREE_IS_EMPTY
-                           == rock_error);
+        seagrass_required_true(ROCK_RED_BLACK_TREE_ERROR_TREE_IS_EMPTY
+                               == rock_error);
         rock_error = ROCK_TREE_MAP_ERROR_TREE_MAP_IS_EMPTY;
         return false;
     }
@@ -223,8 +225,8 @@ bool rock_tree_map_next(struct rock_tree_map_entry *entry,
         return false;
     }
     if (!rock_red_black_tree_next(entry, (void **) out)) {
-        rock_required_true(ROCK_RED_BLACK_TREE_ERROR_END_OF_SEQUENCE
-                           == rock_error);
+        seagrass_required_true(ROCK_RED_BLACK_TREE_ERROR_END_OF_SEQUENCE
+                               == rock_error);
         rock_error = ROCK_TREE_MAP_ERROR_END_OF_SEQUENCE;
         return false;
     }
@@ -242,8 +244,8 @@ bool rock_tree_map_prev(struct rock_tree_map_entry *entry,
         return false;
     }
     if (!rock_red_black_tree_prev(entry, (void **) out)) {
-        rock_required_true(ROCK_RED_BLACK_TREE_ERROR_END_OF_SEQUENCE
-                           == rock_error);
+        seagrass_required_true(ROCK_RED_BLACK_TREE_ERROR_END_OF_SEQUENCE
+                               == rock_error);
         rock_error = ROCK_TREE_MAP_ERROR_END_OF_SEQUENCE;
         return false;
     }

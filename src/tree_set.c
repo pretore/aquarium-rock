@@ -1,6 +1,7 @@
 #include <stdlib.h>
 #include <memory.h>
 #include <threads.h>
+#include <seagrass.h>
 #include <rock.h>
 
 #include "test/cmocka.h"
@@ -23,7 +24,7 @@ bool rock_tree_set_init(struct rock_tree_set *object,
         return false;
     }
     (*object) = (struct rock_tree_set) {0};
-    rock_required_true(rock_red_black_tree_init(
+    seagrass_required_true(rock_red_black_tree_init(
             &object->tree,
             rock_tree_set_compare));
     object->compare = compare;
@@ -36,7 +37,7 @@ bool rock_tree_set_invalidate(struct rock_tree_set *object,
         rock_error = ROCK_TREE_SET_ERROR_OBJECT_IS_NULL;
         return false;
     }
-    rock_required_true(rock_red_black_tree_invalidate(
+    seagrass_required_true(rock_red_black_tree_invalidate(
             &object->tree, on_destroy));
     (*object) = (struct rock_tree_set) {0};
     return true;
@@ -51,7 +52,7 @@ bool rock_tree_set_count(struct rock_tree_set *object, size_t *out) {
         rock_error = ROCK_TREE_SET_ERROR_OUT_IS_NULL;
         return false;
     }
-    rock_required_true(rock_red_black_tree_count(
+    seagrass_required_true(rock_red_black_tree_count(
             &object->tree, out));
     return true;
 }
@@ -74,17 +75,17 @@ bool rock_tree_set_add(struct rock_tree_set *object, void *item) {
         rock_error = ROCK_TREE_SET_ERROR_ITEM_ALREADY_EXISTS;
         return false;
     }
-    rock_required_true(ROCK_RED_BLACK_TREE_ERROR_VALUE_NOT_FOUND
+    seagrass_required_true(ROCK_RED_BLACK_TREE_ERROR_VALUE_NOT_FOUND
                        == rock_error);
     void *node;
     if (!rock_red_black_tree_node(sizeof(void *), &node)) {
-        rock_required_true(ROCK_RED_BLACK_TREE_ERROR_MEMORY_ALLOCATION_FAILED
+        seagrass_required_true(ROCK_RED_BLACK_TREE_ERROR_MEMORY_ALLOCATION_FAILED
                            == rock_error);
         rock_error = ROCK_TREE_SET_ERROR_MEMORY_ALLOCATION_FAILED;
         return false;
     }
     memcpy(node, &item, sizeof(void *));
-    rock_required_true(rock_red_black_tree_insert(
+    seagrass_required_true(rock_red_black_tree_insert(
             &object->tree,
             insertion_point,
             node));
@@ -106,12 +107,12 @@ bool rock_tree_set_remove(struct rock_tree_set *object, void *item) {
                                   NULL,
                                   &item,
                                   &target)) {
-        rock_required_true(ROCK_RED_BLACK_TREE_ERROR_VALUE_NOT_FOUND
+        seagrass_required_true(ROCK_RED_BLACK_TREE_ERROR_VALUE_NOT_FOUND
                            == rock_error);
         rock_error = ROCK_TREE_SET_ERROR_ITEM_NOT_FOUND;
         return false;
     }
-    rock_required_true(rock_red_black_tree_delete(
+    seagrass_required_true(rock_red_black_tree_delete(
             &object->tree,
             target));
     return true;
@@ -138,7 +139,7 @@ bool rock_tree_set_contains(struct rock_tree_set *object, void *item,
                                     &item,
                                     &at);
     if (!*out) {
-        rock_required_true(ROCK_RED_BLACK_TREE_ERROR_VALUE_NOT_FOUND
+        seagrass_required_true(ROCK_RED_BLACK_TREE_ERROR_VALUE_NOT_FOUND
                            == rock_error);
     }
     return true;
@@ -154,7 +155,7 @@ bool rock_tree_set_first(struct rock_tree_set *object, void **out) {
         return false;
     }
     if (!rock_red_black_tree_first(&object->tree, out)) {
-        rock_required_true(ROCK_RED_BLACK_TREE_ERROR_TREE_IS_EMPTY
+        seagrass_required_true(ROCK_RED_BLACK_TREE_ERROR_TREE_IS_EMPTY
                            == rock_error);
         rock_error = ROCK_TREE_SET_ERROR_TREE_SET_IS_EMPTY;
         return false;
@@ -172,7 +173,7 @@ bool rock_tree_set_last(struct rock_tree_set *object, void **out) {
         return false;
     }
     if (!rock_red_black_tree_last(&object->tree, out)) {
-        rock_required_true(ROCK_RED_BLACK_TREE_ERROR_TREE_IS_EMPTY
+        seagrass_required_true(ROCK_RED_BLACK_TREE_ERROR_TREE_IS_EMPTY
                            == rock_error);
         rock_error = ROCK_TREE_SET_ERROR_TREE_SET_IS_EMPTY;
         return false;
@@ -190,7 +191,7 @@ bool rock_tree_set_next(void *item, void **out) {
         return false;
     }
     if (!rock_red_black_tree_next(item, out)) {
-        rock_required_true(ROCK_RED_BLACK_TREE_ERROR_END_OF_SEQUENCE
+        seagrass_required_true(ROCK_RED_BLACK_TREE_ERROR_END_OF_SEQUENCE
                            == rock_error);
         rock_error = ROCK_TREE_SET_ERROR_END_OF_SEQUENCE;
         return false;
@@ -208,7 +209,7 @@ bool rock_tree_set_prev(void *item, void **out) {
         return false;
     }
     if (!rock_red_black_tree_prev(item, out)) {
-        rock_required_true(ROCK_RED_BLACK_TREE_ERROR_END_OF_SEQUENCE
+        seagrass_required_true(ROCK_RED_BLACK_TREE_ERROR_END_OF_SEQUENCE
                            == rock_error);
         rock_error = ROCK_TREE_SET_ERROR_END_OF_SEQUENCE;
         return false;

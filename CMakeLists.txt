@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.22)
-project(aquarium-rock VERSION 1.0
+project(aquarium-rock VERSION 1.0.0
         LANGUAGES C
         DESCRIPTION "Data structures in C")
 
@@ -9,6 +9,7 @@ set(CMAKE_THREAD_PREFER_PTHREAD TRUE)
 set(THREADS_PREFER_PTHREAD_FLAG TRUE)
 find_package(Threads REQUIRED)
 find_package(Doxygen OPTIONAL_COMPONENTS dot mscgen dia)
+include(cmake/FetchAquariumSeagrass.cmake)
 
 # Sources
 set(EXPORTED_HEADER_FILES
@@ -34,7 +35,7 @@ set(SOURCES
 
 if(DOXYGEN_FOUND)
     set(DOXYGEN_EXTRACT_ALL YES)
-    doxygen_add_docs(doc ${EXPORTED_HEADER_FILES})
+    doxygen_add_docs(${PROJECT_NAME}-documentation ${EXPORTED_HEADER_FILES})
 endif()
 
 if(CMAKE_BUILD_TYPE STREQUAL "Debug")
@@ -49,88 +50,74 @@ if(CMAKE_BUILD_TYPE STREQUAL "Debug")
                 src/test/wrap.h)
     target_link_libraries(${PROJECT_NAME}
             PUBLIC
-                m
                 ${CMAKE_THREAD_LIBS_INIT}
-                ${CMOCKA_SHARED_LIBRARY})
+                ${CMOCKA_SHARED_LIBRARY}
+                aquarium-seagrass)
     target_include_directories(${PROJECT_NAME}
             PUBLIC
                 "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>"
                 "$<INSTALL_INTERFACE:$<INSTALL_PREFIX>/${CMAKE_INSTALL_INCLUDEDIR}>")
-    set(LINK_FLAGS "-Wl,--wrap=pthread_mutex_init,--wrap=pthread_mutex_destroy,--wrap=pthread_mutex_lock,--wrap=pthread_mutex_unlock,--wrap=pthread_cond_init,--wrap=pthread_cond_destroy,--wrap=pthread_cond_wait,--wrap=pthread_cond_broadcast,--wrap=pthread_cond_signal")
     # Unit Tests
     enable_testing()
-    # rock-unit-test
-    add_executable(rock-unit-test test/test_rock.c)
-    target_include_directories(rock-unit-test
+    # aquarium-rock-unit-test
+    add_executable(${PROJECT_NAME}-unit-test test/test_rock.c)
+    target_include_directories(${PROJECT_NAME}-unit-test
             PRIVATE
                 "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/src>")
-    target_link_libraries(rock-unit-test
+    target_link_libraries(${PROJECT_NAME}-unit-test
             PRIVATE
                 ${PROJECT_NAME})
-    set_target_properties(rock-unit-test
-            PROPERTIES
-                LINK_FLAGS ${LINK_FLAGS})
-    add_test(rock-unit-test rock-unit-test)
-    # red-black-tree-unit-test
-    add_executable(red-black-tree-unit-test test/test_red_black_tree.c)
-    target_include_directories(red-black-tree-unit-test
+    add_test(${PROJECT_NAME}-unit-test ${PROJECT_NAME}-unit-test)
+    # aquarium-rock-red-black-tree-unit-test
+    add_executable(${PROJECT_NAME}-red-black-tree-unit-test
+            test/test_red_black_tree.c)
+    target_include_directories(${PROJECT_NAME}-red-black-tree-unit-test
             PRIVATE
                 "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/src>")
-    target_link_libraries(red-black-tree-unit-test
+    target_link_libraries(${PROJECT_NAME}-red-black-tree-unit-test
             PRIVATE
                 ${PROJECT_NAME})
-    set_target_properties(red-black-tree-unit-test
-            PROPERTIES
-                LINK_FLAGS ${LINK_FLAGS})
-    add_test(red-black-tree-unit-test red-black-tree-unit-test)
-    # tree-set-unit-test
-    add_executable(tree-set-unit-test test/test_tree_set.c)
-    target_include_directories(tree-set-unit-test
+    add_test(${PROJECT_NAME}-red-black-tree-unit-test
+            ${PROJECT_NAME}-red-black-tree-unit-test)
+    # aquarium-rock-tree-set-unit-test
+    add_executable(${PROJECT_NAME}-tree-set-unit-test test/test_tree_set.c)
+    target_include_directories(${PROJECT_NAME}-tree-set-unit-test
             PRIVATE
                 "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/src>")
-    target_link_libraries(tree-set-unit-test
+    target_link_libraries(${PROJECT_NAME}-tree-set-unit-test
             PRIVATE
                 ${PROJECT_NAME})
-    set_target_properties(tree-set-unit-test
-            PROPERTIES
-                LINK_FLAGS ${LINK_FLAGS})
-    add_test(tree-set-unit-test tree-set-unit-test)
-    # tree-map-unit-test
-    add_executable(tree-map-unit-test test/test_tree_map.c)
-    target_include_directories(tree-map-unit-test
+    add_test(${PROJECT_NAME}-tree-set-unit-test
+            ${PROJECT_NAME}-tree-set-unit-test)
+    # aquarium-rock-tree-map-unit-test
+    add_executable(${PROJECT_NAME}-tree-map-unit-test test/test_tree_map.c)
+    target_include_directories(${PROJECT_NAME}-tree-map-unit-test
             PRIVATE
                 "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/src>")
-    target_link_libraries(tree-map-unit-test
+    target_link_libraries(${PROJECT_NAME}-tree-map-unit-test
             PRIVATE
                 ${PROJECT_NAME})
-    set_target_properties(tree-map-unit-test
-            PROPERTIES
-                LINK_FLAGS ${LINK_FLAGS})
-    add_test(tree-map-unit-test tree-map-unit-test)
-    # array-unit-test
-    add_executable(array-unit-test test/test_array.c)
-    target_include_directories(array-unit-test
+    add_test(${PROJECT_NAME}-tree-map-unit-test
+            ${PROJECT_NAME}-tree-map-unit-test)
+    # aquarium-rock-array-unit-test
+    add_executable(${PROJECT_NAME}-array-unit-test test/test_array.c)
+    target_include_directories(${PROJECT_NAME}-array-unit-test
             PRIVATE
                 "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/src>")
-    target_link_libraries(array-unit-test
+    target_link_libraries(${PROJECT_NAME}-array-unit-test
             PRIVATE
                 ${PROJECT_NAME})
-    set_target_properties(array-unit-test
-            PROPERTIES
-                LINK_FLAGS ${LINK_FLAGS})
-    add_test(array-unit-test array-unit-test)
-    # hash-table-unit-test
-    add_executable(hash-table-unit-test test/test_hash_table.c)
-    target_include_directories(hash-table-unit-test
+    add_test(${PROJECT_NAME}-array-unit-test ${PROJECT_NAME}-array-unit-test)
+    # aquarium-rock-hash-table-unit-test
+    add_executable(${PROJECT_NAME}-hash-table-unit-test test/test_hash_table.c)
+    target_include_directories(${PROJECT_NAME}-hash-table-unit-test
             PRIVATE
                 "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/src>")
-    target_link_libraries(hash-table-unit-test
+    target_link_libraries(${PROJECT_NAME}-hash-table-unit-test
             PRIVATE
                 ${PROJECT_NAME})
-    set_target_properties(hash-table-unit-test
-            PROPERTIES
-                LINK_FLAGS ${LINK_FLAGS})
-    add_test(hash-table-unit-test hash-table-unit-test)
+    add_test(${PROJECT_NAME}-hash-table-unit-test
+            ${PROJECT_NAME}-hash-table-unit-test)
 else()
     add_library(${PROJECT_NAME} "")
     target_sources(${PROJECT_NAME}
@@ -142,8 +129,8 @@ else()
                 "$<INSTALL_INTERFACE:$<INSTALL_PREFIX>/${CMAKE_INSTALL_INCLUDEDIR}>")
     target_link_libraries(${PROJECT_NAME}
             PUBLIC
-                m
-                ${CMAKE_THREAD_LIBS_INIT})
+                ${CMAKE_THREAD_LIBS_INIT}
+                aquarium-seagrass)
     set_target_properties(${PROJECT_NAME}
             PROPERTIES
                 VERSION ${PROJECT_VERSION}

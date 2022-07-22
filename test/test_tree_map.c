@@ -3,6 +3,7 @@
 #include <setjmp.h>
 #include <cmocka.h>
 #include <string.h>
+#include <seagrass.h>
 #include <rock.h>
 
 #include "test/cmocka.h"
@@ -65,8 +66,7 @@ static void check_add_error_on_object_is_null(void **state) {
 
 static int tree_map_compare(const struct rock_tree_map_entry_key *a,
                             const struct rock_tree_map_entry_key *b) {
-    return rock_compare_size_t((const void *)*(size_t *)a,
-                               (const void *)*(size_t *)b);
+    return seagrass_size_t_compare(*(size_t *)a, *(size_t *)b);
 }
 
 static void check_add(void **state) {

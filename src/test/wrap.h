@@ -1,5 +1,5 @@
-#ifndef _CORAL_TEST_WRAP_H_
-#define _CORAL_TEST_WRAP_H_
+#ifndef _ROCK_TEST_WRAP_H_
+#define _ROCK_TEST_WRAP_H_
 
 #ifdef TEST
 #include <stdbool.h>
@@ -50,4 +50,4 @@ extern bool nanosleep_is_overridden;
 int __wrap_nanosleep(void *req, void *rem);
 #endif /* TEST */
 
-#endif /* _CORAL_TEST_WRAP_H_ */
+#endif /* _ROCK_TEST_WRAP_H_ */

@@ -1,5 +1,5 @@
-#ifndef _CORAL_TEST_CMOCKA_H_
-#define _CORAL_TEST_CMOCKA_H_
+#ifndef _ROCK_TEST_CMOCKA_H_
+#define _ROCK_TEST_CMOCKA_H_
 
 #ifdef TEST
 #include <stddef.h>
@@ -19,4 +19,4 @@ extern void _test_free(void* ptr, const char* file, int line);
 #define free(ptr) _test_free(ptr, __FILE__, __LINE__)
 #endif //TEST
 
-#endif /* _CORAL_TEST_CMOCKA_H_ */
+#endif /* _ROCK_TEST_CMOCKA_H_ */

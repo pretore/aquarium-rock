@@ -2,6 +2,7 @@
 #include <stddef.h>
 #include <setjmp.h>
 #include <cmocka.h>
+#include <seagrass.h>
 #include <rock.h>
 
 #include "private/red_black_tree.h"
@@ -1338,9 +1339,9 @@ static void check_init(void **state) {
             .compare = (void *)SIZE_MAX,
     };
     assert_true(rock_red_black_tree_init(&object,
-                                         rock_compare_void_ptr));
+                                         seagrass_void_ptr_compare));
     assert_null(object.root);
-    assert_ptr_equal(rock_compare_void_ptr, object.compare);
+    assert_ptr_equal(seagrass_void_ptr_compare, object.compare);
     assert_int_equal(0, object.count);
     rock_error = ROCK_ERROR_NONE;
 }
@@ -1411,7 +1412,7 @@ static void check_count_error_on_out_is_null(void **state) {
 static void check_count(void **state) {
     rock_error = ROCK_ERROR_NONE;
     struct rock_red_black_tree object = {.count = 2732};
-    assert_true(rock_red_black_tree_init(&object, rock_compare_void_ptr));
+    assert_true(rock_red_black_tree_init(&object, seagrass_void_ptr_compare));
     assert_int_equal(0, object.count);
     object.count = 62213;
     size_t count;
@@ -1464,21 +1465,21 @@ static void check_find_error_on_value_not_found(void **state) {
     *e = 4;
     *f = 5;
     *g = 6;
-    rock_required_true(rock_red_black_tree_node_set_parent(b, d)
+    seagrass_required_true(rock_red_black_tree_node_set_parent(b, d)
                         && rock_red_black_tree_node_set_left(d, b));
-    rock_required_true(rock_red_black_tree_node_set_parent(f, d)
+    seagrass_required_true(rock_red_black_tree_node_set_parent(f, d)
                         && rock_red_black_tree_node_set_right(d, f));
-    rock_required_true(rock_red_black_tree_node_set_parent(a, b)
+    seagrass_required_true(rock_red_black_tree_node_set_parent(a, b)
                         && rock_red_black_tree_node_set_left(b, a));
-    rock_required_true(rock_red_black_tree_node_set_parent(c, b)
+    seagrass_required_true(rock_red_black_tree_node_set_parent(c, b)
                         && rock_red_black_tree_node_set_right(b, c));
-    rock_required_true(rock_red_black_tree_node_set_parent(e, f)
+    seagrass_required_true(rock_red_black_tree_node_set_parent(e, f)
                         && rock_red_black_tree_node_set_left(f, e));
-    rock_required_true(rock_red_black_tree_node_set_parent(g, f)
+    seagrass_required_true(rock_red_black_tree_node_set_parent(g, f)
                         && rock_red_black_tree_node_set_right(f, g));
     struct rock_red_black_tree tree = {
             .root = d,
-            .compare = rock_compare_size_t_ptr
+            .compare = (int (*)(const void *, const void *))seagrass_size_t_ptr_compare
     };
     size_t *item = NULL;
     size_t key = 10;
@@ -1520,21 +1521,21 @@ static void check_find(void **state) {
     *e = 4;
     *f = 5;
     *g = 6;
-    rock_required_true(rock_red_black_tree_node_set_parent(b, d)
+    assert_true(rock_red_black_tree_node_set_parent(b, d)
                         && rock_red_black_tree_node_set_left(d, b));
-    rock_required_true(rock_red_black_tree_node_set_parent(f, d)
+    assert_true(rock_red_black_tree_node_set_parent(f, d)
                         && rock_red_black_tree_node_set_right(d, f));
-    rock_required_true(rock_red_black_tree_node_set_parent(a, b)
+    assert_true(rock_red_black_tree_node_set_parent(a, b)
                         && rock_red_black_tree_node_set_left(b, a));
-    rock_required_true(rock_red_black_tree_node_set_parent(c, b)
+    assert_true(rock_red_black_tree_node_set_parent(c, b)
                         && rock_red_black_tree_node_set_right(b, c));
-    rock_required_true(rock_red_black_tree_node_set_parent(e, f)
+    assert_true(rock_red_black_tree_node_set_parent(e, f)
                         && rock_red_black_tree_node_set_left(f, e));
-    rock_required_true(rock_red_black_tree_node_set_parent(g, f)
+    assert_true(rock_red_black_tree_node_set_parent(g, f)
                         && rock_red_black_tree_node_set_right(f, g));
     struct rock_red_black_tree tree = {
             .root = d,
-            .compare = rock_compare_size_t_ptr
+            .compare = (int (*)(const void *, const void *))seagrass_size_t_ptr_compare
     };
     size_t *item = NULL;
     size_t key = 2;
@@ -1580,7 +1581,7 @@ static void check_insert_error_on_node_already_exists(void **state) {
     rock_error = ROCK_ERROR_NONE;
     struct rock_red_black_tree object = {};
     assert_true(rock_red_black_tree_init(&object,
-                                         rock_compare_size_t_ptr));
+                                         (int (*)(const void *, const void *))seagrass_size_t_ptr_compare));
     size_t *value;
     assert_true(rock_red_black_tree_node(
             sizeof(*value), (void **) &value));
@@ -1604,7 +1605,7 @@ static void check_insert_case_0(void **state) {
     rock_error = ROCK_ERROR_NONE;
     struct rock_red_black_tree object = {};
     assert_true(rock_red_black_tree_init(&object,
-                                         rock_compare_size_t_ptr));
+                                         (int (*)(const void *, const void *))seagrass_size_t_ptr_compare));
     size_t *a;
     assert_true(rock_red_black_tree_node(sizeof(*a), (void **) &a));
     *a = 45;
@@ -1628,7 +1629,7 @@ static void check_insert_case_1(void **state) {
     rock_error = ROCK_ERROR_NONE;
     struct rock_red_black_tree object = {};
     assert_true(rock_red_black_tree_init(&object,
-                                         rock_compare_size_t_ptr));
+                                         (int (*)(const void *, const void *))seagrass_size_t_ptr_compare));
     size_t *root, *a, *b;
     assert_true(rock_red_black_tree_node(sizeof(*root), (void **) &root));
     *root = 199;
@@ -1674,7 +1675,7 @@ static void check_insert_case_2b_configuration_3(void **state) {
     rock_error = ROCK_ERROR_NONE;
     struct rock_red_black_tree object = {};
     assert_true(rock_red_black_tree_init(&object,
-                                         rock_compare_size_t_ptr));
+                                         (int (*)(const void *, const void *))seagrass_size_t_ptr_compare));
     size_t *a, *b, *c;
     assert_true(rock_red_black_tree_node(sizeof(*a), (void **) &a));
     assert_true(rock_red_black_tree_node(sizeof(*b), (void **) &b));
@@ -1717,7 +1718,7 @@ static void check_insert_case_2b_configuration_2(void **state) {
     rock_error = ROCK_ERROR_NONE;
     struct rock_red_black_tree object = {};
     assert_true(rock_red_black_tree_init(&object,
-                                         rock_compare_size_t_ptr));
+                                         (int (*)(const void *, const void *))seagrass_size_t_ptr_compare));
     size_t *a, *b, *c;
     assert_true(rock_red_black_tree_node(sizeof(*a), (void **) &a));
     assert_true(rock_red_black_tree_node(sizeof(*b), (void **) &b));
@@ -1760,7 +1761,7 @@ static void check_insert_case_2b_configuration_1(void **state) {
     rock_error = ROCK_ERROR_NONE;
     struct rock_red_black_tree object = {};
     assert_true(rock_red_black_tree_init(&object,
-                                         rock_compare_size_t_ptr));
+                                         (int (*)(const void *, const void *))seagrass_size_t_ptr_compare));
     size_t *a, *b, *c;
     assert_true(rock_red_black_tree_node(sizeof(*a), (void **) &a));
     assert_true(rock_red_black_tree_node(sizeof(*b), (void **) &b));
@@ -1803,7 +1804,7 @@ static void check_insert_case_2b_configuration_0(void **state) {
     rock_error = ROCK_ERROR_NONE;
     struct rock_red_black_tree object = {};
     assert_true(rock_red_black_tree_init(&object,
-                                         rock_compare_size_t_ptr));
+                                         (int (*)(const void *, const void *))seagrass_size_t_ptr_compare));
     size_t *a, *b, *c;
     assert_true(rock_red_black_tree_node(sizeof(*a), (void **) &a));
     assert_true(rock_red_black_tree_node(sizeof(*b), (void **) &b));
@@ -1846,7 +1847,7 @@ static void check_insert_case_2a(void **state) {
     rock_error = ROCK_ERROR_NONE;
     struct rock_red_black_tree object = {};
     assert_true(rock_red_black_tree_init(&object,
-                                         rock_compare_size_t_ptr));
+                                         (int (*)(const void *, const void *))seagrass_size_t_ptr_compare));
     size_t *a, *b, *c, *d;
     assert_true(rock_red_black_tree_node(sizeof(*a), (void **) &a));
     assert_true(rock_red_black_tree_node(sizeof(*b), (void **) &b));
@@ -1896,7 +1897,7 @@ static void check_insert(void **state) {
     rock_error = ROCK_ERROR_NONE;
     struct rock_red_black_tree object = {};
     assert_true(rock_red_black_tree_init(&object,
-                                         rock_compare_size_t_ptr));
+                                         (int (*)(const void *, const void *))seagrass_size_t_ptr_compare));
     size_t *a, *b, *c, *d, *e;
     assert_true(rock_red_black_tree_node(sizeof(*a), (void **) &a));
     assert_true(rock_red_black_tree_node(sizeof(*b), (void **) &b));
@@ -2010,7 +2011,7 @@ static void check_first(void **state) {
     rock_error = ROCK_ERROR_NONE;
     struct rock_red_black_tree object = {};
     assert_true(rock_red_black_tree_init(&object,
-                                         rock_compare_size_t_ptr));
+                                         (int (*)(const void *, const void *))seagrass_size_t_ptr_compare));
     size_t *a, *b, *c, *d, *e;
     assert_true(rock_red_black_tree_node(sizeof(*a), (void **) &a));
     assert_true(rock_red_black_tree_node(sizeof(*b), (void **) &b));
@@ -2077,7 +2078,7 @@ static void check_last(void **state) {
     rock_error = ROCK_ERROR_NONE;
     struct rock_red_black_tree object = {};
     assert_true(rock_red_black_tree_init(&object,
-                                         rock_compare_size_t_ptr));
+                                         (int (*)(const void *, const void *))seagrass_size_t_ptr_compare));
     size_t *a, *b, *c, *d, *e;
     assert_true(rock_red_black_tree_node(sizeof(*a), (void **) &a));
     assert_true(rock_red_black_tree_node(sizeof(*b), (void **) &b));
@@ -2133,7 +2134,7 @@ static void check_next(void **state) {
     rock_error = ROCK_ERROR_NONE;
     struct rock_red_black_tree object = {};
     assert_true(rock_red_black_tree_init(&object,
-                                         rock_compare_size_t_ptr));
+                                         (int (*)(const void *, const void *))seagrass_size_t_ptr_compare));
     size_t *a, *b, *c, *d, *e;
     assert_true(rock_red_black_tree_node(sizeof(*a), (void **) &a));
     assert_true(rock_red_black_tree_node(sizeof(*b), (void **) &b));
@@ -2191,7 +2192,7 @@ static void check_prev(void **state) {
     rock_error = ROCK_ERROR_NONE;
     struct rock_red_black_tree object = {};
     assert_true(rock_red_black_tree_init(&object,
-                                         rock_compare_size_t_ptr));
+                                         (int (*)(const void *, const void *))seagrass_size_t_ptr_compare));
     size_t *a, *b, *c, *d, *e;
     assert_true(rock_red_black_tree_node(sizeof(*a), (void **) &a));
     assert_true(rock_red_black_tree_node(sizeof(*b), (void **) &b));
@@ -2248,7 +2249,7 @@ static void check_delete_leaf_nodes(void **state) {
     rock_error = ROCK_ERROR_NONE;
     struct rock_red_black_tree object = {};
     assert_true(rock_red_black_tree_init(&object,
-                                         rock_compare_size_t_ptr));
+                                         (int (*)(const void *, const void *))seagrass_size_t_ptr_compare));
     size_t *a, *b;
     assert_true(rock_red_black_tree_node(sizeof(*a), (void **) &a));
     assert_true(rock_red_black_tree_node(sizeof(*b), (void **) &b));
@@ -2289,7 +2290,7 @@ static void check_delete_node_with_single_child(void **state) {
     rock_error = ROCK_ERROR_NONE;
     struct rock_red_black_tree object = {};
     assert_true(rock_red_black_tree_init(&object,
-                                         rock_compare_size_t_ptr));
+                                         (int (*)(const void *, const void *))seagrass_size_t_ptr_compare));
     size_t *a, *b, *c, *d, *e;
     assert_true(rock_red_black_tree_node(sizeof(*a), (void **) &a));
     assert_true(rock_red_black_tree_node(sizeof(*b), (void **) &b));
@@ -2428,7 +2429,7 @@ static void check_delete_node_with_two_children(void **state) {
     rock_error = ROCK_ERROR_NONE;
     struct rock_red_black_tree object = {};
     assert_true(rock_red_black_tree_init(&object,
-                                         rock_compare_size_t_ptr));
+                                         (int (*)(const void *, const void *))seagrass_size_t_ptr_compare));
     size_t *a, *b, *c, *d, *e;
     assert_true(rock_red_black_tree_node(sizeof(*a), (void **) &a));
     assert_true(rock_red_black_tree_node(sizeof(*b), (void **) &b));
@@ -2541,7 +2542,7 @@ static void check_tree(void **state) {
     rock_error = ROCK_ERROR_NONE;
     struct rock_red_black_tree object = {};
     assert_true(rock_red_black_tree_init(&object,
-                                         rock_compare_size_t_ptr));
+                                         (int (*)(const void *, const void *))seagrass_size_t_ptr_compare));
     size_t *p = NULL;
     for (size_t i = 0; i < 10000; i++) {
         size_t *n;
