@@ -159,31 +159,17 @@ bool rock_array_adjust_capacity(struct rock_array *object, const size_t count) {
         rock_error = ROCK_ARRAY_ERROR_MEMORY_ALLOCATION_FAILED;
         return false;
     }
-    size_t capacity = 0;
-    /* increase capacity by times and a half and then use the next even
-     * number */
-    for (size_t b = object->capacity; count + object->length > b;) {
-        size_t i = b >> 1;
-        /* even numbers are desired */
-        if ((b & 1) ^ (i & 1)) {
-            i += 1;
-        }
-        if (!seagrass_size_t_add(b, i, &b)) {
-            seagrass_required_true(SEAGRASS_SIZE_T_ERROR_RESULT_IS_INCONSISTENT
-                                   == seagrass_error);
-            b = SIZE_MAX;
-        } else if (!b) {
-            b = 2;
-        }
-        capacity = b;
-    }
-    size_t out;
-    if (!capacity && !seagrass_size_t_add(count + object->length,
-                                          object->capacity,
-                                          &out)) {
+    size_t limit;
+    size_t capacity;
+    if (!seagrass_size_t_add(count, object->length, &limit)) {
         seagrass_required_true(SEAGRASS_SIZE_T_ERROR_RESULT_IS_INCONSISTENT
                                == seagrass_error);
         capacity = SIZE_MAX;
+    } else {
+        for (capacity = object->capacity; limit > capacity;) {
+            seagrass_required_true(seagrass_size_t_times_and_a_half_even(
+                    capacity, &capacity));
+        }
     }
     /* apply the calculated capacity increase */
     if (capacity > object->capacity

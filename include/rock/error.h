@@ -5,8 +5,6 @@
 #include <threads.h>
 
 #define ROCK_ERROR_NONE                                 0
-#define ROCK_ERROR_OUT_IS_NULL                          1
-#define ROCK_ERROR_OVERFLOW_OCCURRED                    2
 
 extern thread_local size_t rock_error;
 

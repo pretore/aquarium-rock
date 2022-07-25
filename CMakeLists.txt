@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.22)
-project(aquarium-rock VERSION 1.0.0
+project(aquarium-rock VERSION 1.0.1
         LANGUAGES C
         DESCRIPTION "Data structures in C")
 
@@ -35,7 +35,8 @@ set(SOURCES
 
 if(DOXYGEN_FOUND)
     set(DOXYGEN_EXTRACT_ALL YES)
-    doxygen_add_docs(${PROJECT_NAME}-documentation ${EXPORTED_HEADER_FILES})
+    doxygen_add_docs(${PROJECT_NAME}-documentation
+            ${EXPORTED_HEADER_FILES})
 endif()
 
 if(CMAKE_BUILD_TYPE STREQUAL "Debug")
