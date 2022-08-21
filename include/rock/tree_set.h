@@ -67,7 +67,6 @@ bool rock_tree_set_count(struct rock_tree_set *object, size_t *out);
  * @param [in] item to be added.
  * @return On success true, otherwise false if an error has occurred.
  * @throws ROCK_TREE_SET_ERROR_OBJECT_IS_NULL if object is <i>NULL</i>.
- * @throws ROCK_TREE_SET_ERROR_ITEM_IS_NULL if item is <i>NULL</i>.
  * @throws ROCK_TREE_SET_ERROR_ITEM_ALREADY_EXISTS if item is already present
  * in the tree set.
  * @throws ROCK_TREE_SET_ERROR_MEMORY_ALLOCATION_FAILED if there was not
@@ -81,7 +80,6 @@ bool rock_tree_set_add(struct rock_tree_set *object, void *item);
  * @param [in] item to be removed.
  * @return On success true, otherwise false if an error has occurred.
  * @throws ROCK_TREE_SET_ERROR_OBJECT_IS_NULL if object is <i>NULL</i>.
- * @throws ROCK_TREE_SET_ERROR_ITEM_IS_NULL if item is <i>NULL</i>.
  * @throws ROCK_TREE_SET_ERROR_ITEM_NOT_FOUND if item is not in the tree set
  * instance.
  */
@@ -94,7 +92,6 @@ bool rock_tree_set_remove(struct rock_tree_set *object, void *item);
  * @param [out] out receive true if item is present, otherwise false.
  * @return On success true, otherwise false if an error has occurred.
  * @throws ROCK_TREE_SET_ERROR_OBJECT_IS_NULL if object is <i>NULL</i>.
- * @throws ROCK_TREE_SET_ERROR_ITEM_IS_NULL if item is <i>NULL</i>.
  * @throws ROCK_TREE_SET_ERROR_OUT_IS_NULL if out is <i>NULL</i>.
  */
 bool rock_tree_set_contains(struct rock_tree_set *object, void *item,
@@ -140,7 +137,7 @@ bool rock_tree_set_next(void *item, void **out);
  * @return On success true, otherwise false if an error has occurred.
  * @throws ROCK_TREE_SET_ERROR_ITEM_IS_NULL if item is <i>NULL</i>.
  * @throws ROCK_TREE_SET_ERROR_OUT_IS_NULL if out is <i>NULL</i>.
- * @throws ROCK_TREE_SET_ERROR_END_OF_SEQUENCE if there is no next item.
+ * @throws ROCK_TREE_SET_ERROR_END_OF_SEQUENCE if there is no previous item.
  */
 bool rock_tree_set_prev(void *item, void **out);
 

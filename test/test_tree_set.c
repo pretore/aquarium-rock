@@ -64,13 +64,6 @@ static void check_add_error_on_object_is_null(void **state) {
     rock_error = ROCK_ERROR_NONE;
 }
 
-static void check_add_error_on_item_is_null(void **state) {
-    rock_error = ROCK_ERROR_NONE;
-    assert_false(rock_tree_set_add((void *)1, NULL));
-    assert_int_equal(ROCK_TREE_SET_ERROR_ITEM_IS_NULL, rock_error);
-    rock_error = ROCK_ERROR_NONE;
-}
-
 static void check_add(void **state) {
     rock_error = ROCK_ERROR_NONE;
     struct rock_tree_set object = {};
@@ -112,13 +105,6 @@ static void check_remove_error_on_object_is_null(void **state) {
     rock_error = ROCK_ERROR_NONE;
 }
 
-static void check_remove_error_on_item_is_null(void **state) {
-    rock_error = ROCK_ERROR_NONE;
-    assert_false(rock_tree_set_remove((void *)1, NULL));
-    assert_int_equal(ROCK_TREE_SET_ERROR_ITEM_IS_NULL, rock_error);
-    rock_error = ROCK_ERROR_NONE;
-}
-
 static void check_remove_error_on_item_not_found(void **state) {
     rock_error = ROCK_ERROR_NONE;
     struct rock_tree_set object = {};
@@ -148,13 +134,6 @@ static void check_contains_error_on_object_is_null(void **state) {
     rock_error = ROCK_ERROR_NONE;
     assert_false(rock_tree_set_contains(NULL, (void *)1, (void *)1));
     assert_int_equal(ROCK_TREE_SET_ERROR_OBJECT_IS_NULL, rock_error);
-    rock_error = ROCK_ERROR_NONE;
-}
-
-static void check_contains_error_on_item_is_null(void **state) {
-    rock_error = ROCK_ERROR_NONE;
-    assert_false(rock_tree_set_contains((void *)1, NULL, (void *)1));
-    assert_int_equal(ROCK_TREE_SET_ERROR_ITEM_IS_NULL, rock_error);
     rock_error = ROCK_ERROR_NONE;
 }
 
@@ -359,15 +338,12 @@ int main(int argc, char *argv[]) {
             cmocka_unit_test(check_count_error_on_out_is_null),
             cmocka_unit_test(check_count),
             cmocka_unit_test(check_add_error_on_object_is_null),
-            cmocka_unit_test(check_add_error_on_item_is_null),
             cmocka_unit_test(check_add),
             cmocka_unit_test(check_add_error_on_item_already_exists),
             cmocka_unit_test(check_remove_error_on_object_is_null),
-            cmocka_unit_test(check_remove_error_on_item_is_null),
             cmocka_unit_test(check_remove_error_on_item_not_found),
             cmocka_unit_test(check_remove),
             cmocka_unit_test(check_contains_error_on_object_is_null),
-            cmocka_unit_test(check_contains_error_on_item_is_null),
             cmocka_unit_test(check_contains_error_on_out_is_null),
             cmocka_unit_test(check_contains),
             cmocka_unit_test(check_first_error_on_object_is_null),

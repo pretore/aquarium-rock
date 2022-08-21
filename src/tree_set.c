@@ -62,10 +62,6 @@ bool rock_tree_set_add(struct rock_tree_set *object, void *item) {
         rock_error = ROCK_TREE_SET_ERROR_OBJECT_IS_NULL;
         return false;
     }
-    if (!item) {
-        rock_error = ROCK_TREE_SET_ERROR_ITEM_IS_NULL;
-        return false;
-    }
     this = object;
     void *insertion_point;
     if (rock_red_black_tree_find(&object->tree,
@@ -97,10 +93,6 @@ bool rock_tree_set_remove(struct rock_tree_set *object, void *item) {
         rock_error = ROCK_TREE_SET_ERROR_OBJECT_IS_NULL;
         return false;
     }
-    if (!item) {
-        rock_error = ROCK_TREE_SET_ERROR_ITEM_IS_NULL;
-        return false;
-    }
     this = object;
     void *target;
     if (!rock_red_black_tree_find(&object->tree,
@@ -122,10 +114,6 @@ bool rock_tree_set_contains(struct rock_tree_set *object, void *item,
                             bool *out) {
     if (!object) {
         rock_error = ROCK_TREE_SET_ERROR_OBJECT_IS_NULL;
-        return false;
-    }
-    if (!item) {
-        rock_error = ROCK_TREE_SET_ERROR_ITEM_IS_NULL;
         return false;
     }
     if (!out) {
