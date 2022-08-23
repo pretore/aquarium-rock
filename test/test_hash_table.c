@@ -3,6 +3,7 @@
 #include <setjmp.h>
 #include <cmocka.h>
 #include <string.h>
+#include <time.h>
 #include <seagrass.h>
 #include <rock.h>
 
@@ -208,19 +209,21 @@ static void check_add_error_on_memory_allocation_failed(void **state) {
 }
 
 static void check_add(void **state) {
+    srand(time(NULL));
     rock_error = ROCK_ERROR_NONE;
     struct rock_hash_table object = {};
     assert_true(rock_hash_table_init(&object, 0, hash_code, is_equal));
     assert_int_equal(0, object.count);
-    assert_true(rock_hash_table_add(&object, check_add, (void*)2635));
+    void *key = (void *)(rand() % UINTPTR_MAX);
+    assert_true(rock_hash_table_add(&object, key, (void*)2635));
     assert_int_equal(1, object.count);
     size_t length;
     assert_true(rock_array_get_length(&object.array, &length));
     assert_true(length != 0);
-    const size_t at = object.hash_code(check_add) % length;
+    const size_t at = object.hash_code(key) % length;
     struct rock_hash_table_entry *entry;
     assert_true(rock_array_get(&object.array, at, (void **)&entry));
-    assert_true(entry->key.data == check_add && entry->value.data == (void*)2635);
+    assert_true(entry->key.data == key && entry->value.data == (void*)2635);
     assert_true(rock_hash_table_invalidate(&object, NULL));
     rock_error = ROCK_ERROR_NONE;
 }
@@ -230,13 +233,17 @@ static void check_add_error_on_key_already_exists(void **state) {
     struct rock_hash_table object = {};
     assert_true(rock_hash_table_init(&object, 0, hash_code, is_equal));
     assert_int_equal(0, object.count);
-    assert_true(rock_hash_table_add(&object, check_add, (void*)2635));
+    assert_true(rock_hash_table_add(&object,
+                                    (const void *)1,
+                                    (void*)2635));
     assert_int_equal(1, object.count);
-    assert_false(rock_hash_table_add(&object, check_add, NULL));
+    assert_false(rock_hash_table_add(&object,
+                                     (const void *)1,
+                                     NULL));
     assert_int_equal(ROCK_HASH_TABLE_ERROR_KEY_ALREADY_EXISTS, rock_error);
     assert_int_equal(1, object.count);
     assert_true(rock_hash_table_add(&object,
-                                 check_add_error_on_key_already_exists,
+                                 (const void *)2,
                                  (void *)982));
     assert_int_equal(2, object.count);
     assert_true(rock_hash_table_invalidate(&object, NULL));
@@ -262,26 +269,29 @@ static void check_remove_error_on_key_not_found(void **state) {
     struct rock_hash_table object = {};
     assert_true(rock_hash_table_init(&object, 0, hash_code, is_equal));
     assert_int_equal(0, object.count);
-    assert_false(rock_hash_table_remove(&object,
-                                        check_remove_error_on_key_not_found));
+    assert_false(rock_hash_table_remove(&object, (const void *)~0));
     assert_int_equal(ROCK_HASH_TABLE_ERROR_KEY_NOT_FOUND, rock_error);
-    assert_true(rock_hash_table_add(&object, check_add, (void*)2635));
+    assert_true(rock_hash_table_add(&object,
+                                    (const void *)1,
+                                    (void*)2635));
     assert_int_equal(1, object.count);
     assert_false(rock_hash_table_remove(&object,
-                                        check_remove_error_on_key_not_found));
+                                        (const void *)~0));
     assert_int_equal(ROCK_HASH_TABLE_ERROR_KEY_NOT_FOUND, rock_error);
     assert_true(rock_hash_table_invalidate(&object, NULL));
     rock_error = ROCK_ERROR_NONE;
 }
 
 static void check_remove(void **state) {
+    srand(time(NULL));
     rock_error = ROCK_ERROR_NONE;
     struct rock_hash_table object = {};
     assert_true(rock_hash_table_init(&object, 0, hash_code, is_equal));
-    assert_true(rock_hash_table_add(&object, check_remove, (void*)2635));
+    void *key = (void *)(rand() % UINTPTR_MAX);
+    assert_true(rock_hash_table_add(&object, key, (void*)2635));
     assert_int_equal(1, object.count);
     assert_int_equal(0, object.deleted);
-    assert_true(rock_hash_table_remove(&object, check_remove));
+    assert_true(rock_hash_table_remove(&object, key));
     assert_int_equal(0, object.count);
     assert_int_equal(1, object.deleted);
     assert_true(rock_hash_table_invalidate(&object, NULL));
@@ -307,7 +317,7 @@ static void check_set_error_on_key_not_found(void **state) {
     struct rock_hash_table object = {};
     assert_true(rock_hash_table_init(&object, 0, hash_code, is_equal));
     assert_false(rock_hash_table_set(&object,
-                                     check_set_error_on_key_not_found,
+                                     (const void *)~0,
                                      NULL));
     assert_int_equal(ROCK_HASH_TABLE_ERROR_KEY_NOT_FOUND, rock_error);
     assert_true(rock_hash_table_invalidate(&object, NULL));
@@ -318,13 +328,13 @@ static void check_set(void **state) {
     rock_error = ROCK_ERROR_NONE;
     struct rock_hash_table object = {};
     assert_true(rock_hash_table_init(&object, 0, hash_code, is_equal));
-    assert_true(rock_hash_table_add(&object, check_set, NULL));
+    assert_true(rock_hash_table_add(&object, (const void *)1, NULL));
     struct rock_hash_table_entry *entry;
-    assert_true(rock_hash_table_entry_find(&object, check_set, &entry));
-    assert_true(check_set == entry->key.data
+    assert_true(rock_hash_table_entry_find(&object, (const void *)1, &entry));
+    assert_true((const void *)1 == entry->key.data
                 && NULL == entry->value.data);
-    assert_true(rock_hash_table_set(&object, check_set, (void*)524));
-    assert_true(check_set == entry->key.data
+    assert_true(rock_hash_table_set(&object, (const void *)1, (void*)524));
+    assert_true((const void *)1 == entry->key.data
                 && (void*)524 == entry->value.data);
     assert_true(rock_hash_table_invalidate(&object, NULL));
     rock_error = ROCK_ERROR_NONE;
@@ -358,27 +368,31 @@ static void check_get_error_on_key_not_found(void **state) {
     assert_int_equal(0, object.count);
     size_t value;
     assert_false(rock_hash_table_get(&object,
-                                     check_get_error_on_key_not_found,
+                                     (const void *)1,
                                      (void **)&value));
     assert_int_equal(ROCK_HASH_TABLE_ERROR_KEY_NOT_FOUND, rock_error);
-    assert_true(rock_hash_table_add(&object, check_set, NULL));
+    assert_true(rock_hash_table_add(&object,
+                                    (const void *)~0,
+                                    NULL));
     assert_int_equal(1, object.count);
     assert_false(rock_hash_table_get(&object,
-                                     check_get_error_on_key_not_found,
+                                     (const void *)1,
                                      (void **)&value));
     assert_true(rock_hash_table_invalidate(&object, NULL));
     rock_error = ROCK_ERROR_NONE;
 }
 
 static void check_get(void **state) {
+    srand(time(NULL));
     rock_error = ROCK_ERROR_NONE;
     struct rock_hash_table object = {};
     assert_true(rock_hash_table_init(&object, 0, hash_code, is_equal));
-    assert_true(rock_hash_table_add(&object, check_get, (void*) 1821));
+    void *key = (void *)(rand() % UINTPTR_MAX);
+    assert_true(rock_hash_table_add(&object, key, (void*) 1821));
     assert_int_equal(1, object.count);
     size_t value;
     assert_true(rock_hash_table_get(&object,
-                                     check_get,
+                                     key,
                                      (void **)&value));
     assert_int_equal(1821, value);
     assert_true(rock_hash_table_invalidate(&object, NULL));
@@ -407,14 +421,16 @@ static void check_contains_error_on_out_is_null(void **state) {
 }
 
 static void check_contains(void **state) {
+    srand(time(NULL));
     rock_error = ROCK_ERROR_NONE;
     struct rock_hash_table object = {};
     assert_true(rock_hash_table_init(&object, 0, hash_code, is_equal));
     bool result;
-    assert_true(rock_hash_table_contains(&object, check_contains, &result));
+    void *key = (void *)(rand() % UINTPTR_MAX);
+    assert_true(rock_hash_table_contains(&object, key, &result));
     assert_false(result);
-    assert_true(rock_hash_table_add(&object, check_contains, NULL));
-    assert_true(rock_hash_table_contains(&object, check_contains, &result));
+    assert_true(rock_hash_table_add(&object, key, NULL));
+    assert_true(rock_hash_table_contains(&object, key, &result));
     assert_true(result);
     assert_true(rock_hash_table_invalidate(&object, NULL));
     rock_error = ROCK_ERROR_NONE;
@@ -448,18 +464,18 @@ static void check_first(void **state) {
     assert_true(rock_hash_table_init(
             &object, 0, hash_code, is_equal));
     assert_true(rock_hash_table_add(&object,
-                                    check_first,
+                                    (const void *)1,
                                     (void *)1213));
     struct rock_hash_table_entry *entry;
     assert_true(rock_hash_table_first(&object, &entry));
-    assert_true(check_first == entry->key.data
+    assert_true((const void *)1 == entry->key.data
                 && (void *)1213 == entry->value.data);
     assert_true(rock_hash_table_add(&object,
-                                    check_first_error_on_hash_table_is_empty,
+                                    (const void *)10,
                                     (void *)5241));
-    assert_true(rock_hash_table_remove(&object, check_first));
+    assert_true(rock_hash_table_remove(&object, (const void *)1));
     assert_true(rock_hash_table_first(&object, &entry));
-    assert_true(check_first_error_on_hash_table_is_empty == entry->key.data
+    assert_true((const void *)10 == entry->key.data
                 && (void *)5241 == entry->value.data);
     assert_true(rock_hash_table_invalidate(&object, NULL));
     rock_error = ROCK_ERROR_NONE;
@@ -493,17 +509,17 @@ static void check_last(void **state) {
     assert_true(rock_hash_table_init(
             &object, 0, hash_code, is_equal));
     assert_true(rock_hash_table_add(&object,
-                                    check_last,
+                                    (const void *)~1,
                                     (void *)1214));
     struct rock_hash_table_entry *entry;
     assert_true(rock_hash_table_last(&object, &entry));
-    assert_true(check_last == entry->key.data
+    assert_true((const void *)~1 == entry->key.data
                 && (void *)1214 == entry->value.data);
     assert_true(rock_hash_table_add(&object,
-                                    check_last_error_on_hash_table_is_empty,
+                                    (const void *)~0,
                                     (void *)957));
     assert_true(rock_hash_table_last(&object, &entry));
-    assert_true(check_last_error_on_hash_table_is_empty == entry->key.data
+    assert_true((const void *)~0 == entry->key.data
                 && (void *)957 == entry->value.data);
     assert_true(rock_hash_table_invalidate(&object, NULL));
     rock_error = ROCK_ERROR_NONE;
@@ -535,7 +551,7 @@ static void check_next_error_on_entry_not_found(void **state) {
     struct rock_hash_table object = {};
     assert_true(rock_hash_table_init(&object, 0, hash_code, is_equal));
     assert_true(rock_hash_table_add(&object,
-                                    check_next_error_on_entry_not_found,
+                                    (const void *)~0,
                                     (void *)1));
     struct rock_hash_table_entry *entry;
     assert_true(rock_hash_table_first(&object, &entry));
@@ -550,7 +566,7 @@ static void check_next_error_on_end_of_sequence(void **state) {
     struct rock_hash_table object = {};
     assert_true(rock_hash_table_init(&object, 0, hash_code, is_equal));
     assert_true(rock_hash_table_add(&object,
-                                    check_next_error_on_end_of_sequence,
+                                    (const void *)~0,
                                     NULL));
     struct rock_hash_table_entry *entry;
     assert_true(rock_hash_table_first(&object, &entry));
@@ -565,10 +581,10 @@ static void check_next(void **state) {
     struct rock_hash_table object = {};
     assert_true(rock_hash_table_init(&object, 0, hash_code, is_equal));
     assert_true(rock_hash_table_add(&object,
-                                    check_next_error_on_end_of_sequence,
+                                    (const void *)~0,
                                     NULL));
     assert_true(rock_hash_table_add(&object,
-                                    check_next,
+                                    (const void *)~1,
                                     (void *)1));
     struct rock_hash_table_entry *entry;
     assert_true(rock_hash_table_first(&object, &entry));
@@ -603,7 +619,7 @@ static void check_prev_error_on_entry_not_found(void **state) {
     struct rock_hash_table object = {};
     assert_true(rock_hash_table_init(&object, 0, hash_code, is_equal));
     assert_true(rock_hash_table_add(&object,
-                                    check_prev_error_on_entry_not_found,
+                                    (const void *)~0,
                                     (void *)1));
     struct rock_hash_table_entry *entry;
     assert_true(rock_hash_table_last(&object, &entry));
@@ -618,7 +634,7 @@ static void check_prev_error_on_end_of_sequence(void **state) {
     struct rock_hash_table object = {};
     assert_true(rock_hash_table_init(&object, 0, hash_code, is_equal));
     assert_true(rock_hash_table_add(&object,
-                                    check_prev_error_on_end_of_sequence,
+                                    (const void *)~0,
                                     NULL));
     struct rock_hash_table_entry *entry;
     assert_true(rock_hash_table_last(&object, &entry));
@@ -633,10 +649,10 @@ static void check_prev(void **state) {
     struct rock_hash_table object = {};
     assert_true(rock_hash_table_init(&object, 0, hash_code, is_equal));
     assert_true(rock_hash_table_add(&object,
-                                    check_prev_error_on_end_of_sequence,
+                                    (const void *)~0,
                                     NULL));
     assert_true(rock_hash_table_add(&object,
-                                    check_prev,
+                                    (const void *)~1,
                                     (void *)1));
     struct rock_hash_table_entry *entry;
     assert_true(rock_hash_table_last(&object, &entry));

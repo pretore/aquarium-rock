@@ -1,6 +1,5 @@
 #include <stdlib.h>
 #include <math.h>
-#include <fenv.h>
 #include <seagrass.h>
 #include <rock.h>
 
@@ -98,10 +97,11 @@ bool rock_hash_table_rebuild_needed(struct rock_hash_table *object,
     size_t length;
     seagrass_required_true(rock_array_get_length(
             &object->array, &length));
-    seagrass_required_true(!feclearexcept(FE_ALL_EXCEPT));
-    const size_t limit = llrintf((float) length * 0.1f);
-    seagrass_required_true(!fetestexcept(
-            FE_INVALID | FE_DIVBYZERO | FE_OVERFLOW | FE_UNDERFLOW));
+    size_t limit;
+    seagrass_required_true(seagrass_float_to_size_t(
+            (float) length * 0.1f,
+            SEAGRASS_FLOAT_ROUNDING_MODE_UPWARD,
+            &limit));
     *out = object->deleted > limit && object->count < object->deleted;
     return true;
 }
@@ -224,10 +224,10 @@ bool rock_hash_table_add(struct rock_hash_table *object,
     size_t limit;
     const size_t current = length;
     do {
-        seagrass_required_true(!feclearexcept(FE_ALL_EXCEPT));
-        limit = llrintf((float) length * object->lf);
-        seagrass_required_true(!fetestexcept(
-                FE_INVALID | FE_DIVBYZERO | FE_OVERFLOW | FE_UNDERFLOW));
+        seagrass_required_true(seagrass_float_to_size_t(
+                (float) length * object->lf,
+                SEAGRASS_FLOAT_ROUNDING_MODE_UPWARD,
+                &limit));
         if (limit > used) {
             break;
         }
