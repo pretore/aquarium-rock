@@ -121,6 +121,7 @@ bool rock_hash_table_rebuild(struct rock_hash_table *object);
  * @param [in] value that will returned from a lookup with associated key.
  * @return On success true, otherwise false if an error has occurred.
  * @throws ROCK_HASH_TABLE_ERROR_OBJECT_IS_NULL if object is <i>NULL</i>.
+ * @throws ROCK_HASH_TABLE_ERROR_KEY_IS_NULL if key is <i>NULL</i>.
  * @throws ROCK_HASH_TABLE_ERROR_KEY_ALREADY_EXISTS if the key is already
  * present in the hash table.
  * @throws ROCK_HASH_TABLE_ERROR_MEMORY_ALLOCATION_FAILED if there is not
@@ -138,6 +139,7 @@ bool rock_hash_table_add(struct rock_hash_table *object,
  * @param [in] key for which we would like the key-value association removed.
  * @return On success true, otherwise false if an error has occurred.
  * @throws ROCK_HASH_TABLE_ERROR_OBJECT_IS_NULL if object is <i>NULL</i>.
+ * @throws ROCK_HASH_TABLE_ERROR_KEY_IS_NULL if key is <i>NULL</i>.
  * @throws ROCK_HASH_TABLE_ERROR_KEY_NOT_FOUND if key could not be found.
  */
 bool rock_hash_table_remove(struct rock_hash_table *object,
@@ -150,6 +152,7 @@ bool rock_hash_table_remove(struct rock_hash_table *object,
  * @param [in] value of new association with given key.
  * @return On success true, otherwise false if an error has occurred.
  * @throws ROCK_HASH_TABLE_ERROR_OBJECT_IS_NULL if object is <i>NULL</i>.
+ * @throws ROCK_HASH_TABLE_ERROR_KEY_IS_NULL if key is <i>NULL</i>.
  * @throws ROCK_HASH_TABLE_ERROR_KEY_NOT_FOUND if key could not be found.
  */
 bool rock_hash_table_set(struct rock_hash_table *object,
@@ -163,6 +166,7 @@ bool rock_hash_table_set(struct rock_hash_table *object,
  * @param [out] out receive the value.
  * @return On success true, otherwise false if an error has occurred.
  * @throws ROCK_HASH_TABLE_ERROR_OBJECT_IS_NULL if object is <i>NULL</i>.
+ * @throws ROCK_HASH_TABLE_ERROR_KEY_IS_NULL if key is <i>NULL</i>.
  * @throws ROCK_HASH_TABLE_ERROR_OUT_IS_NULL if out is <i>NULL</i>.
  * @throws ROCK_HASH_TABLE_ERROR_KEY_NOT_FOUND if key could not be found.
  */
@@ -177,6 +181,7 @@ bool rock_hash_table_get(struct rock_hash_table *object,
  * @param [out] out true if key is present, otherwise false.
  * @return On success true, otherwise false if an error has occurred.
  * @throws ROCK_HASH_TABLE_ERROR_OBJECT_IS_NULL if object is <i>NULL</i>.
+ * @throws ROCK_HASH_TABLE_ERROR_KEY_IS_NULL if key is <i>NULL</i>.
  * @throws ROCK_HASH_TABLE_ERROR_OUT_IS_NULL if out is <i>NULL</i>.
  */
 bool rock_hash_table_contains(struct rock_hash_table *object,
