@@ -1,12 +1,11 @@
 #include <stdlib.h>
 #include <memory.h>
-#include <threads.h>
 #include <seagrass.h>
 #include <rock.h>
 
 #include "test/cmocka.h"
 
-static thread_local struct rock_tree_set *this;
+static _Thread_local struct rock_tree_set *this;
 
 static int rock_tree_set_compare(const void *a, const void *b) {
     return this->compare(*(void **) a, *(void **) b);

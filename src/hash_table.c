@@ -1,6 +1,5 @@
 #include <stdlib.h>
 #include <math.h>
-#include <threads.h>
 #include <fenv.h>
 #include <seagrass.h>
 #include <rock.h>
@@ -46,7 +45,7 @@ bool rock_hash_table_init(struct rock_hash_table *object,
     return true;
 }
 
-static thread_local void (*on_destroy_callback)(struct rock_hash_table_entry *);
+static _Thread_local void (*on_destroy_callback)(struct rock_hash_table_entry *);
 
 static void rock_hash_table_on_destroy(void *item) {
     struct rock_hash_table_entry *entry = (struct rock_hash_table_entry *) item;
