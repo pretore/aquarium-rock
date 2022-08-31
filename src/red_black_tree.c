@@ -36,8 +36,8 @@ bool rock_red_black_tree_node_alloc(const size_t size, void **out) {
     }
     size_t alloc_size;
     struct rock_red_black_tree_node *node;
-    if (!seagrass_size_t_add(size, sizeof(*node), &alloc_size)) {
-        seagrass_required_true(SEAGRASS_SIZE_T_ERROR_RESULT_IS_INCONSISTENT
+    if (!seagrass_uintmax_t_add(size, sizeof(*node), &alloc_size)) {
+        seagrass_required_true(SEAGRASS_UINTMAX_T_ERROR_RESULT_IS_INCONSISTENT
                                == seagrass_error);
         rock_error = ROCK_RED_BLACK_TREE_ERROR_MEMORY_ALLOCATION_FAILED;
         return false;
@@ -81,7 +81,7 @@ bool rock_red_black_tree_node_get_parent(void *node, void **out) {
     }
     struct rock_red_black_tree_node *node_;
     node_ = rock_red_black_tree_node_from(node);
-    *out = (void *) ((size_t) node_->parent & ~1);
+    *out = (void *) ((uintptr_t) node_->parent & ~1);
     return true;
 }
 
@@ -95,7 +95,7 @@ bool rock_red_black_tree_node_set_parent(void *node, void *parent) {
     bool color;
     seagrass_required_true(rock_red_black_tree_node_get_color(
             node, &color));
-    const size_t value = (size_t) parent | color;
+    const uintptr_t value = (uintptr_t) parent | color;
     node_->parent = (struct rock_red_black_tree_node *) value;
     return true;
 }
@@ -111,7 +111,7 @@ bool rock_red_black_tree_node_get_color(void *node, bool *out) {
     }
     struct rock_red_black_tree_node *node_;
     node_ = rock_red_black_tree_node_from(node);
-    *out = (size_t) node_->parent & 1;
+    *out = (uintmax_t) node_->parent & 1;
     return true;
 }
 
@@ -122,7 +122,7 @@ bool rock_red_black_tree_node_set_color(void *node, const bool color) {
     }
     struct rock_red_black_tree_node *node_;
     node_ = rock_red_black_tree_node_from(node);
-    size_t value = (~1 & (size_t) node_->parent) | (size_t) color;
+    uintmax_t value = (~1 & (uintmax_t) node_->parent) | (uintmax_t) color;
     node_->parent = (struct rock_red_black_tree_node *) value;
     return true;
 }
@@ -448,7 +448,7 @@ bool rock_red_black_tree_invalidate(struct rock_red_black_tree *object,
 }
 
 bool rock_red_black_tree_count(struct rock_red_black_tree *object,
-                               size_t *out) {
+                               uintmax_t *out) {
     if (!object) {
         rock_error = ROCK_RED_BLACK_TREE_ERROR_OBJECT_IS_NULL;
         return false;

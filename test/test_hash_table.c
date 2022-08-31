@@ -38,8 +38,8 @@ static void check_init_error_on_load_factor_is_invalid(void **state) {
     rock_error = ROCK_ERROR_NONE;
 }
 
-static size_t hash_code(const void *object) {
-    return (size_t)object;
+static uintmax_t hash_code(const void *object) {
+    return (uintmax_t)object;
 }
 
 static bool is_equal(const void *a, const void *b) {
@@ -94,7 +94,7 @@ static void check_invalidate(void **state) {
             NULL,
             &entries[2]
     };
-    size_t count = sizeof(items) / sizeof(void *);
+    uintmax_t count = sizeof(items) / sizeof(void *);
     assert_true(rock_array_add_all(&object.array, count, items));
     object.count = 3; // there is one NULL item which is an empty slot
     expect_function_calls(hash_code_on_destroy, object.count);
@@ -130,7 +130,7 @@ static void check_count(void **state) {
     rock_error = ROCK_ERROR_NONE;
     struct rock_hash_table object = {};
     assert_true(rock_hash_table_init(&object, 0, hash_code, is_equal));
-    size_t count;
+    uintmax_t count;
     assert_true(rock_hash_table_count(&object, &count));
     assert_int_equal(object.count, count);
     object.count = 29813;
@@ -217,10 +217,10 @@ static void check_add(void **state) {
     void *key = (void *)(rand() % UINTPTR_MAX);
     assert_true(rock_hash_table_add(&object, key, (void*)2635));
     assert_int_equal(1, object.count);
-    size_t length;
+    uintmax_t length;
     assert_true(rock_array_get_length(&object.array, &length));
     assert_true(length != 0);
-    const size_t at = object.hash_code(key) % length;
+    const uintmax_t at = object.hash_code(key) % length;
     struct rock_hash_table_entry *entry;
     assert_true(rock_array_get(&object.array, at, (void **)&entry));
     assert_true(entry->key.data == key && entry->value.data == (void*)2635);
@@ -366,7 +366,7 @@ static void check_get_error_on_key_not_found(void **state) {
     struct rock_hash_table object = {};
     assert_true(rock_hash_table_init(&object, 0, hash_code, is_equal));
     assert_int_equal(0, object.count);
-    size_t value;
+    uintmax_t value;
     assert_false(rock_hash_table_get(&object,
                                      (const void *)1,
                                      (void **)&value));
@@ -390,7 +390,7 @@ static void check_get(void **state) {
     void *key = (void *)(rand() % UINTPTR_MAX);
     assert_true(rock_hash_table_add(&object, key, (void*) 1821));
     assert_int_equal(1, object.count);
-    size_t value;
+    uintmax_t value;
     assert_true(rock_hash_table_get(&object,
                                      key,
                                      (void **)&value));

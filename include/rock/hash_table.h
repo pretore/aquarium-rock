@@ -36,11 +36,11 @@ struct rock_hash_table_entry {
 
 struct rock_hash_table {
     struct rock_array array;
-    size_t count;
-    size_t deleted;
+    uintmax_t count;
+    uintmax_t deleted;
     float lf;
 
-    size_t (*hash_code)(const void *);
+    uintmax_t (*hash_code)(const void *);
     bool (*is_equal)(const void *, const void *);
 };
 
@@ -62,14 +62,15 @@ struct rock_hash_table {
  */
 bool rock_hash_table_init(struct rock_hash_table *object,
                           float load_factor,
-                          size_t (*hash_code)(const void *),
+                          uintmax_t (*hash_code)(const void *),
                           bool (*is_equal)(const void *, const void *));
 
 /**
  * @brief Invalidate the hash table.
  * <p>All the items contained within the hash table will have the given <i>on
  * destroy</i> callback invoked upon it. The actual <u>hash table instance
- * is not deallocated</u> since it may have been embedded in a larger structure.
+ * is not deallocated</u> since it may have been embedded in a larger
+ * structure.</p>
  * @param [in] object instance to be invalidated.
  * @param [in] on_destroy called just before the item is to be destroyed.
  * @return On success true, otherwise false if an error has occurred.
@@ -87,7 +88,7 @@ rock_hash_table_invalidate(struct rock_hash_table *object,
  * @throws ROCK_HASH_TABLE_ERROR_OBJECT_IS_NULL if object is <i>NULL</i>.
  * @throws ROCK_HASH_TABLE_ERROR_OUT_IS_NULL if out is <i>NULL</i>.
  */
-bool rock_hash_table_count(struct rock_hash_table *object, size_t *out);
+bool rock_hash_table_count(struct rock_hash_table *object, uintmax_t *out);
 
 /**
  * @brief Check if a rebuild is needed.

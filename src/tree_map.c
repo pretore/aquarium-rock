@@ -36,7 +36,7 @@ rock_tree_map_invalidate(struct rock_tree_map *object,
     return true;
 }
 
-bool rock_tree_map_count(struct rock_tree_map *object, size_t *out) {
+bool rock_tree_map_count(struct rock_tree_map *object, uintmax_t *out) {
     if (!object) {
         rock_error = ROCK_TREE_MAP_ERROR_OBJECT_IS_NULL;
         return false;

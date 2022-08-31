@@ -7,7 +7,7 @@
 
 struct rock_array;
 
-void *rock_array_address(struct rock_array *object, size_t at);
+void *rock_array_address(struct rock_array *object, uintmax_t at);
 
 /**
  * @brief Set the capacity.
@@ -18,7 +18,7 @@ void *rock_array_address(struct rock_array *object, size_t at);
  * @throws ROCK_ARRAY_ERROR_MEMORY_ALLOCATION_FAILED if there is
  * insufficient memory to set the new capacity of the array.
  */
-bool rock_array_set_capacity(struct rock_array *object, size_t capacity);
+bool rock_array_set_capacity(struct rock_array *object, uintmax_t capacity);
 
 /**
  * @brief Adjust the capacity if needed.
@@ -30,6 +30,6 @@ bool rock_array_set_capacity(struct rock_array *object, size_t capacity);
  * @throws ROCK_ARRAY_ERROR_MEMORY_ALLOCATION_FAILED if there is
  * insufficient memory to set the new capacity of the array.
  */
-bool rock_array_adjust_capacity(struct rock_array *object, size_t count);
+bool rock_array_adjust_capacity(struct rock_array *object, uintmax_t count);
 
 #endif /* _ROCK_PRIVATE_ARRAY_H_ */

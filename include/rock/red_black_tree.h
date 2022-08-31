@@ -36,7 +36,7 @@ void rock_red_black_tree_node_destroy(void *node);
 
 struct rock_red_black_tree {
     void *root;
-    size_t count;
+    uintmax_t count;
 
     int (*compare)(const void *, const void *);
 };
@@ -61,7 +61,7 @@ bool rock_red_black_tree_init(struct rock_red_black_tree *object,
  * <p>The nodes in the red black tree are destroyed and each node will have the
  * provided <i>on destroy</i> callback invoked upon itself. The actual <u>red
  * black tree instance is not deallocated</u> since it may have been embedded
- * in a larger structure.
+ * in a larger structure.</p>
  * @param [in] object instance to be invalidated.
  * @param [in] on_destroy called just before the node is to be destroyed.
  * @return On success true, otherwise false if an error has occurred.
@@ -79,7 +79,7 @@ bool rock_red_black_tree_invalidate(struct rock_red_black_tree *object,
  * @throws ROCK_RED_BLACK_TREE_ERROR_OUT_IS_NULL if out is <i>NULL</i>.
  */
 bool rock_red_black_tree_count(struct rock_red_black_tree *object,
-                               size_t *out);
+                               uintmax_t *out);
 
 /**
  * @brief Find given value in red black tree.

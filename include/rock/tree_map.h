@@ -53,7 +53,8 @@ bool rock_tree_map_init(struct rock_tree_map *object,
  * @brief Invalidate tree map.
  * <p>All the entries contained within the tree map will have the given <i>on
  * destroy</i> callback invoked upon itself. The actual <u>tree map instance
- * is not deallocated</u> since it may have been embedded in a larger structure.
+ * is not deallocated</u> since it may have been embedded in a larger
+ * structure.</p>
  * @param [in] object instance to be invalidated.
  * @param [in] on_destroy called just before the entry is to be destroyed.
  * @return On success true, otherwise false if an error has occurred.
@@ -70,7 +71,7 @@ bool rock_tree_map_invalidate(struct rock_tree_map *object,
  * @throws ROCK_TREE_MAP_ERROR_OBJECT_IS_NULL if object is <i>NULL</i>.
  * @throws ROCK_TREE_MAP_ERROR_OUT_IS_NULL if out is <i>NULL</i>.
  */
-bool rock_tree_map_count(struct rock_tree_map *object, size_t *out);
+bool rock_tree_map_count(struct rock_tree_map *object, uintmax_t *out);
 
 /**
  * @brief Add a key-value association.

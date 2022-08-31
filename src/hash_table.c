@@ -8,7 +8,7 @@
 
 bool rock_hash_table_init(struct rock_hash_table *object,
                           float load_factor,
-                          size_t (*hash_code)(const void *),
+                          uintmax_t (*hash_code)(const void *),
                           bool (*is_equal)(const void *, const void *)) {
     if (!object) {
         rock_error = ROCK_HASH_TABLE_ERROR_OBJECT_IS_NULL;
@@ -71,7 +71,7 @@ rock_hash_table_invalidate(struct rock_hash_table *object,
     return true;
 }
 
-bool rock_hash_table_count(struct rock_hash_table *object, size_t *out) {
+bool rock_hash_table_count(struct rock_hash_table *object, uintmax_t *out) {
     if (!object) {
         rock_error = ROCK_HASH_TABLE_ERROR_OBJECT_IS_NULL;
         return false;
@@ -94,11 +94,11 @@ bool rock_hash_table_rebuild_needed(struct rock_hash_table *object,
         rock_error = ROCK_HASH_TABLE_ERROR_OUT_IS_NULL;
         return false;
     }
-    size_t length;
+    uintmax_t length;
     seagrass_required_true(rock_array_get_length(
             &object->array, &length));
-    size_t limit;
-    seagrass_required_true(seagrass_float_to_size_t(
+    uintmax_t limit;
+    seagrass_required_true(seagrass_float_to_uintmax_t(
             (float) length * 0.1f,
             SEAGRASS_FLOAT_ROUNDING_MODE_UPWARD,
             &limit));
@@ -111,16 +111,16 @@ bool rock_hash_table_rebuild(struct rock_hash_table *object) {
         rock_error = ROCK_HASH_TABLE_ERROR_OBJECT_IS_NULL;
         return false;
     }
-    size_t length;
+    uintmax_t length;
     seagrass_required_true(rock_array_get_length(
             &object->array, &length));
-    for (size_t i = 0; i < length; i++) {
+    for (uintmax_t i = 0; i < length; i++) {
         struct rock_hash_table_entry *entry;
         seagrass_required_true(rock_array_get(
                 &object->array, i, (void **) &entry));
         if (entry->key.data) {
             do {
-                const size_t at =
+                const uintmax_t at =
                         object->hash_code(entry->key.data) % length;
                 if (at < i) {
                     seagrass_required_true(rock_hash_table_insert(
@@ -175,12 +175,12 @@ bool rock_hash_table_insert(struct rock_hash_table *object,
     seagrass_required(entry);
     seagrass_required(entry->key.data);
 
-    size_t length;
+    uintmax_t length;
     seagrass_required_true(rock_array_get_length(
             &object->array, &length));
-    const size_t at = object->hash_code(entry->key.data) % length;
+    const uintmax_t at = object->hash_code(entry->key.data) % length;
 
-    for (size_t i = 0; i < length; i++) {
+    for (uintmax_t i = 0; i < length; i++) {
         struct rock_hash_table_entry *dst;
         seagrass_required_true(rock_array_get(&object->array,
                                               (at + i) % length,
@@ -211,28 +211,28 @@ bool rock_hash_table_add(struct rock_hash_table *object,
         return false;
     }
     /* check if we need to resize the hash table */
-    size_t length;
+    uintmax_t length;
     seagrass_required_true(rock_array_get_length(
             &object->array, &length));
-    size_t used;
-    if (!seagrass_size_t_add(1, object->count, &used)) {
-        seagrass_required_true(SEAGRASS_SIZE_T_ERROR_RESULT_IS_INCONSISTENT
+    uintmax_t used;
+    if (!seagrass_uintmax_t_add(1, object->count, &used)) {
+        seagrass_required_true(SEAGRASS_UINTMAX_T_ERROR_RESULT_IS_INCONSISTENT
                                == seagrass_error);
         rock_error = ROCK_HASH_TABLE_ERROR_MEMORY_ALLOCATION_FAILED;
         return false;
     }
-    size_t limit;
-    const size_t current = length;
+    uintmax_t limit;
+    const uintmax_t current = length;
     do {
-        seagrass_required_true(seagrass_float_to_size_t(
+        seagrass_required_true(seagrass_float_to_uintmax_t(
                 (float) length * object->lf,
                 SEAGRASS_FLOAT_ROUNDING_MODE_UPWARD,
                 &limit));
         if (limit > used) {
             break;
         }
-        if (!seagrass_size_t_add(used, length, &length)) {
-            seagrass_required_true(SEAGRASS_SIZE_T_ERROR_RESULT_IS_INCONSISTENT
+        if (!seagrass_uintmax_t_add(used, length, &length)) {
+            seagrass_required_true(SEAGRASS_UINTMAX_T_ERROR_RESULT_IS_INCONSISTENT
                                    == seagrass_error);
             if (length < SIZE_MAX) {
                 length = SIZE_MAX;
@@ -275,11 +275,11 @@ bool rock_hash_table_entry_find(struct rock_hash_table *object,
         rock_error = ROCK_HASH_TABLE_ERROR_KEY_NOT_FOUND;
         return false;
     }
-    size_t length;
+    uintmax_t length;
     seagrass_required_true(rock_array_get_length(
             &object->array, &length));
-    size_t at = object->hash_code(key) % length;
-    size_t i;
+    uintmax_t at = object->hash_code(key) % length;
+    uintmax_t i;
     struct rock_hash_table_entry *entry;
     for (i = 0; i < length; i++) {
         seagrass_required_true(rock_array_get(&object->array,
@@ -409,11 +409,11 @@ bool rock_hash_table_first(struct rock_hash_table *object,
         rock_error = ROCK_HASH_TABLE_ERROR_HASH_TABLE_IS_EMPTY;
         return false;
     }
-    size_t length;
+    uintmax_t length;
     seagrass_required_true(rock_array_get_length(
             &object->array, &length));
     struct rock_hash_table_entry *entry;
-    for (size_t i = 0; i < length; i++) {
+    for (uintmax_t i = 0; i < length; i++) {
         seagrass_required_true(rock_array_get(
                 &object->array, i, (void **) &entry));
         if (entry->key.data) {
@@ -440,11 +440,11 @@ bool rock_hash_table_last(struct rock_hash_table *object,
         rock_error = ROCK_HASH_TABLE_ERROR_HASH_TABLE_IS_EMPTY;
         return false;
     }
-    size_t length;
+    uintmax_t length;
     seagrass_required_true(rock_array_get_length(
             &object->array, &length));
     struct rock_hash_table_entry *entry;
-    for (size_t i = length; i; i--) {
+    for (uintmax_t i = length; i; i--) {
         seagrass_required_true(rock_array_get(
                 &object->array, i - 1, (void **) &entry));
         if (entry->key.data) {

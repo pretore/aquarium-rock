@@ -42,7 +42,7 @@ bool rock_tree_set_invalidate(struct rock_tree_set *object,
     return true;
 }
 
-bool rock_tree_set_count(struct rock_tree_set *object, size_t *out) {
+bool rock_tree_set_count(struct rock_tree_set *object, uintmax_t *out) {
     if (!object) {
         rock_error = ROCK_TREE_SET_ERROR_OBJECT_IS_NULL;
         return false;

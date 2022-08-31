@@ -26,7 +26,7 @@ static void check_node_alloc_error_on_memory_allocation_failed(void **s) {
 static void check_node_alloc(void **state) {
     rock_error = ROCK_ERROR_NONE;
     struct object {
-        size_t count;
+        uintmax_t count;
     } *object;
     assert_true(rock_red_black_tree_node_alloc(
             sizeof(*object),
@@ -101,13 +101,13 @@ static void check_node_set_parent(void **state) {
     node_ = rock_red_black_tree_node_from(node);
     node_->parent = (void *) ROCK_RED_BLACK_TREE_COLOR_RED;
     assert_true(rock_red_black_tree_node_set_parent(node, &rock_error));
-    assert_ptr_equal((void *) ((size_t) node_->parent & ~1), &rock_error);
-    assert_int_equal(((size_t) node_->parent & 1),
+    assert_ptr_equal((void *) ((uintmax_t) node_->parent & ~1), &rock_error);
+    assert_int_equal(((uintmax_t) node_->parent & 1),
                      ROCK_RED_BLACK_TREE_COLOR_RED);
     node_->parent = (void *) ROCK_RED_BLACK_TREE_COLOR_BLACK;
     assert_true(rock_red_black_tree_node_set_parent(node, &rock_error));
-    assert_ptr_equal((void *) ((size_t) node_->parent & ~1), &rock_error);
-    assert_int_equal(((size_t) node_->parent & 1),
+    assert_ptr_equal((void *) ((uintmax_t) node_->parent & ~1), &rock_error);
+    assert_int_equal(((uintmax_t) node_->parent & 1),
                      ROCK_RED_BLACK_TREE_COLOR_BLACK);
     rock_red_black_tree_node_destroy(node);
     rock_error = ROCK_ERROR_NONE;
@@ -1415,7 +1415,7 @@ static void check_count(void **state) {
     assert_true(rock_red_black_tree_init(&object, seagrass_void_ptr_compare));
     assert_int_equal(0, object.count);
     object.count = 62213;
-    size_t count;
+    uintmax_t count;
     assert_true(rock_red_black_tree_count(&object, &count));
     assert_int_equal(object.count, count);
     assert_true(rock_red_black_tree_invalidate(&object, NULL));
@@ -1449,8 +1449,8 @@ static void check_find_error_on_out_is_null(void **state) {
 
 static void check_find_error_on_value_not_found(void **state) {
     rock_error = ROCK_ERROR_NONE;
-    const size_t size = sizeof(size_t);
-    size_t *a, *b, *c, *d, *e, *f, *g;
+    const size_t size = sizeof(uintmax_t);
+    uintmax_t *a, *b, *c, *d, *e, *f, *g;
     assert_true(rock_red_black_tree_node(size, (void **) &a));
     assert_true(rock_red_black_tree_node(size, (void **) &b));
     assert_true(rock_red_black_tree_node(size, (void **) &c));
@@ -1479,12 +1479,11 @@ static void check_find_error_on_value_not_found(void **state) {
                         && rock_red_black_tree_node_set_right(f, g));
     struct rock_red_black_tree tree = {
             .root = d,
-            .compare = (int (*)(const void *, const void *))seagrass_size_t_ptr_compare
+            .compare = (int (*)(const void *, const void *))seagrass_uintmax_t_ptr_compare
     };
-    size_t *item = NULL;
-    size_t key = 10;
-    assert_false(rock_red_black_tree_find(
-            &tree, NULL, &key, (void **) &item));
+    uintmax_t *item = NULL;
+    uintmax_t key = 10;
+    assert_false(rock_red_black_tree_find(&tree, NULL, &key, (void **) &item));
     assert_int_equal(ROCK_RED_BLACK_TREE_ERROR_VALUE_NOT_FOUND, rock_error);
     assert_ptr_equal(g, item); /* insertion point found in tree */
     assert_true(rock_red_black_tree_invalidate(&tree, NULL));
@@ -1493,7 +1492,7 @@ static void check_find_error_on_value_not_found(void **state) {
 
 static void check_find_empty_tree(void **state) {
     rock_error = ROCK_ERROR_NONE;
-    size_t value = 12;
+    uintmax_t value = 12;
     struct rock_red_black_tree tree = {};
     void *at = &value;
     assert_false(rock_red_black_tree_find(
@@ -1505,8 +1504,8 @@ static void check_find_empty_tree(void **state) {
 
 static void check_find(void **state) {
     rock_error = ROCK_ERROR_NONE;
-    const size_t size = sizeof(size_t);
-    size_t *a, *b, *c, *d, *e, *f, *g;
+    const size_t size = sizeof(uintmax_t);
+    uintmax_t *a, *b, *c, *d, *e, *f, *g;
     assert_true(rock_red_black_tree_node(size, (void **) &a));
     assert_true(rock_red_black_tree_node(size, (void **) &b));
     assert_true(rock_red_black_tree_node(size, (void **) &c));
@@ -1535,10 +1534,10 @@ static void check_find(void **state) {
                         && rock_red_black_tree_node_set_right(f, g));
     struct rock_red_black_tree tree = {
             .root = d,
-            .compare = (int (*)(const void *, const void *))seagrass_size_t_ptr_compare
+            .compare = (int (*)(const void *, const void *))seagrass_uintmax_t_ptr_compare
     };
-    size_t *item = NULL;
-    size_t key = 2;
+    uintmax_t *item = NULL;
+    uintmax_t key = 2;
     assert_true(rock_red_black_tree_find(
             &tree, NULL, &key, (void **) &item));
     assert_ptr_equal(c, item); /* exact match found in tree */
@@ -1580,16 +1579,17 @@ static void check_insert_error_on_node_is_null(void **state) {
 static void check_insert_error_on_node_already_exists(void **state) {
     rock_error = ROCK_ERROR_NONE;
     struct rock_red_black_tree object = {};
-    assert_true(rock_red_black_tree_init(&object,
-                                         (int (*)(const void *, const void *))seagrass_size_t_ptr_compare));
-    size_t *value;
+    assert_true(rock_red_black_tree_init(
+            &object,
+            (int (*)(const void *, const void *))seagrass_uintmax_t_ptr_compare));
+    uintmax_t *value;
     assert_true(rock_red_black_tree_node(
             sizeof(*value), (void **) &value));
     *value = 99;
     object.root = value;
     assert_true(rock_red_black_tree_node_set_color(
             value, ROCK_RED_BLACK_TREE_COLOR_BLACK));
-    size_t *node;
+    uintmax_t *node;
     assert_true(rock_red_black_tree_node(
             sizeof(*node), (void **) &node));
     *node = 99;
@@ -1604,9 +1604,10 @@ static void check_insert_error_on_node_already_exists(void **state) {
 static void check_insert_case_0(void **state) {
     rock_error = ROCK_ERROR_NONE;
     struct rock_red_black_tree object = {};
-    assert_true(rock_red_black_tree_init(&object,
-                                         (int (*)(const void *, const void *))seagrass_size_t_ptr_compare));
-    size_t *a;
+    assert_true(rock_red_black_tree_init(
+            &object,
+            (int (*)(const void *, const void *))seagrass_uintmax_t_ptr_compare));
+    uintmax_t *a;
     assert_true(rock_red_black_tree_node(sizeof(*a), (void **) &a));
     *a = 45;
     bool color = ROCK_RED_BLACK_TREE_COLOR_BLACK;
@@ -1628,9 +1629,10 @@ static void check_insert_case_0(void **state) {
 static void check_insert_case_1(void **state) {
     rock_error = ROCK_ERROR_NONE;
     struct rock_red_black_tree object = {};
-    assert_true(rock_red_black_tree_init(&object,
-                                         (int (*)(const void *, const void *))seagrass_size_t_ptr_compare));
-    size_t *root, *a, *b;
+    assert_true(rock_red_black_tree_init(
+            &object,
+            (int (*)(const void *, const void *))seagrass_uintmax_t_ptr_compare));
+    uintmax_t *root, *a, *b;
     assert_true(rock_red_black_tree_node(sizeof(*root), (void **) &root));
     *root = 199;
     object.root = root;
@@ -1674,9 +1676,10 @@ static void check_insert_case_1(void **state) {
 static void check_insert_case_2b_configuration_3(void **state) {
     rock_error = ROCK_ERROR_NONE;
     struct rock_red_black_tree object = {};
-    assert_true(rock_red_black_tree_init(&object,
-                                         (int (*)(const void *, const void *))seagrass_size_t_ptr_compare));
-    size_t *a, *b, *c;
+    assert_true(rock_red_black_tree_init(
+            &object,
+            (int (*)(const void *, const void *))seagrass_uintmax_t_ptr_compare));
+    uintmax_t *a, *b, *c;
     assert_true(rock_red_black_tree_node(sizeof(*a), (void **) &a));
     assert_true(rock_red_black_tree_node(sizeof(*b), (void **) &b));
     assert_true(rock_red_black_tree_node(sizeof(*c), (void **) &c));
@@ -1717,9 +1720,10 @@ static void check_insert_case_2b_configuration_3(void **state) {
 static void check_insert_case_2b_configuration_2(void **state) {
     rock_error = ROCK_ERROR_NONE;
     struct rock_red_black_tree object = {};
-    assert_true(rock_red_black_tree_init(&object,
-                                         (int (*)(const void *, const void *))seagrass_size_t_ptr_compare));
-    size_t *a, *b, *c;
+    assert_true(rock_red_black_tree_init(
+            &object,
+            (int (*)(const void *, const void *))seagrass_uintmax_t_ptr_compare));
+    uintmax_t *a, *b, *c;
     assert_true(rock_red_black_tree_node(sizeof(*a), (void **) &a));
     assert_true(rock_red_black_tree_node(sizeof(*b), (void **) &b));
     assert_true(rock_red_black_tree_node(sizeof(*c), (void **) &c));
@@ -1760,9 +1764,10 @@ static void check_insert_case_2b_configuration_2(void **state) {
 static void check_insert_case_2b_configuration_1(void **state) {
     rock_error = ROCK_ERROR_NONE;
     struct rock_red_black_tree object = {};
-    assert_true(rock_red_black_tree_init(&object,
-                                         (int (*)(const void *, const void *))seagrass_size_t_ptr_compare));
-    size_t *a, *b, *c;
+    assert_true(rock_red_black_tree_init(
+            &object,
+            (int (*)(const void *, const void *))seagrass_uintmax_t_ptr_compare));
+    uintmax_t *a, *b, *c;
     assert_true(rock_red_black_tree_node(sizeof(*a), (void **) &a));
     assert_true(rock_red_black_tree_node(sizeof(*b), (void **) &b));
     assert_true(rock_red_black_tree_node(sizeof(*c), (void **) &c));
@@ -1803,9 +1808,10 @@ static void check_insert_case_2b_configuration_1(void **state) {
 static void check_insert_case_2b_configuration_0(void **state) {
     rock_error = ROCK_ERROR_NONE;
     struct rock_red_black_tree object = {};
-    assert_true(rock_red_black_tree_init(&object,
-                                         (int (*)(const void *, const void *))seagrass_size_t_ptr_compare));
-    size_t *a, *b, *c;
+    assert_true(rock_red_black_tree_init(
+            &object,
+            (int (*)(const void *, const void *))seagrass_uintmax_t_ptr_compare));
+    uintmax_t *a, *b, *c;
     assert_true(rock_red_black_tree_node(sizeof(*a), (void **) &a));
     assert_true(rock_red_black_tree_node(sizeof(*b), (void **) &b));
     assert_true(rock_red_black_tree_node(sizeof(*c), (void **) &c));
@@ -1846,9 +1852,10 @@ static void check_insert_case_2b_configuration_0(void **state) {
 static void check_insert_case_2a(void **state) {
     rock_error = ROCK_ERROR_NONE;
     struct rock_red_black_tree object = {};
-    assert_true(rock_red_black_tree_init(&object,
-                                         (int (*)(const void *, const void *))seagrass_size_t_ptr_compare));
-    size_t *a, *b, *c, *d;
+    assert_true(rock_red_black_tree_init(
+            &object,
+            (int (*)(const void *, const void *))seagrass_uintmax_t_ptr_compare));
+    uintmax_t *a, *b, *c, *d;
     assert_true(rock_red_black_tree_node(sizeof(*a), (void **) &a));
     assert_true(rock_red_black_tree_node(sizeof(*b), (void **) &b));
     assert_true(rock_red_black_tree_node(sizeof(*c), (void **) &c));
@@ -1896,9 +1903,10 @@ static void check_insert_case_2a(void **state) {
 static void check_insert(void **state) {
     rock_error = ROCK_ERROR_NONE;
     struct rock_red_black_tree object = {};
-    assert_true(rock_red_black_tree_init(&object,
-                                         (int (*)(const void *, const void *))seagrass_size_t_ptr_compare));
-    size_t *a, *b, *c, *d, *e;
+    assert_true(rock_red_black_tree_init(
+            &object,
+            (int (*)(const void *, const void *))seagrass_uintmax_t_ptr_compare));
+    uintmax_t *a, *b, *c, *d, *e;
     assert_true(rock_red_black_tree_node(sizeof(*a), (void **) &a));
     assert_true(rock_red_black_tree_node(sizeof(*b), (void **) &b));
     assert_true(rock_red_black_tree_node(sizeof(*c), (void **) &c));
@@ -2010,9 +2018,10 @@ static void check_first_error_on_tree_is_empty(void **state) {
 static void check_first(void **state) {
     rock_error = ROCK_ERROR_NONE;
     struct rock_red_black_tree object = {};
-    assert_true(rock_red_black_tree_init(&object,
-                                         (int (*)(const void *, const void *))seagrass_size_t_ptr_compare));
-    size_t *a, *b, *c, *d, *e;
+    assert_true(rock_red_black_tree_init(
+            &object,
+            (int (*)(const void *, const void *))seagrass_uintmax_t_ptr_compare));
+    uintmax_t *a, *b, *c, *d, *e;
     assert_true(rock_red_black_tree_node(sizeof(*a), (void **) &a));
     assert_true(rock_red_black_tree_node(sizeof(*b), (void **) &b));
     assert_true(rock_red_black_tree_node(sizeof(*c), (void **) &c));
@@ -2027,23 +2036,23 @@ static void check_first(void **state) {
     void *first;
     assert_true(rock_red_black_tree_first(&object, &first));
     assert_ptr_equal(a, first);
-    assert_int_equal(*a, *(size_t *) first);
+    assert_int_equal(*a, *(uintmax_t *) first);
     assert_true(rock_red_black_tree_insert(&object, a, b));
     assert_true(rock_red_black_tree_first(&object, &first));
     assert_ptr_equal(b, first);
-    assert_int_equal(*b, *(size_t *) first);
+    assert_int_equal(*b, *(uintmax_t *) first);
     assert_true(rock_red_black_tree_insert(&object, b, c));
     assert_true(rock_red_black_tree_first(&object, &first));
     assert_ptr_equal(c, first);
-    assert_int_equal(*c, *(size_t *) first);
+    assert_int_equal(*c, *(uintmax_t *) first);
     assert_true(rock_red_black_tree_insert(&object, c, d));
     assert_true(rock_red_black_tree_first(&object, &first));
     assert_ptr_equal(d, first);
-    assert_int_equal(*d, *(size_t *) first);
+    assert_int_equal(*d, *(uintmax_t *) first);
     assert_true(rock_red_black_tree_insert(&object, d, e));
     assert_true(rock_red_black_tree_first(&object, &first));
     assert_ptr_equal(e, first);
-    assert_int_equal(*e, *(size_t *) first);
+    assert_int_equal(*e, *(uintmax_t *) first);
     assert_true(rock_red_black_tree_invalidate(&object, NULL));
     rock_error = ROCK_ERROR_NONE;
 }
@@ -2077,9 +2086,10 @@ static void check_last_error_on_tree_is_empty(void **state) {
 static void check_last(void **state) {
     rock_error = ROCK_ERROR_NONE;
     struct rock_red_black_tree object = {};
-    assert_true(rock_red_black_tree_init(&object,
-                                         (int (*)(const void *, const void *))seagrass_size_t_ptr_compare));
-    size_t *a, *b, *c, *d, *e;
+    assert_true(rock_red_black_tree_init(
+            &object,
+            (int (*)(const void *, const void *))seagrass_uintmax_t_ptr_compare));
+    uintmax_t *a, *b, *c, *d, *e;
     assert_true(rock_red_black_tree_node(sizeof(*a), (void **) &a));
     assert_true(rock_red_black_tree_node(sizeof(*b), (void **) &b));
     assert_true(rock_red_black_tree_node(sizeof(*c), (void **) &c));
@@ -2094,23 +2104,23 @@ static void check_last(void **state) {
     void *last;
     assert_true(rock_red_black_tree_last(&object, &last));
     assert_ptr_equal(a, last);
-    assert_int_equal(*a, *(size_t *) last);
+    assert_int_equal(*a, *(uintmax_t *) last);
     assert_true(rock_red_black_tree_insert(&object, a, b));
     assert_true(rock_red_black_tree_last(&object, &last));
     assert_ptr_equal(b, last);
-    assert_int_equal(*b, *(size_t *) last);
+    assert_int_equal(*b, *(uintmax_t *) last);
     assert_true(rock_red_black_tree_insert(&object, b, c));
     assert_true(rock_red_black_tree_last(&object, &last));
     assert_ptr_equal(c, last);
-    assert_int_equal(*c, *(size_t *) last);
+    assert_int_equal(*c, *(uintmax_t *) last);
     assert_true(rock_red_black_tree_insert(&object, c, d));
     assert_true(rock_red_black_tree_last(&object, &last));
     assert_ptr_equal(d, last);
-    assert_int_equal(*d, *(size_t *) last);
+    assert_int_equal(*d, *(uintmax_t *) last);
     assert_true(rock_red_black_tree_insert(&object, d, e));
     assert_true(rock_red_black_tree_last(&object, &last));
     assert_ptr_equal(e, last);
-    assert_int_equal(*e, *(size_t *) last);
+    assert_int_equal(*e, *(uintmax_t *) last);
     assert_true(rock_red_black_tree_invalidate(&object, NULL));
     rock_error = ROCK_ERROR_NONE;
 }
@@ -2133,9 +2143,10 @@ static void check_next_error_on_out_is_null(void **state) {
 static void check_next(void **state) {
     rock_error = ROCK_ERROR_NONE;
     struct rock_red_black_tree object = {};
-    assert_true(rock_red_black_tree_init(&object,
-                                         (int (*)(const void *, const void *))seagrass_size_t_ptr_compare));
-    size_t *a, *b, *c, *d, *e;
+    assert_true(rock_red_black_tree_init(
+            &object,
+            (int (*)(const void *, const void *))seagrass_uintmax_t_ptr_compare));
+    uintmax_t *a, *b, *c, *d, *e;
     assert_true(rock_red_black_tree_node(sizeof(*a), (void **) &a));
     assert_true(rock_red_black_tree_node(sizeof(*b), (void **) &b));
     assert_true(rock_red_black_tree_node(sizeof(*c), (void **) &c));
@@ -2154,19 +2165,19 @@ static void check_next(void **state) {
     void *node;
     assert_true(rock_red_black_tree_first(&object, &node));
     assert_ptr_equal(e, node);
-    assert_int_equal(1, *(size_t *) node);
+    assert_int_equal(1, *(uintmax_t *) node);
     assert_true(rock_red_black_tree_next(node, &node));
     assert_ptr_equal(d, node);
-    assert_int_equal(2, *(size_t *) node);
+    assert_int_equal(2, *(uintmax_t *) node);
     assert_true(rock_red_black_tree_next(node, &node));
     assert_ptr_equal(c, node);
-    assert_int_equal(4, *(size_t *) node);
+    assert_int_equal(4, *(uintmax_t *) node);
     assert_true(rock_red_black_tree_next(node, &node));
     assert_ptr_equal(b, node);
-    assert_int_equal(5, *(size_t *) node);
+    assert_int_equal(5, *(uintmax_t *) node);
     assert_true(rock_red_black_tree_next(node, &node));
     assert_ptr_equal(a, node);
-    assert_int_equal(9, *(size_t *) node);
+    assert_int_equal(9, *(uintmax_t *) node);
     assert_false(rock_red_black_tree_next(node, &node));
     assert_int_equal(ROCK_RED_BLACK_TREE_ERROR_END_OF_SEQUENCE, rock_error);
     assert_true(rock_red_black_tree_invalidate(&object, NULL));
@@ -2191,9 +2202,10 @@ static void check_get_prev_error_on_out_is_null(void **state) {
 static void check_prev(void **state) {
     rock_error = ROCK_ERROR_NONE;
     struct rock_red_black_tree object = {};
-    assert_true(rock_red_black_tree_init(&object,
-                                         (int (*)(const void *, const void *))seagrass_size_t_ptr_compare));
-    size_t *a, *b, *c, *d, *e;
+    assert_true(rock_red_black_tree_init(
+            &object,
+            (int (*)(const void *, const void *))seagrass_uintmax_t_ptr_compare));
+    uintmax_t *a, *b, *c, *d, *e;
     assert_true(rock_red_black_tree_node(sizeof(*a), (void **) &a));
     assert_true(rock_red_black_tree_node(sizeof(*b), (void **) &b));
     assert_true(rock_red_black_tree_node(sizeof(*c), (void **) &c));
@@ -2212,19 +2224,19 @@ static void check_prev(void **state) {
     void *node;
     assert_true(rock_red_black_tree_last(&object, &node));
     assert_ptr_equal(e, node);
-    assert_int_equal(9, *(size_t *) node);
+    assert_int_equal(9, *(uintmax_t *) node);
     assert_true(rock_red_black_tree_prev(node, &node));
     assert_ptr_equal(d, node);
-    assert_int_equal(5, *(size_t *) node);
+    assert_int_equal(5, *(uintmax_t *) node);
     assert_true(rock_red_black_tree_prev(node, &node));
     assert_ptr_equal(c, node);
-    assert_int_equal(4, *(size_t *) node);
+    assert_int_equal(4, *(uintmax_t *) node);
     assert_true(rock_red_black_tree_prev(node, &node));
     assert_ptr_equal(b, node);
-    assert_int_equal(2, *(size_t *) node);
+    assert_int_equal(2, *(uintmax_t *) node);
     assert_true(rock_red_black_tree_prev(node, &node));
     assert_ptr_equal(a, node);
-    assert_int_equal(1, *(size_t *) node);
+    assert_int_equal(1, *(uintmax_t *) node);
     assert_false(rock_red_black_tree_prev(node, &node));
     assert_int_equal(ROCK_RED_BLACK_TREE_ERROR_END_OF_SEQUENCE, rock_error);
     assert_true(rock_red_black_tree_invalidate(&object, NULL));
@@ -2248,9 +2260,10 @@ static void check_delete_error_on_node_is_null(void **state) {
 static void check_delete_leaf_nodes(void **state) {
     rock_error = ROCK_ERROR_NONE;
     struct rock_red_black_tree object = {};
-    assert_true(rock_red_black_tree_init(&object,
-                                         (int (*)(const void *, const void *))seagrass_size_t_ptr_compare));
-    size_t *a, *b;
+    assert_true(rock_red_black_tree_init(
+            &object,
+            (int (*)(const void *, const void *))seagrass_uintmax_t_ptr_compare));
+    uintmax_t *a, *b;
     assert_true(rock_red_black_tree_node(sizeof(*a), (void **) &a));
     assert_true(rock_red_black_tree_node(sizeof(*b), (void **) &b));
     *a = 9;
@@ -2289,9 +2302,10 @@ static void check_delete_leaf_nodes(void **state) {
 static void check_delete_node_with_single_child(void **state) {
     rock_error = ROCK_ERROR_NONE;
     struct rock_red_black_tree object = {};
-    assert_true(rock_red_black_tree_init(&object,
-                                         (int (*)(const void *, const void *))seagrass_size_t_ptr_compare));
-    size_t *a, *b, *c, *d, *e;
+    assert_true(rock_red_black_tree_init(
+            &object,
+            (int (*)(const void *, const void *))seagrass_uintmax_t_ptr_compare));
+    uintmax_t *a, *b, *c, *d, *e;
     assert_true(rock_red_black_tree_node(sizeof(*a), (void **) &a));
     assert_true(rock_red_black_tree_node(sizeof(*b), (void **) &b));
     assert_true(rock_red_black_tree_node(sizeof(*c), (void **) &c));
@@ -2428,9 +2442,10 @@ static void check_delete_node_with_single_child(void **state) {
 static void check_delete_node_with_two_children(void **state) {
     rock_error = ROCK_ERROR_NONE;
     struct rock_red_black_tree object = {};
-    assert_true(rock_red_black_tree_init(&object,
-                                         (int (*)(const void *, const void *))seagrass_size_t_ptr_compare));
-    size_t *a, *b, *c, *d, *e;
+    assert_true(rock_red_black_tree_init(
+            &object,
+            (int (*)(const void *, const void *))seagrass_uintmax_t_ptr_compare));
+    uintmax_t *a, *b, *c, *d, *e;
     assert_true(rock_red_black_tree_node(sizeof(*a), (void **) &a));
     assert_true(rock_red_black_tree_node(sizeof(*b), (void **) &b));
     assert_true(rock_red_black_tree_node(sizeof(*c), (void **) &c));
@@ -2541,11 +2556,12 @@ static void check_delete_node_with_two_children(void **state) {
 static void check_tree(void **state) {
     rock_error = ROCK_ERROR_NONE;
     struct rock_red_black_tree object = {};
-    assert_true(rock_red_black_tree_init(&object,
-                                         (int (*)(const void *, const void *))seagrass_size_t_ptr_compare));
-    size_t *p = NULL;
-    for (size_t i = 0; i < 10000; i++) {
-        size_t *n;
+    assert_true(rock_red_black_tree_init(
+            &object,
+            (int (*)(const void *, const void *))seagrass_uintmax_t_ptr_compare));
+    uintmax_t *p = NULL;
+    for (uintmax_t i = 0; i < 10000; i++) {
+        uintmax_t *n;
         assert_true(rock_red_black_tree_node(sizeof(*n), (void **)&n));
         *n = i;
         assert_int_equal(i, object.count);
@@ -2553,7 +2569,7 @@ static void check_tree(void **state) {
         assert_int_equal(1 + i, object.count);
         p = n;
     }
-    for (size_t i = 0; i < 10000; i++) {
+    for (uintmax_t i = 0; i < 10000; i++) {
         assert_int_equal(10000 - i, object.count);
         assert_true(rock_red_black_tree_delete(&object, object.root));
         assert_int_equal(9999 - i, object.count);

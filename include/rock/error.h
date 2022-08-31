@@ -5,6 +5,6 @@
 
 #define ROCK_ERROR_NONE                                 0
 
-extern _Thread_local size_t rock_error;
+extern _Thread_local uintmax_t rock_error;
 
 #endif /* _ROCK_ERROR_H_ */

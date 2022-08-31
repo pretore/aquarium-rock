@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.22)
-project(aquarium-rock VERSION 1.0.3
+project(aquarium-rock VERSION 2.0.0
         LANGUAGES C
         DESCRIPTION "Data structures in C")
 

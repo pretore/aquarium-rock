@@ -7,7 +7,7 @@
 #include "test/cmocka.h"
 
 bool rock_array_init(struct rock_array *object, const size_t size,
-                     const size_t capacity) {
+                     const uintmax_t capacity) {
     if (!object) {
         rock_error = ROCK_ARRAY_ERROR_OBJECT_IS_NULL;
         return false;
@@ -33,7 +33,7 @@ bool rock_array_invalidate(struct rock_array *object,
         return false;
     }
     if (on_destroy) {
-        for (size_t i = 0; i < object->length; i++) {
+        for (uintmax_t i = 0; i < object->length; i++) {
             on_destroy(rock_array_address(object, i));
         }
     }
@@ -42,7 +42,7 @@ bool rock_array_invalidate(struct rock_array *object,
     return true;
 }
 
-bool rock_array_capacity(struct rock_array *object, size_t *out) {
+bool rock_array_capacity(struct rock_array *object, uintmax_t *out) {
     if (!object) {
         rock_error = ROCK_ARRAY_ERROR_OBJECT_IS_NULL;
         return false;
@@ -55,19 +55,20 @@ bool rock_array_capacity(struct rock_array *object, size_t *out) {
     return true;
 }
 
-bool rock_array_set_capacity(struct rock_array *object, const size_t capacity) {
+bool
+rock_array_set_capacity(struct rock_array *object, const uintmax_t capacity) {
     if (!object) {
         rock_error = ROCK_ARRAY_ERROR_OBJECT_IS_NULL;
         return false;
     }
     seagrass_required_true(object->size > 0);
-    size_t new;
+    uintmax_t new;
     if (capacity <= object->capacity) {
         new = object->size * capacity;
-    } else if (!seagrass_size_t_multiply(capacity,
-                                         object->size,
-                                         &new)) {
-        seagrass_required_true(SEAGRASS_SIZE_T_ERROR_RESULT_IS_INCONSISTENT
+    } else if (!seagrass_uintmax_t_multiply(capacity,
+                                            object->size,
+                                            &new)) {
+        seagrass_required_true(SEAGRASS_UINTMAX_T_ERROR_RESULT_IS_INCONSISTENT
                                == seagrass_error);
         rock_error = ROCK_ARRAY_ERROR_MEMORY_ALLOCATION_FAILED;
         return false;
@@ -95,7 +96,7 @@ bool rock_array_set_capacity(struct rock_array *object, const size_t capacity) {
     return true;
 }
 
-bool rock_array_get_length(struct rock_array *object, size_t *out) {
+bool rock_array_get_length(struct rock_array *object, uintmax_t *out) {
     if (!object) {
         rock_error = ROCK_ARRAY_ERROR_OBJECT_IS_NULL;
         return false;
@@ -108,7 +109,7 @@ bool rock_array_get_length(struct rock_array *object, size_t *out) {
     return true;
 }
 
-bool rock_array_set_length(struct rock_array *object, const size_t length) {
+bool rock_array_set_length(struct rock_array *object, const uintmax_t length) {
     if (!object) {
         rock_error = ROCK_ARRAY_ERROR_OBJECT_IS_NULL;
         return false;
@@ -146,7 +147,8 @@ bool rock_array_shrink(struct rock_array *object) {
     return true;
 }
 
-bool rock_array_adjust_capacity(struct rock_array *object, const size_t count) {
+bool
+rock_array_adjust_capacity(struct rock_array *object, const uintmax_t count) {
     if (!object) {
         rock_error = ROCK_ARRAY_ERROR_OBJECT_IS_NULL;
         return false;
@@ -159,15 +161,15 @@ bool rock_array_adjust_capacity(struct rock_array *object, const size_t count) {
         rock_error = ROCK_ARRAY_ERROR_MEMORY_ALLOCATION_FAILED;
         return false;
     }
-    size_t limit;
-    size_t capacity;
-    if (!seagrass_size_t_add(count, object->length, &limit)) {
-        seagrass_required_true(SEAGRASS_SIZE_T_ERROR_RESULT_IS_INCONSISTENT
+    uintmax_t limit;
+    uintmax_t capacity;
+    if (!seagrass_uintmax_t_add(count, object->length, &limit)) {
+        seagrass_required_true(SEAGRASS_UINTMAX_T_ERROR_RESULT_IS_INCONSISTENT
                                == seagrass_error);
         capacity = SIZE_MAX;
     } else {
         for (capacity = object->capacity; limit > capacity;) {
-            seagrass_required_true(seagrass_size_t_times_and_a_half_even(
+            seagrass_required_true(seagrass_uintmax_t_times_and_a_half_even(
                     capacity, &capacity));
         }
     }
@@ -196,7 +198,7 @@ bool rock_array_add(struct rock_array *object, void *item) {
     return true;
 }
 
-bool rock_array_add_all(struct rock_array *object, const size_t count,
+bool rock_array_add_all(struct rock_array *object, const uintmax_t count,
                         void *items[]) {
     if (!object) {
         rock_error = ROCK_ARRAY_ERROR_OBJECT_IS_NULL;
@@ -216,7 +218,7 @@ bool rock_array_add_all(struct rock_array *object, const size_t count,
         return false;
     }
     object->length += count;
-    for (size_t i = 0, at = object->length - count; i < count; i++, at++) {
+    for (uintmax_t i = 0, at = object->length - count; i < count; i++, at++) {
         seagrass_required_true(rock_array_set(object, at, items[i]));
     }
     return true;
@@ -235,13 +237,14 @@ bool rock_array_remove_last(struct rock_array *object) {
     return true;
 }
 
-void *rock_array_address(struct rock_array *object, const size_t at) {
+void *rock_array_address(struct rock_array *object, const uintmax_t at) {
     seagrass_required(object);
     seagrass_required(object->data);
     return ((unsigned char *) object->data) + (object->size * at);
 }
 
-bool rock_array_insert(struct rock_array *object, const size_t at, void *item) {
+bool rock_array_insert(struct rock_array *object, const uintmax_t at,
+                       void *item) {
     if (!object) {
         rock_error = ROCK_ARRAY_ERROR_OBJECT_IS_NULL;
         return false;
@@ -259,8 +262,8 @@ bool rock_array_insert(struct rock_array *object, const size_t at, void *item) {
     return true;
 }
 
-bool rock_array_insert_all(struct rock_array *object, const size_t at,
-                           const size_t count, void *items[]) {
+bool rock_array_insert_all(struct rock_array *object, const uintmax_t at,
+                           const uintmax_t count, void *items[]) {
     if (!object) {
         rock_error = ROCK_ARRAY_ERROR_OBJECT_IS_NULL;
         return false;
@@ -286,13 +289,13 @@ bool rock_array_insert_all(struct rock_array *object, const size_t at,
            rock_array_address(object, at),
            object->size * (object->length - at));
     object->length += count;
-    for (size_t i = 0; i < count; i++) {
+    for (uintmax_t i = 0; i < count; i++) {
         seagrass_required_true(rock_array_set(object, at + i, items[i]));
     }
     return true;
 }
 
-bool rock_array_remove(struct rock_array *object, const size_t at) {
+bool rock_array_remove(struct rock_array *object, const uintmax_t at) {
     if (!object) {
         rock_error = ROCK_ARRAY_ERROR_OBJECT_IS_NULL;
         return false;
@@ -305,8 +308,8 @@ bool rock_array_remove(struct rock_array *object, const size_t at) {
     return true;
 }
 
-bool rock_array_remove_all(struct rock_array *object, const size_t at,
-                           const size_t count) {
+bool rock_array_remove_all(struct rock_array *object, const uintmax_t at,
+                           const uintmax_t count) {
     if (!object) {
         rock_error = ROCK_ARRAY_ERROR_OBJECT_IS_NULL;
         return false;
@@ -319,16 +322,16 @@ bool rock_array_remove_all(struct rock_array *object, const size_t at,
         rock_error = ROCK_ARRAY_ERROR_COUNT_IS_ZERO;
         return false;
     }
-    size_t max;
-    if (!seagrass_size_t_add(at, count, &max)) {
-        seagrass_required_true(SEAGRASS_SIZE_T_ERROR_RESULT_IS_INCONSISTENT
+    uintmax_t max;
+    if (!seagrass_uintmax_t_add(at, count, &max)) {
+        seagrass_required_true(SEAGRASS_UINTMAX_T_ERROR_RESULT_IS_INCONSISTENT
                                == seagrass_error);
-        max = SIZE_MAX;
+        max = UINTMAX_MAX;
     }
     if (max >= object->length) {
         object->length = at;
     } else {
-        const size_t remainder = object->length - count - at;
+        const uintmax_t remainder = object->length - count - at;
         memmove(rock_array_address(object, at),
                 rock_array_address(object, at + count),
                 object->size * remainder);
@@ -337,7 +340,7 @@ bool rock_array_remove_all(struct rock_array *object, const size_t at,
     return true;
 }
 
-bool rock_array_get(struct rock_array *object, const size_t at, void **out) {
+bool rock_array_get(struct rock_array *object, const uintmax_t at, void **out) {
     if (!object) {
         rock_error = ROCK_ARRAY_ERROR_OBJECT_IS_NULL;
         return false;
@@ -354,7 +357,7 @@ bool rock_array_get(struct rock_array *object, const size_t at, void **out) {
     return true;
 }
 
-bool rock_array_set(struct rock_array *object, const size_t at,
+bool rock_array_set(struct rock_array *object, const uintmax_t at,
                     const void *item) {
     if (!object) {
         rock_error = ROCK_ARRAY_ERROR_OBJECT_IS_NULL;
@@ -430,9 +433,9 @@ bool rock_array_next(struct rock_array *object, void *item, void **out) {
         rock_error = ROCK_ARRAY_ERROR_ITEM_IS_OUT_OF_BOUNDS;
         return false;
     }
-    size_t at = (item - begin) / object->size;
-    if (!seagrass_size_t_add(1, at, &at)) {
-        seagrass_required_true(SEAGRASS_SIZE_T_ERROR_RESULT_IS_INCONSISTENT
+    uintmax_t at = (item - begin) / object->size;
+    if (!seagrass_uintmax_t_add(1, at, &at)) {
+        seagrass_required_true(SEAGRASS_UINTMAX_T_ERROR_RESULT_IS_INCONSISTENT
                                == seagrass_error);
         rock_error = ROCK_ARRAY_ERROR_END_OF_SEQUENCE;
         return false;
@@ -469,7 +472,7 @@ bool rock_array_prev(struct rock_array *object, void *item, void **out) {
         rock_error = ROCK_ARRAY_ERROR_ITEM_IS_OUT_OF_BOUNDS;
         return false;
     }
-    size_t at = (item - begin) / object->size;
+    uintmax_t at = (item - begin) / object->size;
     if (!rock_array_get(object, at - 1, out)) {
         seagrass_required_true(ROCK_ARRAY_ERROR_INDEX_IS_OUT_OF_BOUNDS
                                == rock_error);

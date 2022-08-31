@@ -46,9 +46,8 @@ static void check_count_error_on_out_is_null(void **state) {
 static void check_count(void **state) {
     rock_error = ROCK_ERROR_NONE;
     struct rock_tree_map object;
-    assert_true(rock_tree_map_init(&object,
-                                   (void *)1));
-    size_t count;
+    assert_true(rock_tree_map_init(&object, (void *)1));
+    uintmax_t count;
     assert_true(rock_tree_map_count(&object, &count));
     assert_int_equal(object.tree.count, count);
     object.tree.count = 192312;
@@ -66,14 +65,13 @@ static void check_add_error_on_object_is_null(void **state) {
 
 static int tree_map_compare(const struct rock_tree_map_entry_key *a,
                             const struct rock_tree_map_entry_key *b) {
-    return seagrass_size_t_compare(*(size_t *)a, *(size_t *)b);
+    return seagrass_uintmax_t_ptr_compare((uintmax_t *)a, (uintmax_t *)b);
 }
 
 static void check_add(void **state) {
     rock_error = ROCK_ERROR_NONE;
     struct rock_tree_map object = {};
-    assert_true(rock_tree_map_init(&object,
-                                   tree_map_compare));
+    assert_true(rock_tree_map_init(&object, tree_map_compare));
     assert_int_equal(0, object.tree.count);
     assert_true(rock_tree_map_add(&object, (void *)1, NULL));
     assert_int_equal(1, object.tree.count);
@@ -86,8 +84,7 @@ static void check_add(void **state) {
 static void check_add_error_on_key_already_exists(void **state) {
     rock_error = ROCK_ERROR_NONE;
     struct rock_tree_map object = {};
-    assert_true(rock_tree_map_init(&object,
-                                   tree_map_compare));
+    assert_true(rock_tree_map_init(&object, tree_map_compare));
     assert_int_equal(0, object.tree.count);
     assert_true(rock_tree_map_add(&object, (void *)1, NULL));
     assert_int_equal(1, object.tree.count);
@@ -107,8 +104,7 @@ static void check_remove_error_on_object_is_null(void **state) {
 static void check_remove_error_on_key_not_found(void **state) {
     rock_error = ROCK_ERROR_NONE;
     struct rock_tree_map object = {};
-    assert_true(rock_tree_map_init(&object,
-                                   tree_map_compare));
+    assert_true(rock_tree_map_init(&object, tree_map_compare));
     assert_false(rock_tree_map_remove(&object, (void *)1));
     assert_int_equal(ROCK_TREE_MAP_ERROR_KEY_NOT_FOUND, rock_error);
     assert_true(rock_tree_map_invalidate(&object, NULL));
@@ -118,8 +114,7 @@ static void check_remove_error_on_key_not_found(void **state) {
 static void check_remove(void **state) {
     rock_error = ROCK_ERROR_NONE;
     struct rock_tree_map object = {};
-    assert_true(rock_tree_map_init(&object,
-                                   tree_map_compare));
+    assert_true(rock_tree_map_init(&object, tree_map_compare));
     assert_int_equal(0, object.tree.count);
     assert_true(rock_tree_map_add(&object, (void *)191, NULL));
     assert_int_equal(1, object.tree.count);
@@ -139,8 +134,7 @@ static void check_set_error_on_object_is_null(void **state) {
 static void check_set_error_on_key_not_found(void **state) {
     rock_error = ROCK_ERROR_NONE;
     struct rock_tree_map object = {};
-    assert_true(rock_tree_map_init(&object,
-                                   tree_map_compare));
+    assert_true(rock_tree_map_init(&object, tree_map_compare));
     assert_false(rock_tree_map_set(&object, (void *)1, (void *)12));
     assert_int_equal(ROCK_TREE_MAP_ERROR_KEY_NOT_FOUND, rock_error);
     assert_true(rock_tree_map_invalidate(&object, NULL));
@@ -150,12 +144,11 @@ static void check_set_error_on_key_not_found(void **state) {
 static void check_set(void **state) {
     rock_error = ROCK_ERROR_NONE;
     struct rock_tree_map object = {};
-    assert_true(rock_tree_map_init(&object,
-                                   tree_map_compare));
+    assert_true(rock_tree_map_init(&object, tree_map_compare));
     assert_int_equal(0, object.tree.count);
     assert_true(rock_tree_map_add(&object, (void *)100, (void *)30));
     assert_int_equal(1, object.tree.count);
-    size_t value;
+    uintmax_t value;
     assert_true(rock_tree_map_get(&object, (void *)100, (void **)&value));
     assert_int_equal(30, value);
     assert_true(rock_tree_map_set(&object, (void *)100, NULL));
@@ -182,12 +175,11 @@ static void check_get_error_on_out_is_null(void **state) {
 static void check_get(void **state) {
     rock_error = ROCK_ERROR_NONE;
     struct rock_tree_map object = {};
-    assert_true(rock_tree_map_init(&object,
-                                   tree_map_compare));
+    assert_true(rock_tree_map_init(&object, tree_map_compare));
     assert_int_equal(0, object.tree.count);
     assert_true(rock_tree_map_add(&object, (void *)100, (void *)12));
     assert_int_equal(1, object.tree.count);
-    size_t value;
+    uintmax_t value;
     assert_true(rock_tree_map_get(&object, (void *)100, (void **)&value));
     assert_int_equal(12, value);
     assert_true(rock_tree_map_invalidate(&object, NULL));
@@ -211,8 +203,7 @@ static void check_contains_error_on_out_is_null(void **state) {
 static void check_contains(void **state) {
     rock_error = ROCK_ERROR_NONE;
     struct rock_tree_map object = {};
-    assert_true(rock_tree_map_init(&object,
-                                   tree_map_compare));
+    assert_true(rock_tree_map_init(&object, tree_map_compare));
     assert_int_equal(0, object.tree.count);
     assert_true(rock_tree_map_add(&object, (void *)72, (void *)12));
     assert_int_equal(1, object.tree.count);
@@ -242,8 +233,7 @@ static void check_first_error_on_out_is_null(void **state) {
 static void check_first_error_on_empty_tree_map(void **state) {
     rock_error = ROCK_ERROR_NONE;
     struct rock_tree_map object = {};
-    assert_true(rock_tree_map_init(&object,
-                                   tree_map_compare));
+    assert_true(rock_tree_map_init(&object, tree_map_compare));
     struct rock_tree_map_entry *entry;
     assert_false(rock_tree_map_first(&object, &entry));
     assert_int_equal(ROCK_TREE_MAP_ERROR_TREE_MAP_IS_EMPTY, rock_error);
@@ -254,20 +244,19 @@ static void check_first_error_on_empty_tree_map(void **state) {
 static void check_first(void **state) {
     rock_error = ROCK_ERROR_NONE;
     struct rock_tree_map object = {};
-    assert_true(rock_tree_map_init(&object,
-                                   tree_map_compare));
+    assert_true(rock_tree_map_init(&object, tree_map_compare));
     assert_int_equal(0, object.tree.count);
     assert_true(rock_tree_map_add(&object, (void *)123, NULL));
     assert_int_equal(1, object.tree.count);
     struct rock_tree_map_entry *entry;
     assert_true(rock_tree_map_first(&object, &entry));
-    assert_int_equal(123, (size_t)entry->key.data);
+    assert_int_equal(123, (uintmax_t)entry->key.data);
     assert_null(entry->value.data);
     assert_true(rock_tree_map_add(&object, (void *)77, (void*)1));
     assert_int_equal(2, object.tree.count);
     assert_true(rock_tree_map_first(&object, &entry));
-    assert_int_equal(77, (size_t)entry->key.data);
-    assert_int_equal(1, (size_t)entry->value.data);
+    assert_int_equal(77, (uintmax_t)entry->key.data);
+    assert_int_equal(1, (uintmax_t)entry->value.data);
     assert_true(rock_tree_map_invalidate(&object, NULL));
     rock_error = ROCK_ERROR_NONE;
 }
@@ -289,8 +278,7 @@ static void check_last_error_on_out_is_null(void **state) {
 static void check_last_error_on_empty_tree_map(void **state) {
     rock_error = ROCK_ERROR_NONE;
     struct rock_tree_map object = {};
-    assert_true(rock_tree_map_init(&object,
-                                   tree_map_compare));
+    assert_true(rock_tree_map_init(&object, tree_map_compare));
     struct rock_tree_map_entry *entry;
     assert_false(rock_tree_map_last(&object, &entry));
     assert_int_equal(ROCK_TREE_MAP_ERROR_TREE_MAP_IS_EMPTY, rock_error);
@@ -301,20 +289,19 @@ static void check_last_error_on_empty_tree_map(void **state) {
 static void check_last(void **state) {
     rock_error = ROCK_ERROR_NONE;
     struct rock_tree_map object = {};
-    assert_true(rock_tree_map_init(&object,
-                                   tree_map_compare));
+    assert_true(rock_tree_map_init(&object, tree_map_compare));
     assert_int_equal(0, object.tree.count);
     assert_true(rock_tree_map_add(&object, (void *)77, NULL));
     assert_int_equal(1, object.tree.count);
     struct rock_tree_map_entry *entry;
     assert_true(rock_tree_map_last(&object, &entry));
-    assert_int_equal(77, (size_t)entry->key.data);
+    assert_int_equal(77, (uintmax_t)entry->key.data);
     assert_null(entry->value.data);
     assert_true(rock_tree_map_add(&object, (void *)123, (void*)1));
     assert_int_equal(2, object.tree.count);
     assert_true(rock_tree_map_last(&object, &entry));
-    assert_int_equal(123, (size_t)entry->key.data);
-    assert_int_equal(1, (size_t)entry->value.data);
+    assert_int_equal(123, (uintmax_t)entry->key.data);
+    assert_int_equal(1, (uintmax_t)entry->value.data);
     assert_true(rock_tree_map_invalidate(&object, NULL));
     rock_error = ROCK_ERROR_NONE;
 }
@@ -336,8 +323,7 @@ static void check_next_error_on_out_is_null(void **state) {
 static void check_next_error_on_end_of_sequence(void **state) {
     rock_error = ROCK_ERROR_NONE;
     struct rock_tree_map object = {};
-    assert_true(rock_tree_map_init(&object,
-                                   tree_map_compare));
+    assert_true(rock_tree_map_init(&object, tree_map_compare));
     assert_int_equal(0, object.tree.count);
     assert_true(rock_tree_map_add(&object, (void *)77, NULL));
     assert_int_equal(1, object.tree.count);
@@ -352,19 +338,18 @@ static void check_next_error_on_end_of_sequence(void **state) {
 static void check_next(void **state) {
     rock_error = ROCK_ERROR_NONE;
     struct rock_tree_map object = {};
-    assert_true(rock_tree_map_init(&object,
-                                   tree_map_compare));
+    assert_true(rock_tree_map_init(&object, tree_map_compare));
     assert_int_equal(0, object.tree.count);
     assert_true(rock_tree_map_add(&object, (void *)77, NULL));
     assert_true(rock_tree_map_add(&object, (void *)123, (void*)1));
     assert_int_equal(2, object.tree.count);
     struct rock_tree_map_entry *entry;
     assert_true(rock_tree_map_first(&object, &entry));
-    assert_int_equal(77, (size_t)entry->key.data);
-    assert_int_equal(0, (size_t)entry->value.data);
+    assert_int_equal(77, (uintmax_t)entry->key.data);
+    assert_int_equal(0, (uintmax_t)entry->value.data);
     assert_true(rock_tree_map_next(entry, &entry));
-    assert_int_equal(123, (size_t)entry->key.data);
-    assert_int_equal(1, (size_t)entry->value.data);
+    assert_int_equal(123, (uintmax_t)entry->key.data);
+    assert_int_equal(1, (uintmax_t)entry->value.data);
     assert_true(rock_tree_map_invalidate(&object, NULL));
     rock_error = ROCK_ERROR_NONE;
 }
@@ -386,8 +371,7 @@ static void check_prev_error_on_out_is_null(void **state) {
 static void check_prev_error_on_end_of_sequence(void **state) {
     rock_error = ROCK_ERROR_NONE;
     struct rock_tree_map object = {};
-    assert_true(rock_tree_map_init(&object,
-                                   tree_map_compare));
+    assert_true(rock_tree_map_init(&object, tree_map_compare));
     assert_int_equal(0, object.tree.count);
     assert_true(rock_tree_map_add(&object, (void *)77, NULL));
     assert_int_equal(1, object.tree.count);
@@ -402,19 +386,18 @@ static void check_prev_error_on_end_of_sequence(void **state) {
 static void check_prev(void **state) {
     rock_error = ROCK_ERROR_NONE;
     struct rock_tree_map object = {};
-    assert_true(rock_tree_map_init(&object,
-                                   tree_map_compare));
+    assert_true(rock_tree_map_init(&object, tree_map_compare));
     assert_int_equal(0, object.tree.count);
     assert_true(rock_tree_map_add(&object, (void *)77, NULL));
     assert_true(rock_tree_map_add(&object, (void *)123, (void*)1));
     assert_int_equal(2, object.tree.count);
     struct rock_tree_map_entry *entry;
     assert_true(rock_tree_map_last(&object, &entry));
-    assert_int_equal(123, (size_t)entry->key.data);
-    assert_int_equal(1, (size_t)entry->value.data);
+    assert_int_equal(123, (uintmax_t)entry->key.data);
+    assert_int_equal(1, (uintmax_t)entry->value.data);
     assert_true(rock_tree_map_prev(entry, &entry));
-    assert_int_equal(77, (size_t)entry->key.data);
-    assert_int_equal(0, (size_t)entry->value.data);
+    assert_int_equal(77, (uintmax_t)entry->key.data);
+    assert_int_equal(0, (uintmax_t)entry->value.data);
     assert_true(rock_tree_map_invalidate(&object, NULL));
     rock_error = ROCK_ERROR_NONE;
 }
