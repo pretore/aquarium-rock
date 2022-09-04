@@ -16,9 +16,11 @@
 #define ROCK_TREE_SET_ERROR_MEMORY_ALLOCATION_FAILED            7
 #define ROCK_TREE_SET_ERROR_TREE_SET_IS_EMPTY                   8
 #define ROCK_TREE_SET_ERROR_END_OF_SEQUENCE                     9
+#define ROCK_TREE_SET_ERROR_SIZE_IS_ZERO                        10
 
 struct rock_tree_set {
     struct rock_red_black_tree tree;
+    size_t size;
 
     int (*compare)(const void *, const void *);
 };
@@ -26,6 +28,7 @@ struct rock_tree_set {
 /**
  * @brief Initialise tree set.
  * @param [in] object instance to be initialised.
+ * @param [in] size of items to be contained within the set.
  * @param [in] compare comparison which must return an integer less than,
  * equal to, or greater than zero if the <u>first item</u> is considered
  * to be respectively less than, equal to, or greater than the <u>second
@@ -33,8 +36,10 @@ struct rock_tree_set {
  * @return On success true, otherwise false if an error has occurred.
  * @throws ROCK_TREE_SET_ERROR_OBJECT_IS_NULL if object is <i>NULL</i>.
  * @throws ROCK_TREE_SET_ERROR_COMPARE_IS_NULL if compare is <i>NULL</i>.
+ * @throws ROCK_TREE_SET_ERROR_SIZE_IS_ZERO if size is zero.
  */
 bool rock_tree_set_init(struct rock_tree_set *object,
+                        size_t size,
                         int (*compare)(const void *first,
                                        const void *second));
 
@@ -50,7 +55,17 @@ bool rock_tree_set_init(struct rock_tree_set *object,
  * @throws ROCK_TREE_SET_ERROR_OBJECT_IS_NULL if object is <i>NULL</i>.
  */
 bool rock_tree_set_invalidate(struct rock_tree_set *object,
-                              void (*on_destroy)(void *));
+                              void (*on_destroy)(void *item));
+
+/**
+ * @brief Retrieve the size of an item.
+ * @param [in] object tree set instance.
+ * @param [in] out receive the size of an item.
+ * @return On success true, otherwise false if an error has occurred.
+ * @throws ROCK_TREE_SET_ERROR_OBJECT_IS_NULL if object is <i>NULL</i>.
+ * @throws ROCK_TREE_SET_ERROR_OUT_IS_NULL if out is <i>NULL</i>.
+ */
+bool rock_tree_set_size(struct rock_tree_set *object, size_t *out);
 
 /**
  * @brief Retrieve the count of items.
@@ -68,6 +83,7 @@ bool rock_tree_set_count(struct rock_tree_set *object, uintmax_t *out);
  * @param [in] item to be added.
  * @return On success true, otherwise false if an error has occurred.
  * @throws ROCK_TREE_SET_ERROR_OBJECT_IS_NULL if object is <i>NULL</i>.
+ * @throws ROCK_TREE_SET_ERROR_ITEM_IS_NULL if item is <i>NULL</i>.
  * @throws ROCK_TREE_SET_ERROR_ITEM_ALREADY_EXISTS if item is already present
  * in the tree set.
  * @throws ROCK_TREE_SET_ERROR_MEMORY_ALLOCATION_FAILED if there was not
@@ -81,6 +97,7 @@ bool rock_tree_set_add(struct rock_tree_set *object, void *item);
  * @param [in] item to be removed.
  * @return On success true, otherwise false if an error has occurred.
  * @throws ROCK_TREE_SET_ERROR_OBJECT_IS_NULL if object is <i>NULL</i>.
+ * @throws ROCK_TREE_SET_ERROR_ITEM_IS_NULL if item is <i>NULL</i>.
  * @throws ROCK_TREE_SET_ERROR_ITEM_NOT_FOUND if item is not in the tree set
  * instance.
  */
@@ -93,6 +110,7 @@ bool rock_tree_set_remove(struct rock_tree_set *object, void *item);
  * @param [out] out receive true if item is present, otherwise false.
  * @return On success true, otherwise false if an error has occurred.
  * @throws ROCK_TREE_SET_ERROR_OBJECT_IS_NULL if object is <i>NULL</i>.
+ * @throws ROCK_TREE_SET_ERROR_ITEM_IS_NULL if item is <i>NULL</i>.
  * @throws ROCK_TREE_SET_ERROR_OUT_IS_NULL if out is <i>NULL</i>.
  */
 bool rock_tree_set_contains(struct rock_tree_set *object, void *item,
