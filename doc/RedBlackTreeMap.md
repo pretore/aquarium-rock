@@ -42,19 +42,15 @@ callback to order ``struct student_key`` types.
 Here is an example student key compare implementation:
 ```c
 static int student_key_compare(const void *const a, const void *const b) {
-    const struct student_key *const A = (const struct student *)a;
-    const struct student_key *const B = (const struct student *)b;
+    const struct student_key *const A = (const struct student_key *)a;
+    const struct student_key *const B = (const struct student_key *)b;
     /* first compare by length ... */
     int result = seagrass_uintmax_t_compare(A->length, B->length));
     if (result) {
         return result;
     }
     /* ... then by name */
-    result = strncmp(A->name, B->name, A->name_length);
-    if (result) {
-        return result;
-    }
-    return result;
+    return strncmp(A->name, B->name, A->name_length);
 }
 ```
 
@@ -68,7 +64,7 @@ cleanup on the stored types as shown below.
 
 ```c
 static void student_on_destroy(void *const key, void *const value) {
-    struct student_key *const A = (struct student *)a;
+    struct student_key *const A = (struct student_key *)a;
     free(A->name); /* free the heap allocated name */
 }
 
