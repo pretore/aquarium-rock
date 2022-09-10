@@ -1,13 +1,13 @@
-### Functions
+## Functions
 
-#### Name
+### Name
 
 All functions in this library will start with ``rock_``. 
 
 Functions that get and set values must contain ``get`` or ``set`` in 
 their name unless you can only get a value then the prefix is omitted.
 
-#### Return Types
+### Return Types
 
 If there is no possibility of failure then the function must have a
 ``void`` return type.
@@ -32,7 +32,7 @@ used for comparison functions.
 int memcmp(const void *s1, const void *s2, size_t n);
 ```
 
-#### Errors
+### Errors
 
 Errors are reported by setting the ``rock_error`` to the correct error value 
 and then returning ``false``.

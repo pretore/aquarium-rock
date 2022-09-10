@@ -9,6 +9,11 @@
 extern void* _test_malloc(size_t size, const char* file, int line);
 #define malloc(size) _test_malloc(size, __FILE__, __LINE__)
 
+int _test_posix_memalign(void **out, size_t alignment, size_t size,
+                         const char* file, int line);
+#define posix_memalign(out, alignment, size) \
+    _test_posix_memalign(out, alignment, size, __FILE__, __LINE__)
+
 extern void* _test_calloc(size_t nmemb, size_t size, const char* file, int line);
 #define calloc(nmemb, size) _test_calloc(nmemb, size, __FILE__, __LINE__)
 

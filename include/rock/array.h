@@ -26,7 +26,7 @@ struct rock_array {
 /**
  * @brief Initialise array.
  * @param [in] object instance to be initialised.
- * @param [in] size in bytes of an item in the array.
+ * @param [in] size of an item in the array.
  * @param [in] capacity set the initial capacity.
  * @return On success true, otherwise false if an error has occurred.
  * @throws ROCK_ARRAY_ERROR_OBJECT_IS_NULL if object is <i>NULL</i>.
@@ -85,7 +85,7 @@ bool rock_array_set_length(struct rock_array *object, uintmax_t length);
 /**
  * @brief Retrieve the size of an item.
  * @param [in] object array instance.
- * @param [in] out receive the size in bytes of an item.
+ * @param [in] out receive the size of an item.
  * @return On success true, otherwise false if an error has occurred.
  * @throws ROCK_ARRAY_ERROR_OBJECT_IS_NULL if object is <i>NULL</i>.
  * @throws ROCK_ARRAY_ERROR_OUT_IS_NULL if out is <i>NULL</i>.

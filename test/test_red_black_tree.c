@@ -2,87 +2,32 @@
 #include <stddef.h>
 #include <setjmp.h>
 #include <cmocka.h>
+#include <stdlib.h>
+#include <time.h>
 #include <seagrass.h>
 #include <rock.h>
 
 #include "private/red_black_tree.h"
 #include "test/cmocka.h"
 
-static void check_node_alloc_error_on_out_is_null(void **state) {
-    rock_error = ROCK_ERROR_NONE;
-    assert_false(rock_red_black_tree_node_alloc(0, NULL));
-    assert_int_equal(ROCK_RED_BLACK_TREE_ERROR_OUT_IS_NULL, rock_error);
-    rock_error = ROCK_ERROR_NONE;
-}
-
-static void check_node_alloc_error_on_memory_allocation_failed(void **s) {
-    rock_error = ROCK_ERROR_NONE;
-    assert_false(rock_red_black_tree_node_alloc(SIZE_MAX, (void **) 1));
-    assert_int_equal(ROCK_RED_BLACK_TREE_ERROR_MEMORY_ALLOCATION_FAILED,
-                     rock_error);
-    rock_error = ROCK_ERROR_NONE;
-}
-
-static void check_node_alloc(void **state) {
-    rock_error = ROCK_ERROR_NONE;
-    struct object {
-        uintmax_t count;
-    } *object;
-    assert_true(rock_red_black_tree_node_alloc(
-            sizeof(*object),
-            (void **) &object));
-    rock_red_black_tree_node_destroy(object);
-    rock_error = ROCK_ERROR_NONE;
-}
-
 static void check_node_init_error_on_node_is_null(void **state) {
     rock_error = ROCK_ERROR_NONE;
     assert_false(rock_red_black_tree_node_init(NULL));
+    assert_int_equal(ROCK_RED_BLACK_TREE_ERROR_NODE_IS_NULL, rock_error);
     rock_error = ROCK_ERROR_NONE;
 }
 
 static void check_node_init(void **state) {
     rock_error = ROCK_ERROR_NONE;
-    void *node;
-    assert_true(rock_red_black_tree_node_alloc(0, &node));
-    struct rock_red_black_tree_node *node_;
-    node_ = rock_red_black_tree_node_from(node);
-    node_->right = (void *) ~0;
-    node_->left = (void *) ~0;
-    node_->parent = (void *) ~0;
-    assert_true(rock_red_black_tree_node_init(node));
-    assert_null(node_->parent);
-    assert_null(node_->left);
-    assert_null(node_->right);
-    rock_red_black_tree_node_destroy(node);
-    rock_error = ROCK_ERROR_NONE;
-}
-
-static void check_node_error_on_out_is_null(void **state) {
-    rock_error = ROCK_ERROR_NONE;
-    assert_false(rock_red_black_tree_node(0, NULL));
-    assert_int_equal(ROCK_RED_BLACK_TREE_ERROR_OUT_IS_NULL, rock_error);
-    rock_error = ROCK_ERROR_NONE;
-}
-
-static void check_node_error_on_memory_allocation_failed(void **state) {
-    rock_error = ROCK_ERROR_NONE;
-    assert_false(rock_red_black_tree_node(SIZE_MAX, (void *) 1));
-    assert_int_equal(ROCK_RED_BLACK_TREE_ERROR_MEMORY_ALLOCATION_FAILED,
-                     rock_error);
-    rock_error = ROCK_ERROR_NONE;
-}
-
-static void check_node(void **state) {
-    rock_error = ROCK_ERROR_NONE;
-    void *node;
-    assert_true(rock_red_black_tree_node(0, &node));
-    struct rock_red_black_tree_node *node_;
-    node_ = rock_red_black_tree_node_from(node);
-    assert_null(node_->parent);
-    assert_null(node_->left);
-    assert_null(node_->right);
-    rock_red_black_tree_node_destroy(node);
+    struct entry {
+        int i;
+        struct rock_red_black_tree_node node;
+        int p;
+    } e;
+    assert_true(rock_red_black_tree_node_init(&e.node));
+    assert_null(e.node.parent);
+    assert_null(e.node.left);
+    assert_null(e.node.right);
     rock_error = ROCK_ERROR_NONE;
 }
 
@@ -95,21 +40,20 @@ static void check_node_set_parent_error_on_node_is_null(void **state) {
 
 static void check_node_set_parent(void **state) {
     rock_error = ROCK_ERROR_NONE;
-    void *node;
-    assert_true(rock_red_black_tree_node(0, &node));
-    struct rock_red_black_tree_node *node_;
-    node_ = rock_red_black_tree_node_from(node);
-    node_->parent = (void *) ROCK_RED_BLACK_TREE_COLOR_RED;
-    assert_true(rock_red_black_tree_node_set_parent(node, &rock_error));
-    assert_ptr_equal((void *) ((uintmax_t) node_->parent & ~1), &rock_error);
-    assert_int_equal(((uintmax_t) node_->parent & 1),
+    struct rock_red_black_tree_node node;
+    assert_true(rock_red_black_tree_node_init(&node));
+    struct rock_red_black_tree_node parent;
+    assert_true(rock_red_black_tree_node_init(&parent));
+    node.parent = (void *) ROCK_RED_BLACK_TREE_COLOR_RED;
+    assert_true(rock_red_black_tree_node_set_parent(&node, &parent));
+    assert_ptr_equal((void *) ((uintmax_t) node.parent & ~1), &parent);
+    assert_int_equal(((uintmax_t) node.parent & 1),
                      ROCK_RED_BLACK_TREE_COLOR_RED);
-    node_->parent = (void *) ROCK_RED_BLACK_TREE_COLOR_BLACK;
-    assert_true(rock_red_black_tree_node_set_parent(node, &rock_error));
-    assert_ptr_equal((void *) ((uintmax_t) node_->parent & ~1), &rock_error);
-    assert_int_equal(((uintmax_t) node_->parent & 1),
+    node.parent = (void *) ROCK_RED_BLACK_TREE_COLOR_BLACK;
+    assert_true(rock_red_black_tree_node_set_parent(&node, &parent));
+    assert_ptr_equal((void *) ((uintmax_t) node.parent & ~1), &parent);
+    assert_int_equal(((uintmax_t) node.parent & 1),
                      ROCK_RED_BLACK_TREE_COLOR_BLACK);
-    rock_red_black_tree_node_destroy(node);
     rock_error = ROCK_ERROR_NONE;
 }
 
@@ -129,15 +73,16 @@ static void check_node_get_parent_error_on_out_is_null(void **state) {
 
 static void check_node_get_parent(void **state) {
     rock_error = ROCK_ERROR_NONE;
-    void *node;
-    assert_true(rock_red_black_tree_node(0, &node));
-    void *parent;
-    assert_true(rock_red_black_tree_node_get_parent(node, &parent));
-    assert_null(parent);
-    assert_true(rock_red_black_tree_node_set_parent(node, &rock_error));
-    assert_true(rock_red_black_tree_node_get_parent(node, &parent));
-    assert_int_equal(&rock_error, parent);
-    rock_red_black_tree_node_destroy(node);
+    struct rock_red_black_tree_node node;
+    assert_true(rock_red_black_tree_node_init(&node));
+    struct rock_red_black_tree_node parent;
+    assert_true(rock_red_black_tree_node_init(&parent));
+    struct rock_red_black_tree_node *out;
+    assert_true(rock_red_black_tree_node_get_parent(&node, &out));
+    assert_null(out);
+    assert_true(rock_red_black_tree_node_set_parent(&node, &parent));
+    assert_true(rock_red_black_tree_node_get_parent(&node, &out));
+    assert_int_equal(&parent, out);
     rock_error = ROCK_ERROR_NONE;
 }
 
@@ -158,50 +103,47 @@ static void check_node_get_color_error_on_out_is_null(void **state) {
 
 static void check_node_get_color(void **state) {
     rock_error = ROCK_ERROR_NONE;
-    void *node;
-    assert_true(rock_red_black_tree_node(0, &node));
+    struct rock_red_black_tree_node node;
+    assert_true(rock_red_black_tree_node_init(&node));
     bool color;
-    assert_true(rock_red_black_tree_node_get_color(node, &color));
+    assert_true(rock_red_black_tree_node_get_color(&node, &color));
     assert_int_equal(ROCK_RED_BLACK_TREE_COLOR_RED, color);
-    struct rock_red_black_tree_node *node_;
-    node_ = rock_red_black_tree_node_from(node);
-    node_->parent = (void *) ROCK_RED_BLACK_TREE_COLOR_BLACK;
-    assert_true(rock_red_black_tree_node_get_color(node, &color));
+    node.parent = (void *) ROCK_RED_BLACK_TREE_COLOR_BLACK;
+    assert_true(rock_red_black_tree_node_get_color(&node, &color));
     assert_int_equal(ROCK_RED_BLACK_TREE_COLOR_BLACK, color);
-    node_->parent = (void *) ROCK_RED_BLACK_TREE_COLOR_RED;
-    assert_true(rock_red_black_tree_node_get_color(node, &color));
+    node.parent = (void *) ROCK_RED_BLACK_TREE_COLOR_RED;
+    assert_true(rock_red_black_tree_node_get_color(&node, &color));
     assert_int_equal(ROCK_RED_BLACK_TREE_COLOR_RED, color);
-    rock_red_black_tree_node_destroy(node);
     rock_error = ROCK_ERROR_NONE;
 }
 
 static void check_node_set_color_error_on_node_is_null(void **state) {
     rock_error = ROCK_ERROR_NONE;
     assert_false(rock_red_black_tree_node_set_color(
-            NULL,
-            ROCK_RED_BLACK_TREE_COLOR_BLACK));
+            NULL, ROCK_RED_BLACK_TREE_COLOR_BLACK));
     assert_int_equal(ROCK_RED_BLACK_TREE_ERROR_NODE_IS_NULL, rock_error);
     rock_error = ROCK_ERROR_NONE;
 }
 
 static void check_node_set_color(void **state) {
-    void *node;
-    assert_true(rock_red_black_tree_node(0, &node));
+    rock_error = ROCK_ERROR_NONE;
+    struct rock_red_black_tree_node node;
+    assert_true(rock_red_black_tree_node_init(&node));
     bool color;
-    assert_true(rock_red_black_tree_node_get_color(node, &color));
+    assert_true(rock_red_black_tree_node_get_color(&node, &color));
     assert_int_equal(ROCK_RED_BLACK_TREE_COLOR_RED, color);
     assert_true(rock_red_black_tree_node_set_color(
-            node, ROCK_RED_BLACK_TREE_COLOR_BLACK));
-    assert_true(rock_red_black_tree_node_get_color(node, &color));
+            &node, ROCK_RED_BLACK_TREE_COLOR_BLACK));
+    assert_true(rock_red_black_tree_node_get_color(&node, &color));
     assert_int_equal(ROCK_RED_BLACK_TREE_COLOR_BLACK, color);
     assert_true(rock_red_black_tree_node_set_color(
-            node, ROCK_RED_BLACK_TREE_COLOR_RED));
-    assert_true(rock_red_black_tree_node_get_color(node, &color));
+            &node, ROCK_RED_BLACK_TREE_COLOR_RED));
+    assert_true(rock_red_black_tree_node_get_color(&node, &color));
     assert_int_equal(ROCK_RED_BLACK_TREE_COLOR_RED, color);
-    rock_red_black_tree_node_destroy(node);
+    rock_error = ROCK_ERROR_NONE;
 }
 
-static void check_node_get_left_error_on_null_node(void**state) {
+static void check_node_get_left_error_on_null_node(void **state) {
     rock_error = ROCK_ERROR_NONE;
     assert_false(rock_red_black_tree_node_get_left(NULL, (void *) 1));
     assert_int_equal(ROCK_RED_BLACK_TREE_ERROR_END_OF_SEQUENCE, rock_error);
@@ -216,18 +158,17 @@ static void check_node_get_left_error_on_null_argument_ptr(void **state) {
 }
 
 static void check_node_get_left(void **state) {
+    srand(time(NULL));
     rock_error = ROCK_ERROR_NONE;
-    void *node;
-    assert_true(rock_red_black_tree_node(0, &node));
-    void *left = &check_node_get_left;
-    assert_true(rock_red_black_tree_node_get_left(node, &left));
-    assert_null(left);
-    struct rock_red_black_tree_node *node_;
-    node_ = rock_red_black_tree_node_from(node);
-    node_->left = &rock_error;
-    assert_true(rock_red_black_tree_node_get_left(node, &left));
-    assert_ptr_equal(&rock_error, left);
-    rock_red_black_tree_node_destroy(node);
+    struct rock_red_black_tree_node node;
+    assert_true(rock_red_black_tree_node_init(&node));
+    struct rock_red_black_tree_node *out;
+    assert_true(rock_red_black_tree_node_get_left(&node, &out));
+    assert_null(out);
+    uintptr_t left = (rand() % UINTPTR_MAX);
+    node.left = (struct rock_red_black_tree_node *)left;
+    assert_true(rock_red_black_tree_node_get_left(&node, &out));
+    assert_ptr_equal(out, (void*)left);
     rock_error = ROCK_ERROR_NONE;
 }
 
@@ -240,15 +181,15 @@ static void check_node_set_left_error_on_node_is_null(void **state) {
 
 static void check_node_set_left(void **state) {
     rock_error = ROCK_ERROR_NONE;
-    void *node;
-    assert_true(rock_red_black_tree_node(0, &node));
-    void *left;
-    assert_true(rock_red_black_tree_node_get_left(node, &left));
-    assert_null(left);
-    assert_true(rock_red_black_tree_node_set_left(node, &rock_error));
-    assert_true(rock_red_black_tree_node_get_left(node, &left));
-    assert_ptr_equal(&rock_error, left);
-    rock_red_black_tree_node_destroy(node);
+    struct rock_red_black_tree_node node;
+    assert_true(rock_red_black_tree_node_init(&node));
+    struct rock_red_black_tree_node left;
+    struct rock_red_black_tree_node *out;
+    assert_true(rock_red_black_tree_node_get_left(&node, &out));
+    assert_null(out);
+    assert_true(rock_red_black_tree_node_set_left(&node, &left));
+    assert_true(rock_red_black_tree_node_get_left(&node, &out));
+    assert_ptr_equal(&left, out);
     rock_error = ROCK_ERROR_NONE;
 }
 
@@ -267,18 +208,17 @@ static void check_node_get_right_error_on_out_is_null(void **state) {
 }
 
 static void check_node_get_right(void **state) {
+    srand(time(NULL));
     rock_error = ROCK_ERROR_NONE;
-    void *node;
-    assert_true(rock_red_black_tree_node(0, &node));
-    void *right = &check_node_get_right;
-    assert_true(rock_red_black_tree_node_get_right(node, &right));
-    assert_null(right);
-    struct rock_red_black_tree_node *node_;
-    node_ = rock_red_black_tree_node_from(node);
-    node_->right = &rock_error;
-    assert_true(rock_red_black_tree_node_get_right(node, &right));
-    assert_ptr_equal(&rock_error, right);
-    rock_red_black_tree_node_destroy(node);
+    struct rock_red_black_tree_node node;
+    assert_true(rock_red_black_tree_node_init(&node));
+    struct rock_red_black_tree_node *out;
+    assert_true(rock_red_black_tree_node_get_right(&node, &out));
+    assert_null(out);
+    uintptr_t right = (rand() % UINTPTR_MAX);
+    node.right = (struct rock_red_black_tree_node *)right;
+    assert_true(rock_red_black_tree_node_get_right(&node, &out));
+    assert_ptr_equal(out, (void*)right);
     rock_error = ROCK_ERROR_NONE;
 }
 
@@ -291,15 +231,15 @@ static void check_node_set_right_error_on_node_is_null(void **state) {
 
 static void check_node_set_right(void **state) {
     rock_error = ROCK_ERROR_NONE;
-    void *node;
-    assert_true(rock_red_black_tree_node(0, &node));
-    void *right;
-    assert_true(rock_red_black_tree_node_get_right(node, &right));
-    assert_null(right);
-    assert_true(rock_red_black_tree_node_set_right(node, &rock_error));
-    assert_true(rock_red_black_tree_node_get_right(node, &right));
-    assert_ptr_equal(&rock_error, right);
-    rock_red_black_tree_node_destroy(node);
+    struct rock_red_black_tree_node node;
+    assert_true(rock_red_black_tree_node_init(&node));
+    struct rock_red_black_tree_node right;
+    struct rock_red_black_tree_node *out;
+    assert_true(rock_red_black_tree_node_get_right(&node, &out));
+    assert_null(out);
+    assert_true(rock_red_black_tree_node_set_right(&node, &right));
+    assert_true(rock_red_black_tree_node_get_right(&node, &out));
+    assert_ptr_equal(&right, out);
     rock_error = ROCK_ERROR_NONE;
 }
 
@@ -312,297 +252,363 @@ static void check_rotate_left_error_on_Y_is_null(void **state) {
 
 static void check_rotate_left_error_on_Y_has_no_parent(void **state) {
     rock_error = ROCK_ERROR_NONE;
-    void *Y;
-    assert_true(rock_red_black_tree_node(0, &Y));
-    assert_false(rock_red_black_tree_rotate_left(Y));
+    struct rock_red_black_tree_node Y;
+    assert_true(rock_red_black_tree_node_init(&Y));
+    assert_false(rock_red_black_tree_rotate_left(&Y));
     assert_int_equal(ROCK_RED_BLACK_TREE_ERROR_Y_HAS_NO_PARENT, rock_error);
-    rock_red_black_tree_node_destroy(Y);
     rock_error = ROCK_ERROR_NONE;
 }
 
 static void
 check_rotate_left_error_on_Y_is_not_right_child_of_X(void **state) {
     rock_error = ROCK_ERROR_NONE;
-    void *X, *Y;
-    assert_true(rock_red_black_tree_node(0, &X));
-    assert_true(rock_red_black_tree_node(0, &Y));
-    assert_true(rock_red_black_tree_node_set_left(X, Y)
-                && rock_red_black_tree_node_set_parent(Y, X));
-    assert_false(rock_red_black_tree_rotate_left(Y));
+    struct rock_red_black_tree_node X, Y;
+    assert_true(rock_red_black_tree_node_init(&X));
+    assert_true(rock_red_black_tree_node_init(&Y));
+    assert_true(rock_red_black_tree_node_set_left(&X, &Y));
+    assert_true(rock_red_black_tree_node_set_parent(&Y, &X));
+    assert_false(rock_red_black_tree_rotate_left(&Y));
     assert_int_equal(ROCK_RED_BLACK_TREE_ERROR_Y_IS_NOT_RIGHT_CHILD_OF_X,
                      rock_error);
-    rock_red_black_tree_node_destroy(Y);
-    rock_red_black_tree_node_destroy(X);
     rock_error = ROCK_ERROR_NONE;
 }
 
 static void check_rotate_left_a_b_c_pL_X_Y(void **state) {
     rock_error = ROCK_ERROR_NONE;
-    void *a, *b, *c, *p, *X, *Y;
-    assert_true(rock_red_black_tree_node(0, &a));
-    assert_true(rock_red_black_tree_node(0, &b));
-    assert_true(rock_red_black_tree_node(0, &c));
-    assert_true(rock_red_black_tree_node(0, &p));
-    assert_true(rock_red_black_tree_node(0, &X));
-    assert_true(rock_red_black_tree_node(0, &Y));
-    assert_true(rock_red_black_tree_node_set_left(p, X)
-                && rock_red_black_tree_node_set_parent(X, p));
-    assert_true(rock_red_black_tree_node_set_left(X, a)
-                && rock_red_black_tree_node_set_parent(a, X));
-    assert_true(rock_red_black_tree_node_set_right(X, Y)
-                && rock_red_black_tree_node_set_parent(Y, X));
-    assert_true(rock_red_black_tree_node_set_left(Y, b)
-                && rock_red_black_tree_node_set_parent(b, Y));
-    assert_true(rock_red_black_tree_node_set_right(Y, c)
-                && rock_red_black_tree_node_set_parent(c, Y));
-    assert_true(rock_red_black_tree_rotate_left(Y));
-    void *a_, *b_, *c_, *p_, *X_, *Y_;
-    assert_true(rock_red_black_tree_node_get_left(p, &Y_)
-                && Y == Y_
-                && rock_red_black_tree_node_get_parent(Y, &p_)
-                && p == p_);
-    assert_true(rock_red_black_tree_node_get_left(Y, &X_)
-                && X == X_
-                && rock_red_black_tree_node_get_parent(X, &Y_)
-                && Y == Y_);
-    assert_true(rock_red_black_tree_node_get_left(X, &a_)
-                && a == a_
-                && rock_red_black_tree_node_get_parent(a, &X_)
-                && X == X_);
-    assert_true(rock_red_black_tree_node_get_right(X, &b_)
-                && b == b_
-                && rock_red_black_tree_node_get_parent(b, &X_)
-                && X == X_);
-    assert_true(rock_red_black_tree_node_get_right(Y, &c_)
-                && c == c_
-                && rock_red_black_tree_node_get_parent(c, &Y_)
-                && Y == Y_);
-    rock_red_black_tree_node_destroy(Y);
-    rock_red_black_tree_node_destroy(X);
-    rock_red_black_tree_node_destroy(p);
-    rock_red_black_tree_node_destroy(c);
-    rock_red_black_tree_node_destroy(b);
-    rock_red_black_tree_node_destroy(a);
+    struct rock_red_black_tree_node a, b, c, p, X, Y;
+    assert_true(rock_red_black_tree_node_init(&a));
+    assert_true(rock_red_black_tree_node_init(&b));
+    assert_true(rock_red_black_tree_node_init(&c));
+    assert_true(rock_red_black_tree_node_init(&p));
+    assert_true(rock_red_black_tree_node_init(&X));
+    assert_true(rock_red_black_tree_node_init(&Y));
+    /*
+     *           p
+     *          /
+     *         X
+     *        / \
+     *       a   Y
+     *          / \
+     *         b   c
+     */
+    assert_true(rock_red_black_tree_node_set_left(&p, &X));
+    assert_true(rock_red_black_tree_node_set_parent(&X, &p));
+    assert_true(rock_red_black_tree_node_set_left(&X, &a));
+    assert_true(rock_red_black_tree_node_set_parent(&a, &X));
+    assert_true(rock_red_black_tree_node_set_right(&X, &Y));
+    assert_true(rock_red_black_tree_node_set_parent(&Y, &X));
+    assert_true(rock_red_black_tree_node_set_left(&Y, &b));
+    assert_true(rock_red_black_tree_node_set_parent(&b, &Y));
+    assert_true(rock_red_black_tree_node_set_right(&Y, &c));
+    assert_true(rock_red_black_tree_node_set_parent(&c, &Y));
+    assert_true(rock_red_black_tree_rotate_left(&Y));
+    /*
+     *           p
+     *          /
+     *         Y
+     *        / \
+     *       X   c
+     *      / \
+     *     a   b
+     */
+    struct rock_red_black_tree_node *a_, *b_, *c_, *p_, *X_, *Y_;
+    assert_true(rock_red_black_tree_node_get_left(&p, &Y_));
+    assert_ptr_equal(&Y, Y_);
+    assert_true(rock_red_black_tree_node_get_parent(&Y, &p_));
+    assert_ptr_equal(&p, p_);
+    assert_true(rock_red_black_tree_node_get_left(&Y, &X_));
+    assert_ptr_equal(&X, X_);
+    assert_true(rock_red_black_tree_node_get_parent(&X, &Y_));
+    assert_ptr_equal(&Y, Y_);
+    assert_true(rock_red_black_tree_node_get_left(&X, &a_));
+    assert_ptr_equal(&a, a_);
+    assert_true(rock_red_black_tree_node_get_parent(&a, &X_));
+    assert_ptr_equal(&X, X_);
+    assert_true(rock_red_black_tree_node_get_right(&X, &b_));
+    assert_ptr_equal(&b, b_);
+    assert_true(rock_red_black_tree_node_get_parent(&b, &X_));
+    assert_ptr_equal(&X, X_);
+    assert_true(rock_red_black_tree_node_get_right(&Y, &c_));
+    assert_ptr_equal(&c, c_);
+    assert_true(rock_red_black_tree_node_get_parent(&c, &Y_));
+    assert_ptr_equal(&Y, Y_);
     rock_error = ROCK_ERROR_NONE;
 }
 
 static void check_rotate_left_a_b_c_pR_X_Y(void **state) {
     rock_error = ROCK_ERROR_NONE;
-    void *a, *b, *c, *p, *X, *Y;
-    assert_true(rock_red_black_tree_node(0, &a));
-    assert_true(rock_red_black_tree_node(0, &b));
-    assert_true(rock_red_black_tree_node(0, &c));
-    assert_true(rock_red_black_tree_node(0, &p));
-    assert_true(rock_red_black_tree_node(0, &X));
-    assert_true(rock_red_black_tree_node(0, &Y));
-    assert_true(rock_red_black_tree_node_set_right(p, X)
-                && rock_red_black_tree_node_set_parent(X, p));
-    assert_true(rock_red_black_tree_node_set_left(X, a)
-                && rock_red_black_tree_node_set_parent(a, X));
-    assert_true(rock_red_black_tree_node_set_right(X, Y)
-                && rock_red_black_tree_node_set_parent(Y, X));
-    assert_true(rock_red_black_tree_node_set_left(Y, b)
-                && rock_red_black_tree_node_set_parent(b, Y));
-    assert_true(rock_red_black_tree_node_set_right(Y, c)
-                && rock_red_black_tree_node_set_parent(c, Y));
-    assert_true(rock_red_black_tree_rotate_left(Y));
-    void *a_, *b_, *c_, *p_, *X_, *Y_;
-    assert_true(rock_red_black_tree_node_get_right(p, &Y_)
-                && Y == Y_
-                && rock_red_black_tree_node_get_parent(Y, &p_)
-                && p == p_);
-    assert_true(rock_red_black_tree_node_get_left(Y, &X_)
-                && X == X_
-                && rock_red_black_tree_node_get_parent(X, &Y_)
-                && Y == Y_);
-    assert_true(rock_red_black_tree_node_get_left(X, &a_)
-                && a == a_
-                && rock_red_black_tree_node_get_parent(a, &X_)
-                && X == X_);
-    assert_true(rock_red_black_tree_node_get_right(X, &b_)
-                && b == b_
-                && rock_red_black_tree_node_get_parent(b, &X_)
-                && X == X_);
-    assert_true(rock_red_black_tree_node_get_right(Y, &c_)
-                && c == c_
-                && rock_red_black_tree_node_get_parent(c, &Y_)
-                && Y == Y_);
-    rock_red_black_tree_node_destroy(Y);
-    rock_red_black_tree_node_destroy(X);
-    rock_red_black_tree_node_destroy(p);
-    rock_red_black_tree_node_destroy(c);
-    rock_red_black_tree_node_destroy(b);
-    rock_red_black_tree_node_destroy(a);
+    struct rock_red_black_tree_node a, b, c, p, X, Y;
+    assert_true(rock_red_black_tree_node_init(&a));
+    assert_true(rock_red_black_tree_node_init(&b));
+    assert_true(rock_red_black_tree_node_init(&c));
+    assert_true(rock_red_black_tree_node_init(&p));
+    assert_true(rock_red_black_tree_node_init(&X));
+    assert_true(rock_red_black_tree_node_init(&Y));
+    /*
+     *       p
+     *        \
+     *         X
+     *        / \
+     *       a   Y
+     *          / \
+     *         b   c
+     */
+    assert_true(rock_red_black_tree_node_set_right(&p, &X));
+    assert_true(rock_red_black_tree_node_set_parent(&X, &p));
+    assert_true(rock_red_black_tree_node_set_left(&X, &a));
+    assert_true(rock_red_black_tree_node_set_parent(&a, &X));
+    assert_true(rock_red_black_tree_node_set_right(&X, &Y));
+    assert_true(rock_red_black_tree_node_set_parent(&Y, &X));
+    assert_true(rock_red_black_tree_node_set_left(&Y, &b));
+    assert_true(rock_red_black_tree_node_set_parent(&b, &Y));
+    assert_true(rock_red_black_tree_node_set_right(&Y, &c));
+    assert_true(rock_red_black_tree_node_set_parent(&c, &Y));
+    assert_true(rock_red_black_tree_rotate_left(&Y));
+    /*
+     *       p
+     *        \
+     *         Y
+     *        / \
+     *       X   c
+     *      / \
+     *     a   b
+     */
+    struct rock_red_black_tree_node *a_, *b_, *c_, *p_, *X_, *Y_;
+    assert_true(rock_red_black_tree_node_get_right(&p, &Y_));
+    assert_ptr_equal(&Y, Y_);
+    assert_true(rock_red_black_tree_node_get_parent(&Y, &p_));
+    assert_ptr_equal(&p, p_);
+    assert_true(rock_red_black_tree_node_get_left(&Y, &X_));
+    assert_ptr_equal(&X, X_);
+    assert_true(rock_red_black_tree_node_get_parent(&X, &Y_));
+    assert_ptr_equal(&Y, Y_);
+    assert_true(rock_red_black_tree_node_get_left(&X, &a_));
+    assert_ptr_equal(&a, a_);
+    assert_true(rock_red_black_tree_node_get_parent(&a, &X_));
+    assert_ptr_equal(&X, X_);
+    assert_true(rock_red_black_tree_node_get_right(&X, &b_));
+    assert_ptr_equal(&b, b_);
+    assert_true(rock_red_black_tree_node_get_parent(&b, &X_));
+    assert_ptr_equal(&X, X_);
+    assert_true(rock_red_black_tree_node_get_right(&Y, &c_));
+    assert_ptr_equal(&c, c_);
+    assert_true(rock_red_black_tree_node_get_parent(&c, &Y_));
+    assert_ptr_equal(&Y, Y_);
     rock_error = ROCK_ERROR_NONE;
 }
 
 static void check_rotate_left_a_b_c_X_Y(void **state) {
     rock_error = ROCK_ERROR_NONE;
-    void *a, *b, *c, *X, *Y;
-    assert_true(rock_red_black_tree_node(0, &a));
-    assert_true(rock_red_black_tree_node(0, &b));
-    assert_true(rock_red_black_tree_node(0, &c));
-    assert_true(rock_red_black_tree_node(0, &X));
-    assert_true(rock_red_black_tree_node(0, &Y));
-    assert_true(rock_red_black_tree_node_set_left(X, a)
-                && rock_red_black_tree_node_set_parent(a, X));
-    assert_true(rock_red_black_tree_node_set_right(X, Y)
-                && rock_red_black_tree_node_set_parent(Y, X));
-    assert_true(rock_red_black_tree_node_set_left(Y, b)
-                && rock_red_black_tree_node_set_parent(b, Y));
-    assert_true(rock_red_black_tree_node_set_right(Y, c)
-                && rock_red_black_tree_node_set_parent(c, Y));
-    assert_true(rock_red_black_tree_rotate_left(Y));
-    void *a_, *b_, *c_, *X_, *Y_, *root_;
-    assert_true(rock_red_black_tree_node_get_parent(Y, &root_)
-                && NULL == root_);
-    assert_true(rock_red_black_tree_node_get_left(Y, &X_)
-                && X == X_
-                && rock_red_black_tree_node_get_parent(X, &Y_)
-                && Y == Y_);
-    assert_true(rock_red_black_tree_node_get_left(X, &a_)
-                && a == a_
-                && rock_red_black_tree_node_get_parent(a, &X_)
-                && X == X_);
-    assert_true(rock_red_black_tree_node_get_right(X, &b_)
-                && b == b_
-                && rock_red_black_tree_node_get_parent(b, &X_)
-                && X == X_);
-    assert_true(rock_red_black_tree_node_get_right(Y, &c_)
-                && c == c_
-                && rock_red_black_tree_node_get_parent(c, &Y_)
-                && Y == Y_);
-    rock_red_black_tree_node_destroy(Y);
-    rock_red_black_tree_node_destroy(X);
-    rock_red_black_tree_node_destroy(c);
-    rock_red_black_tree_node_destroy(b);
-    rock_red_black_tree_node_destroy(a);
+    struct rock_red_black_tree_node a, b, c, X, Y;
+    assert_true(rock_red_black_tree_node_init(&a));
+    assert_true(rock_red_black_tree_node_init(&b));
+    assert_true(rock_red_black_tree_node_init(&c));
+    assert_true(rock_red_black_tree_node_init(&X));
+    assert_true(rock_red_black_tree_node_init(&Y));
+    /*
+     *         X
+     *        / \
+     *       a   Y
+     *          / \
+     *         b   c
+     */
+    assert_true(rock_red_black_tree_node_set_left(&X, &a));
+    assert_true(rock_red_black_tree_node_set_parent(&a, &X));
+    assert_true(rock_red_black_tree_node_set_right(&X, &Y));
+    assert_true(rock_red_black_tree_node_set_parent(&Y, &X));
+    assert_true(rock_red_black_tree_node_set_left(&Y, &b));
+    assert_true(rock_red_black_tree_node_set_parent(&b, &Y));
+    assert_true(rock_red_black_tree_node_set_right(&Y, &c));
+    assert_true(rock_red_black_tree_node_set_parent(&c, &Y));
+    assert_true(rock_red_black_tree_rotate_left(&Y));
+    /*
+     *         Y
+     *        / \
+     *       X   c
+     *      / \
+     *     a   b
+     */
+    struct rock_red_black_tree_node *a_, *b_, *c_, *X_, *Y_, *root_;
+    assert_true(rock_red_black_tree_node_get_parent(&Y, &root_));
+    assert_null(root_);
+    assert_true(rock_red_black_tree_node_get_left(&Y, &X_));
+    assert_ptr_equal(&X, X_);
+    assert_true(rock_red_black_tree_node_get_parent(&X, &Y_));
+    assert_ptr_equal(&Y, Y_);
+    assert_true(rock_red_black_tree_node_get_left(&X, &a_));
+    assert_ptr_equal(&a, a_);
+    assert_true(rock_red_black_tree_node_get_parent(&a, &X_));
+    assert_ptr_equal(&X, X_);
+    assert_true(rock_red_black_tree_node_get_right(&X, &b_));
+    assert_ptr_equal(&b, b_);
+    assert_true(rock_red_black_tree_node_get_parent(&b, &X_));
+    assert_ptr_equal(&X, X_);
+    assert_true(rock_red_black_tree_node_get_right(&Y, &c_));
+    assert_ptr_equal(&c, c_);
+    assert_true(rock_red_black_tree_node_get_parent(&c, &Y_));
+    assert_ptr_equal(&Y, Y_);
     rock_error = ROCK_ERROR_NONE;
 }
 
 static void check_rotate_left_a_c_pL_X_Y(void **state) {
     rock_error = ROCK_ERROR_NONE;
-    void *a, *c, *p, *X, *Y;
-    assert_true(rock_red_black_tree_node(0, &a));
-    assert_true(rock_red_black_tree_node(0, &c));
-    assert_true(rock_red_black_tree_node(0, &p));
-    assert_true(rock_red_black_tree_node(0, &X));
-    assert_true(rock_red_black_tree_node(0, &Y));
-    assert_true(rock_red_black_tree_node_set_left(p, X)
-                && rock_red_black_tree_node_set_parent(X, p));
-    assert_true(rock_red_black_tree_node_set_left(X, a)
-                && rock_red_black_tree_node_set_parent(a, X));
-    assert_true(rock_red_black_tree_node_set_right(X, Y)
-                && rock_red_black_tree_node_set_parent(Y, X));
-    assert_true(rock_red_black_tree_node_set_right(Y, c)
-                && rock_red_black_tree_node_set_parent(c, Y));
-    assert_true(rock_red_black_tree_rotate_left(Y));
-    void *a_, *b_, *c_, *p_, *X_, *Y_;
-    assert_true(rock_red_black_tree_node_get_left(p, &Y_)
-                && Y == Y_
-                && rock_red_black_tree_node_get_parent(Y, &p_)
-                && p == p_);
-    assert_true(rock_red_black_tree_node_get_left(Y, &X_)
-                && X == X_
-                && rock_red_black_tree_node_get_parent(X, &Y_)
-                && Y == Y_);
-    assert_true(rock_red_black_tree_node_get_left(X, &a_)
-                && a == a_
-                && rock_red_black_tree_node_get_parent(a, &X_)
-                && X == X_);
-    assert_true(rock_red_black_tree_node_get_right(X, &b_)
-                && NULL == b_);
-    assert_true(rock_red_black_tree_node_get_right(Y, &c_)
-                && c == c_
-                && rock_red_black_tree_node_get_parent(c, &Y_)
-                && Y == Y_);
-    rock_red_black_tree_node_destroy(Y);
-    rock_red_black_tree_node_destroy(X);
-    rock_red_black_tree_node_destroy(p);
-    rock_red_black_tree_node_destroy(c);
-    rock_red_black_tree_node_destroy(a);
+    struct rock_red_black_tree_node a, c, p, X, Y;
+    assert_true(rock_red_black_tree_node_init(&a));
+    assert_true(rock_red_black_tree_node_init(&c));
+    assert_true(rock_red_black_tree_node_init(&p));
+    assert_true(rock_red_black_tree_node_init(&X));
+    assert_true(rock_red_black_tree_node_init(&Y));
+    /*
+     *           p
+     *          /
+     *         X
+     *        / \
+     *       a   Y
+     *            \
+     *             c
+     */
+    assert_true(rock_red_black_tree_node_set_left(&p, &X));
+    assert_true(rock_red_black_tree_node_set_parent(&X, &p));
+    assert_true(rock_red_black_tree_node_set_left(&X, &a));
+    assert_true(rock_red_black_tree_node_set_parent(&a, &X));
+    assert_true(rock_red_black_tree_node_set_right(&X, &Y));
+    assert_true(rock_red_black_tree_node_set_parent(&Y, &X));
+    assert_true(rock_red_black_tree_node_set_right(&Y, &c));
+    assert_true(rock_red_black_tree_node_set_parent(&c, &Y));
+    assert_true(rock_red_black_tree_rotate_left(&Y));
+    /*
+     *           p
+     *          /
+     *         Y
+     *        / \
+     *       X   c
+     *      /
+     *     a
+     */
+    struct rock_red_black_tree_node *a_, *b_, *c_, *p_, *X_, *Y_;
+    assert_true(rock_red_black_tree_node_get_left(&p, &Y_));
+    assert_ptr_equal(&Y, Y_);
+    assert_true(rock_red_black_tree_node_get_parent(&Y, &p_));
+    assert_ptr_equal(&p, p_);
+    assert_true(rock_red_black_tree_node_get_left(&Y, &X_));
+    assert_ptr_equal(&X, X_);
+    assert_true(rock_red_black_tree_node_get_parent(&X, &Y_));
+    assert_ptr_equal(&Y, Y_);
+    assert_true(rock_red_black_tree_node_get_left(&X, &a_));
+    assert_ptr_equal(&a, a_);
+    assert_true(rock_red_black_tree_node_get_parent(&a, &X_));
+    assert_ptr_equal(&X, X_);
+    assert_true(rock_red_black_tree_node_get_right(&X, &b_));
+    assert_null(b_);
+    assert_true(rock_red_black_tree_node_get_right(&Y, &c_));
+    assert_ptr_equal(&c, c_);
+    assert_true(rock_red_black_tree_node_get_parent(&c, &Y_));
+    assert_ptr_equal(&Y, Y_);
     rock_error = ROCK_ERROR_NONE;
 }
 
 static void check_rotate_left_a_c_pR_X_Y(void **state) {
     rock_error = ROCK_ERROR_NONE;
-    void *a, *c, *p, *X, *Y;
-    assert_true(rock_red_black_tree_node(0, &a));
-    assert_true(rock_red_black_tree_node(0, &c));
-    assert_true(rock_red_black_tree_node(0, &p));
-    assert_true(rock_red_black_tree_node(0, &X));
-    assert_true(rock_red_black_tree_node(0, &Y));
-    assert_true(rock_red_black_tree_node_set_right(p, X)
-                && rock_red_black_tree_node_set_parent(X, p));
-    assert_true(rock_red_black_tree_node_set_left(X, a)
-                && rock_red_black_tree_node_set_parent(a, X));
-    assert_true(rock_red_black_tree_node_set_right(X, Y)
-                && rock_red_black_tree_node_set_parent(Y, X));
-    assert_true(rock_red_black_tree_node_set_right(Y, c)
-                && rock_red_black_tree_node_set_parent(c, Y));
-    assert_true(rock_red_black_tree_rotate_left(Y));
-    void *a_, *b_, *c_, *p_, *X_, *Y_;
-    assert_true(rock_red_black_tree_node_get_right(p, &Y_)
-                && Y == Y_
-                && rock_red_black_tree_node_get_parent(Y, &p_)
-                && p == p_);
-    assert_true(rock_red_black_tree_node_get_left(Y, &X_)
-                && X == X_
-                && rock_red_black_tree_node_get_parent(X, &Y_)
-                && Y == Y_);
-    assert_true(rock_red_black_tree_node_get_left(X, &a_)
-                && a == a_
-                && rock_red_black_tree_node_get_parent(a, &X_)
-                && X == X_);
-    assert_true(rock_red_black_tree_node_get_right(X, &b_)
-                && NULL == b_);
-    assert_true(rock_red_black_tree_node_get_right(Y, &c_)
-                && c == c_
-                && rock_red_black_tree_node_get_parent(c, &Y_)
-                && Y == Y_);
-    rock_red_black_tree_node_destroy(Y);
-    rock_red_black_tree_node_destroy(X);
-    rock_red_black_tree_node_destroy(p);
-    rock_red_black_tree_node_destroy(c);
-    rock_red_black_tree_node_destroy(a);
+    struct rock_red_black_tree_node a, c, p, X, Y;
+    assert_true(rock_red_black_tree_node_init(&a));
+    assert_true(rock_red_black_tree_node_init(&c));
+    assert_true(rock_red_black_tree_node_init(&p));
+    assert_true(rock_red_black_tree_node_init(&X));
+    assert_true(rock_red_black_tree_node_init(&Y));
+    /*
+     *       p
+     *        \
+     *         X
+     *        / \
+     *       a   Y
+     *            \
+     *             c
+     */
+    assert_true(rock_red_black_tree_node_set_right(&p, &X));
+    assert_true(rock_red_black_tree_node_set_parent(&X, &p));
+    assert_true(rock_red_black_tree_node_set_left(&X, &a));
+    assert_true(rock_red_black_tree_node_set_parent(&a, &X));
+    assert_true(rock_red_black_tree_node_set_right(&X, &Y));
+    assert_true(rock_red_black_tree_node_set_parent(&Y, &X));
+    assert_true(rock_red_black_tree_node_set_right(&Y, &c));
+    assert_true(rock_red_black_tree_node_set_parent(&c, &Y));
+    assert_true(rock_red_black_tree_rotate_left(&Y));
+    /*
+     *       p
+     *        \
+     *         Y
+     *        / \
+     *       X   c
+     *      /
+     *     a
+     */
+    struct rock_red_black_tree_node *a_, *b_, *c_, *p_, *X_, *Y_;
+    assert_true(rock_red_black_tree_node_get_right(&p, &Y_));
+    assert_ptr_equal(&Y, Y_);
+    assert_true(rock_red_black_tree_node_get_parent(&Y, &p_));
+    assert_ptr_equal(&p, p_);
+    assert_true(rock_red_black_tree_node_get_left(&Y, &X_));
+    assert_ptr_equal(&X, X_);
+    assert_true(rock_red_black_tree_node_get_parent(&X, &Y_));
+    assert_ptr_equal(&Y, Y_);
+    assert_true(rock_red_black_tree_node_get_left(&X, &a_));
+    assert_ptr_equal(&a, a_);
+    assert_true(rock_red_black_tree_node_get_parent(&a, &X_));
+    assert_ptr_equal(&X, X_);
+    assert_true(rock_red_black_tree_node_get_right(&X, &b_));
+    assert_null(b_);
+    assert_true(rock_red_black_tree_node_get_right(&Y, &c_));
+    assert_ptr_equal(&c, c_);
+    assert_true(rock_red_black_tree_node_get_parent(&c, &Y_));
+    assert_ptr_equal(&Y, Y_);
     rock_error = ROCK_ERROR_NONE;
 }
 
 static void check_rotate_left_a_c_X_Y(void **state) {
     rock_error = ROCK_ERROR_NONE;
-    void *a, *c, *X, *Y;
-    assert_true(rock_red_black_tree_node(0, &a));
-    assert_true(rock_red_black_tree_node(0, &c));
-    assert_true(rock_red_black_tree_node(0, &X));
-    assert_true(rock_red_black_tree_node(0, &Y));
-    assert_true(rock_red_black_tree_node_set_left(X, a)
-                && rock_red_black_tree_node_set_parent(a, X));
-    assert_true(rock_red_black_tree_node_set_right(X, Y)
-                && rock_red_black_tree_node_set_parent(Y, X));
-    assert_true(rock_red_black_tree_node_set_right(Y, c)
-                && rock_red_black_tree_node_set_parent(c, Y));
-    assert_true(rock_red_black_tree_rotate_left(Y));
-    void *a_, *b_, *c_, *X_, *Y_, *root_;
-    assert_true(rock_red_black_tree_node_get_parent(Y, &root_)
-                && NULL == root_);
-    assert_true(rock_red_black_tree_node_get_left(Y, &X_)
-                && X == X_
-                && rock_red_black_tree_node_get_parent(X, &Y_)
-                && Y == Y_);
-    assert_true(rock_red_black_tree_node_get_left(X, &a_)
-                && a == a_
-                && rock_red_black_tree_node_get_parent(a, &X_)
-                && X == X_);
-    assert_true(rock_red_black_tree_node_get_right(X, &b_)
-                && NULL == b_);
-    assert_true(rock_red_black_tree_node_get_right(Y, &c_)
-                && c == c_
-                && rock_red_black_tree_node_get_parent(c, &Y_)
-                && Y == Y_);
-    rock_red_black_tree_node_destroy(Y);
-    rock_red_black_tree_node_destroy(X);
-    rock_red_black_tree_node_destroy(c);
-    rock_red_black_tree_node_destroy(a);
+    struct rock_red_black_tree_node a, c, X, Y;
+    assert_true(rock_red_black_tree_node_init(&a));
+    assert_true(rock_red_black_tree_node_init(&c));
+    assert_true(rock_red_black_tree_node_init(&X));
+    assert_true(rock_red_black_tree_node_init(&Y));
+    /*
+     *         X
+     *        / \
+     *       a   Y
+     *            \
+     *             c
+     */
+    assert_true(rock_red_black_tree_node_set_left(&X, &a));
+    assert_true(rock_red_black_tree_node_set_parent(&a, &X));
+    assert_true(rock_red_black_tree_node_set_right(&X, &Y));
+    assert_true(rock_red_black_tree_node_set_parent(&Y, &X));
+    assert_true(rock_red_black_tree_node_set_right(&Y, &c));
+    assert_true(rock_red_black_tree_node_set_parent(&c, &Y));
+    assert_true(rock_red_black_tree_rotate_left(&Y));
+    /*
+     *         Y
+     *        / \
+     *       X   c
+     *      /
+     *     a
+     */
+    struct rock_red_black_tree_node *a_, *b_, *c_, *X_, *Y_, *root_;
+    assert_true(rock_red_black_tree_node_get_parent(&Y, &root_));
+    assert_null(root_);
+    assert_true(rock_red_black_tree_node_get_left(&Y, &X_));
+    assert_ptr_equal(&X, X_);
+    assert_true(rock_red_black_tree_node_get_parent(&X, &Y_));
+    assert_ptr_equal(&Y, Y_);
+    assert_true(rock_red_black_tree_node_get_left(&X, &a_));
+    assert_ptr_equal(&a, a_);
+    assert_true(rock_red_black_tree_node_get_parent(&a, &X_));
+    assert_ptr_equal(&X, X_);
+    assert_true(rock_red_black_tree_node_get_right(&X, &b_));
+    assert_null(b_);
+    assert_true(rock_red_black_tree_node_get_right(&Y, &c_));
+    assert_ptr_equal(&c, c_);
+    assert_true(rock_red_black_tree_node_get_parent(&c, &Y_));
+    assert_ptr_equal(&Y, Y_);
     rock_error = ROCK_ERROR_NONE;
 }
 
@@ -615,297 +621,363 @@ static void check_rotate_right_error_on_Y_is_null(void **state) {
 
 static void check_rotate_right_error_on_Y_has_no_parent(void **state) {
     rock_error = ROCK_ERROR_NONE;
-    void *Y;
-    assert_true(rock_red_black_tree_node(0, &Y));
-    assert_false(rock_red_black_tree_rotate_right(Y));
+    struct rock_red_black_tree_node Y;
+    assert_true(rock_red_black_tree_node_init(&Y));
+    assert_false(rock_red_black_tree_rotate_right(&Y));
     assert_int_equal(ROCK_RED_BLACK_TREE_ERROR_Y_HAS_NO_PARENT, rock_error);
-    rock_red_black_tree_node_destroy(Y);
     rock_error = ROCK_ERROR_NONE;
 }
 
 static void
 check_rotate_right_error_on_Y_is_not_left_child_of_X(void **state) {
     rock_error = ROCK_ERROR_NONE;
-    void *X, *Y;
-    assert_true(rock_red_black_tree_node(0, &X));
-    assert_true(rock_red_black_tree_node(0, &Y));
-    assert_true(rock_red_black_tree_node_set_right(X, Y)
-                && rock_red_black_tree_node_set_parent(Y, X));
-    assert_false(rock_red_black_tree_rotate_right(Y));
+    struct rock_red_black_tree_node X, Y;
+    assert_true(rock_red_black_tree_node_init(&X));
+    assert_true(rock_red_black_tree_node_init(&Y));
+    assert_true(rock_red_black_tree_node_set_right(&X, &Y));
+    assert_true(rock_red_black_tree_node_set_parent(&Y, &X));
+    assert_false(rock_red_black_tree_rotate_right(&Y));
     assert_int_equal(ROCK_RED_BLACK_TREE_ERROR_Y_IS_NOT_LEFT_CHILD_OF_X,
                      rock_error);
-    rock_red_black_tree_node_destroy(Y);
-    rock_red_black_tree_node_destroy(X);
     rock_error = ROCK_ERROR_NONE;
 }
 
 static void check_rotate_right_a_b_c_pL_X_Y(void **state) {
     rock_error = ROCK_ERROR_NONE;
-    void *a, *b, *c, *p, *X, *Y;
-    assert_true(rock_red_black_tree_node(0, &a));
-    assert_true(rock_red_black_tree_node(0, &b));
-    assert_true(rock_red_black_tree_node(0, &c));
-    assert_true(rock_red_black_tree_node(0, &p));
-    assert_true(rock_red_black_tree_node(0, &X));
-    assert_true(rock_red_black_tree_node(0, &Y));
-    assert_true(rock_red_black_tree_node_set_left(p, X)
-                && rock_red_black_tree_node_set_parent(X, p));
-    assert_true(rock_red_black_tree_node_set_right(X, c)
-                && rock_red_black_tree_node_set_parent(c, X));
-    assert_true(rock_red_black_tree_node_set_left(X, Y)
-                && rock_red_black_tree_node_set_parent(Y, X));
-    assert_true(rock_red_black_tree_node_set_right(Y, b)
-                && rock_red_black_tree_node_set_parent(b, Y));
-    assert_true(rock_red_black_tree_node_set_left(Y, a)
-                && rock_red_black_tree_node_set_parent(a, Y));
-    assert_true(rock_red_black_tree_rotate_right(Y));
-    void *a_, *b_, *c_, *p_, *X_, *Y_;
-    assert_true(rock_red_black_tree_node_get_left(p, &Y_)
-                && Y == Y_
-                && rock_red_black_tree_node_get_parent(Y, &p_)
-                && p == p_);
-    assert_true(rock_red_black_tree_node_get_right(Y, &X_)
-                && X == X_
-                && rock_red_black_tree_node_get_parent(X, &Y_)
-                && Y == Y_);
-    assert_true(rock_red_black_tree_node_get_left(Y, &a_)
-                && a == a_
-                && rock_red_black_tree_node_get_parent(a, &Y_)
-                && Y == Y_);
-    assert_true(rock_red_black_tree_node_get_left(X, &b_)
-                && b == b_
-                && rock_red_black_tree_node_get_parent(b, &X_)
-                && X == X_);
-    assert_true(rock_red_black_tree_node_get_right(X, &c_)
-                && c == c_
-                && rock_red_black_tree_node_get_parent(c, &X_)
-                && X == X_);
-    rock_red_black_tree_node_destroy(Y);
-    rock_red_black_tree_node_destroy(X);
-    rock_red_black_tree_node_destroy(p);
-    rock_red_black_tree_node_destroy(c);
-    rock_red_black_tree_node_destroy(b);
-    rock_red_black_tree_node_destroy(a);
+    struct rock_red_black_tree_node a, b, c, p, X, Y;
+    assert_true(rock_red_black_tree_node_init(&a));
+    assert_true(rock_red_black_tree_node_init(&b));
+    assert_true(rock_red_black_tree_node_init(&c));
+    assert_true(rock_red_black_tree_node_init(&p));
+    assert_true(rock_red_black_tree_node_init(&X));
+    assert_true(rock_red_black_tree_node_init(&Y));
+    /*
+     *           p
+     *          /
+     *         X
+     *        / \
+     *       Y   c
+     *      / \
+     *     a   b
+     */
+    assert_true(rock_red_black_tree_node_set_left(&p, &X));
+    assert_true(rock_red_black_tree_node_set_parent(&X, &p));
+    assert_true(rock_red_black_tree_node_set_right(&X, &c));
+    assert_true(rock_red_black_tree_node_set_parent(&c, &X));
+    assert_true(rock_red_black_tree_node_set_left(&X, &Y));
+    assert_true(rock_red_black_tree_node_set_parent(&Y, &X));
+    assert_true(rock_red_black_tree_node_set_right(&Y, &b));
+    assert_true(rock_red_black_tree_node_set_parent(&b, &Y));
+    assert_true(rock_red_black_tree_node_set_left(&Y, &a));
+    assert_true(rock_red_black_tree_node_set_parent(&a, &Y));
+    assert_true(rock_red_black_tree_rotate_right(&Y));
+    /*
+     *           p
+     *          /
+     *         Y
+     *        / \
+     *       a   X
+     *          / \
+     *         b   c
+     */
+    struct rock_red_black_tree_node *a_, *b_, *c_, *p_, *X_, *Y_;
+    assert_true(rock_red_black_tree_node_get_left(&p, &Y_));
+    assert_ptr_equal(&Y, Y_);
+    assert_true(rock_red_black_tree_node_get_parent(&Y, &p_));
+    assert_ptr_equal(&p, p_);
+    assert_true(rock_red_black_tree_node_get_right(&Y, &X_));
+    assert_ptr_equal(&X, X_);
+    assert_true(rock_red_black_tree_node_get_parent(&X, &Y_));
+    assert_ptr_equal(&Y, Y_);
+    assert_true(rock_red_black_tree_node_get_left(&Y, &a_));
+    assert_ptr_equal(&a, a_);
+    assert_true(rock_red_black_tree_node_get_parent(&a, &Y_));
+    assert_ptr_equal(&Y, Y_);
+    assert_true(rock_red_black_tree_node_get_left(&X, &b_));
+    assert_ptr_equal(&b, b_);
+    assert_true(rock_red_black_tree_node_get_parent(&b, &X_));
+    assert_ptr_equal(&X, X_);
+    assert_true(rock_red_black_tree_node_get_right(&X, &c_));
+    assert_ptr_equal(&c, c_);
+    assert_true(rock_red_black_tree_node_get_parent(&c, &X_));
+    assert_ptr_equal(&X, X_);
     rock_error = ROCK_ERROR_NONE;
 }
 
 static void check_rotate_right_a_b_c_pR_X_Y(void **state) {
     rock_error = ROCK_ERROR_NONE;
-    void *a, *b, *c, *p, *X, *Y;
-    assert_true(rock_red_black_tree_node(0, &a));
-    assert_true(rock_red_black_tree_node(0, &b));
-    assert_true(rock_red_black_tree_node(0, &c));
-    assert_true(rock_red_black_tree_node(0, &p));
-    assert_true(rock_red_black_tree_node(0, &X));
-    assert_true(rock_red_black_tree_node(0, &Y));
-    assert_true(rock_red_black_tree_node_set_right(p, X)
-                && rock_red_black_tree_node_set_parent(X, p));
-    assert_true(rock_red_black_tree_node_set_right(X, c)
-                && rock_red_black_tree_node_set_parent(c, X));
-    assert_true(rock_red_black_tree_node_set_left(X, Y)
-                && rock_red_black_tree_node_set_parent(Y, X));
-    assert_true(rock_red_black_tree_node_set_right(Y, b)
-                && rock_red_black_tree_node_set_parent(b, Y));
-    assert_true(rock_red_black_tree_node_set_left(Y, a)
-                && rock_red_black_tree_node_set_parent(a, Y));
-    assert_true(rock_red_black_tree_rotate_right(Y));
-    void *a_, *b_, *c_, *p_, *X_, *Y_;
-    assert_true(rock_red_black_tree_node_get_right(p, &Y_)
-                && Y == Y_
-                && rock_red_black_tree_node_get_parent(Y, &p_)
-                && p == p_);
-    assert_true(rock_red_black_tree_node_get_right(Y, &X_)
-                && X == X_
-                && rock_red_black_tree_node_get_parent(X, &Y_)
-                && Y == Y_);
-    assert_true(rock_red_black_tree_node_get_left(Y, &a_)
-                && a == a_
-                && rock_red_black_tree_node_get_parent(a, &Y_)
-                && Y == Y_);
-    assert_true(rock_red_black_tree_node_get_left(X, &b_)
-                && b == b_
-                && rock_red_black_tree_node_get_parent(b, &X_)
-                && X == X_);
-    assert_true(rock_red_black_tree_node_get_right(X, &c_)
-                && c == c_
-                && rock_red_black_tree_node_get_parent(c, &X_)
-                && X == X_);
-    rock_red_black_tree_node_destroy(Y);
-    rock_red_black_tree_node_destroy(X);
-    rock_red_black_tree_node_destroy(p);
-    rock_red_black_tree_node_destroy(c);
-    rock_red_black_tree_node_destroy(b);
-    rock_red_black_tree_node_destroy(a);
+    struct rock_red_black_tree_node a, b, c, p, X, Y;
+    assert_true(rock_red_black_tree_node_init(&a));
+    assert_true(rock_red_black_tree_node_init(&b));
+    assert_true(rock_red_black_tree_node_init(&c));
+    assert_true(rock_red_black_tree_node_init(&p));
+    assert_true(rock_red_black_tree_node_init(&X));
+    assert_true(rock_red_black_tree_node_init(&Y));
+    /*
+     *       p
+     *        \
+     *         X
+     *        / \
+     *       Y   c
+     *      / \
+     *     a   b
+     */
+    assert_true(rock_red_black_tree_node_set_right(&p, &X));
+    assert_true(rock_red_black_tree_node_set_parent(&X, &p));
+    assert_true(rock_red_black_tree_node_set_right(&X, &c));
+    assert_true(rock_red_black_tree_node_set_parent(&c, &X));
+    assert_true(rock_red_black_tree_node_set_left(&X, &Y));
+    assert_true(rock_red_black_tree_node_set_parent(&Y, &X));
+    assert_true(rock_red_black_tree_node_set_right(&Y, &b));
+    assert_true(rock_red_black_tree_node_set_parent(&b, &Y));
+    assert_true(rock_red_black_tree_node_set_left(&Y, &a));
+    assert_true(rock_red_black_tree_node_set_parent(&a, &Y));
+    assert_true(rock_red_black_tree_rotate_right(&Y));
+    /*
+     *       p
+     *        \
+     *         Y
+     *        / \
+     *       a   X
+     *          / \
+     *         b   c
+     */
+    struct rock_red_black_tree_node *a_, *b_, *c_, *p_, *X_, *Y_;
+    assert_true(rock_red_black_tree_node_get_right(&p, &Y_));
+    assert_ptr_equal(&Y, Y_);
+    assert_true(rock_red_black_tree_node_get_parent(&Y, &p_));
+    assert_ptr_equal(&p, p_);
+    assert_true(rock_red_black_tree_node_get_right(&Y, &X_));
+    assert_ptr_equal(&X, X_);
+    assert_true(rock_red_black_tree_node_get_parent(&X, &Y_));
+    assert_ptr_equal(&Y, Y_);
+    assert_true(rock_red_black_tree_node_get_left(&Y, &a_));
+    assert_ptr_equal(&a, a_);
+    assert_true(rock_red_black_tree_node_get_parent(&a, &Y_));
+    assert_ptr_equal(&Y, Y_);
+    assert_true(rock_red_black_tree_node_get_left(&X, &b_));
+    assert_ptr_equal(&b, b_);
+    assert_true(rock_red_black_tree_node_get_parent(&b, &X_));
+    assert_ptr_equal(&X, X_);
+    assert_true(rock_red_black_tree_node_get_right(&X, &c_));
+    assert_ptr_equal(&c, c_);
+    assert_true(rock_red_black_tree_node_get_parent(&c, &X_));
+    assert_ptr_equal(&X, X_);
     rock_error = ROCK_ERROR_NONE;
 }
 
 static void check_rotate_right_a_b_c_X_Y(void **state) {
     rock_error = ROCK_ERROR_NONE;
-    void *a, *b, *c, *X, *Y;
-    assert_true(rock_red_black_tree_node(0, &a));
-    assert_true(rock_red_black_tree_node(0, &b));
-    assert_true(rock_red_black_tree_node(0, &c));
-    assert_true(rock_red_black_tree_node(0, &X));
-    assert_true(rock_red_black_tree_node(0, &Y));
-    assert_true(rock_red_black_tree_node_set_right(X, c)
-                && rock_red_black_tree_node_set_parent(c, X));
-    assert_true(rock_red_black_tree_node_set_left(X, Y)
-                && rock_red_black_tree_node_set_parent(Y, X));
-    assert_true(rock_red_black_tree_node_set_right(Y, b)
-                && rock_red_black_tree_node_set_parent(b, Y));
-    assert_true(rock_red_black_tree_node_set_left(Y, a)
-                && rock_red_black_tree_node_set_parent(a, Y));
-    assert_true(rock_red_black_tree_rotate_right(Y));
-    void *a_, *b_, *c_, *X_, *Y_, *root_;
-    assert_true(rock_red_black_tree_node_get_parent(Y, &root_)
-                && NULL == root_);
-    assert_true(rock_red_black_tree_node_get_right(Y, &X_)
-                && X == X_
-                && rock_red_black_tree_node_get_parent(X, &Y_)
-                && Y == Y_);
-    assert_true(rock_red_black_tree_node_get_left(Y, &a_)
-                && a == a_
-                && rock_red_black_tree_node_get_parent(a, &Y_)
-                && Y == Y_);
-    assert_true(rock_red_black_tree_node_get_left(X, &b_)
-                && b == b_
-                && rock_red_black_tree_node_get_parent(b, &X_)
-                && X == X_);
-    assert_true(rock_red_black_tree_node_get_right(X, &c_)
-                && c == c_
-                && rock_red_black_tree_node_get_parent(c, &X_)
-                && X == X_);
-    rock_red_black_tree_node_destroy(Y);
-    rock_red_black_tree_node_destroy(X);
-    rock_red_black_tree_node_destroy(c);
-    rock_red_black_tree_node_destroy(b);
-    rock_red_black_tree_node_destroy(a);
+    struct rock_red_black_tree_node a, b, c, X, Y;
+    assert_true(rock_red_black_tree_node_init(&a));
+    assert_true(rock_red_black_tree_node_init(&b));
+    assert_true(rock_red_black_tree_node_init(&c));
+    assert_true(rock_red_black_tree_node_init(&X));
+    assert_true(rock_red_black_tree_node_init(&Y));
+    /*
+     *         X
+     *        / \
+     *       Y   c
+     *      / \
+     *     a   b
+     */
+    assert_true(rock_red_black_tree_node_set_right(&X, &c));
+    assert_true(rock_red_black_tree_node_set_parent(&c, &X));
+    assert_true(rock_red_black_tree_node_set_left(&X, &Y));
+    assert_true(rock_red_black_tree_node_set_parent(&Y, &X));
+    assert_true(rock_red_black_tree_node_set_right(&Y, &b));
+    assert_true(rock_red_black_tree_node_set_parent(&b, &Y));
+    assert_true(rock_red_black_tree_node_set_left(&Y, &a));
+    assert_true(rock_red_black_tree_node_set_parent(&a, &Y));
+    assert_true(rock_red_black_tree_rotate_right(&Y));
+    /*
+     *         Y
+     *        / \
+     *       a   X
+     *          / \
+     *         b   c
+     */
+    struct rock_red_black_tree_node *a_, *b_, *c_, *X_, *Y_, *root_;
+    assert_true(rock_red_black_tree_node_get_parent(&Y, &root_));
+    assert_null(root_);
+    assert_true(rock_red_black_tree_node_get_right(&Y, &X_));
+    assert_ptr_equal(&X, X_);
+    assert_true(rock_red_black_tree_node_get_parent(&X, &Y_));
+    assert_ptr_equal(&Y, Y_);
+    assert_true(rock_red_black_tree_node_get_left(&Y, &a_));
+    assert_ptr_equal(&a, a_);
+    assert_true(rock_red_black_tree_node_get_parent(&a, &Y_));
+    assert_ptr_equal(&Y, Y_);
+    assert_true(rock_red_black_tree_node_get_left(&X, &b_));
+    assert_ptr_equal(&b, b_);
+    assert_true(rock_red_black_tree_node_get_parent(&b, &X_));
+    assert_ptr_equal(&X, X_);
+    assert_true(rock_red_black_tree_node_get_right(&X, &c_));
+    assert_ptr_equal(&c, c_);
+    assert_true(rock_red_black_tree_node_get_parent(&c, &X_));
+    assert_ptr_equal(&X, X_);
     rock_error = ROCK_ERROR_NONE;
 }
 
 static void check_rotate_right_a_c_pL_X_Y(void **state) {
     rock_error = ROCK_ERROR_NONE;
-    void *a, *c, *p, *X, *Y;
-    assert_true(rock_red_black_tree_node(0, &a));
-    assert_true(rock_red_black_tree_node(0, &c));
-    assert_true(rock_red_black_tree_node(0, &p));
-    assert_true(rock_red_black_tree_node(0, &X));
-    assert_true(rock_red_black_tree_node(0, &Y));
-    assert_true(rock_red_black_tree_node_set_left(p, X)
-                && rock_red_black_tree_node_set_parent(X, p));
-    assert_true(rock_red_black_tree_node_set_right(X, c)
-                && rock_red_black_tree_node_set_parent(c, X));
-    assert_true(rock_red_black_tree_node_set_left(X, Y)
-                && rock_red_black_tree_node_set_parent(Y, X));
-    assert_true(rock_red_black_tree_node_set_left(Y, a)
-                && rock_red_black_tree_node_set_parent(a, Y));
-    assert_true(rock_red_black_tree_rotate_right(Y));
-    void *a_, *b_, *c_, *p_, *X_, *Y_;
-    assert_true(rock_red_black_tree_node_get_left(p, &Y_)
-                && Y == Y_
-                && rock_red_black_tree_node_get_parent(Y, &p_)
-                && p == p_);
-    assert_true(rock_red_black_tree_node_get_right(Y, &X_)
-                && X == X_
-                && rock_red_black_tree_node_get_parent(X, &Y_)
-                && Y == Y_);
-    assert_true(rock_red_black_tree_node_get_left(Y, &a_)
-                && a == a_
-                && rock_red_black_tree_node_get_parent(a, &Y_)
-                && Y == Y_);
-    assert_true(rock_red_black_tree_node_get_left(X, &b_)
-                && NULL == b_);
-    assert_true(rock_red_black_tree_node_get_right(X, &c_)
-                && c == c_
-                && rock_red_black_tree_node_get_parent(c, &X_)
-                && X == X_);
-    rock_red_black_tree_node_destroy(Y);
-    rock_red_black_tree_node_destroy(X);
-    rock_red_black_tree_node_destroy(p);
-    rock_red_black_tree_node_destroy(c);
-    rock_red_black_tree_node_destroy(a);
+    struct rock_red_black_tree_node a, c, p, X, Y;
+    assert_true(rock_red_black_tree_node_init(&a));
+    assert_true(rock_red_black_tree_node_init(&c));
+    assert_true(rock_red_black_tree_node_init(&p));
+    assert_true(rock_red_black_tree_node_init(&X));
+    assert_true(rock_red_black_tree_node_init(&Y));
+    /*
+     *           p
+     *          /
+     *         X
+     *        / \
+     *       Y   c
+     *      /
+     *     a
+     */
+    assert_true(rock_red_black_tree_node_set_left(&p, &X));
+    assert_true(rock_red_black_tree_node_set_parent(&X, &p));
+    assert_true(rock_red_black_tree_node_set_right(&X, &c));
+    assert_true(rock_red_black_tree_node_set_parent(&c, &X));
+    assert_true(rock_red_black_tree_node_set_left(&X, &Y));
+    assert_true(rock_red_black_tree_node_set_parent(&Y, &X));
+    assert_true(rock_red_black_tree_node_set_left(&Y, &a));
+    assert_true(rock_red_black_tree_node_set_parent(&a, &Y));
+    assert_true(rock_red_black_tree_rotate_right(&Y));
+    /*
+     *           p
+     *          /
+     *         Y
+     *        / \
+     *       a   X
+     *            \
+     *             c
+     */
+    struct rock_red_black_tree_node *a_, *b_, *c_, *p_, *X_, *Y_;
+    assert_true(rock_red_black_tree_node_get_left(&p, &Y_));
+    assert_ptr_equal(&Y, Y_);
+    assert_true(rock_red_black_tree_node_get_parent(&Y, &p_));
+    assert_ptr_equal(&p, p_);
+    assert_true(rock_red_black_tree_node_get_right(&Y, &X_));
+    assert_ptr_equal(&X, X_);
+    assert_true(rock_red_black_tree_node_get_parent(&X, &Y_));
+    assert_ptr_equal(&Y, Y_);
+    assert_true(rock_red_black_tree_node_get_left(&Y, &a_));
+    assert_ptr_equal(&a, a_);
+    assert_true(rock_red_black_tree_node_get_parent(&a, &Y_));
+    assert_ptr_equal(&Y, Y_);
+    assert_true(rock_red_black_tree_node_get_left(&X, &b_));
+    assert_null(b_);
+    assert_true(rock_red_black_tree_node_get_right(&X, &c_));
+    assert_ptr_equal(&c, c_);
+    assert_true(rock_red_black_tree_node_get_parent(&c, &X_));
+    assert_ptr_equal(&X, X_);
     rock_error = ROCK_ERROR_NONE;
 }
 
 static void check_rotate_right_a_c_pR_X_Y(void **state) {
     rock_error = ROCK_ERROR_NONE;
-    void *a, *c, *p, *X, *Y;
-    assert_true(rock_red_black_tree_node(0, &a));
-    assert_true(rock_red_black_tree_node(0, &c));
-    assert_true(rock_red_black_tree_node(0, &p));
-    assert_true(rock_red_black_tree_node(0, &X));
-    assert_true(rock_red_black_tree_node(0, &Y));
-    assert_true(rock_red_black_tree_node_set_right(p, X)
-                && rock_red_black_tree_node_set_parent(X, p));
-    assert_true(rock_red_black_tree_node_set_right(X, c)
-                && rock_red_black_tree_node_set_parent(c, X));
-    assert_true(rock_red_black_tree_node_set_left(X, Y)
-                && rock_red_black_tree_node_set_parent(Y, X));
-    assert_true(rock_red_black_tree_node_set_left(Y, a)
-                && rock_red_black_tree_node_set_parent(a, Y));
-    assert_true(rock_red_black_tree_rotate_right(Y));
-    void *a_, *b_, *c_, *p_, *X_, *Y_;
-    assert_true(rock_red_black_tree_node_get_right(p, &Y_)
-                && Y == Y_
-                && rock_red_black_tree_node_get_parent(Y, &p_)
-                && p == p_);
-    assert_true(rock_red_black_tree_node_get_right(Y, &X_)
-                && X == X_
-                && rock_red_black_tree_node_get_parent(X, &Y_)
-                && Y == Y_);
-    assert_true(rock_red_black_tree_node_get_left(Y, &a_)
-                && a == a_
-                && rock_red_black_tree_node_get_parent(a, &Y_)
-                && Y == Y_);
-    assert_true(rock_red_black_tree_node_get_left(X, &b_)
-                && NULL == b_);
-    assert_true(rock_red_black_tree_node_get_right(X, &c_)
-                && c == c_
-                && rock_red_black_tree_node_get_parent(c, &X_)
-                && X == X_);
-    rock_red_black_tree_node_destroy(Y);
-    rock_red_black_tree_node_destroy(X);
-    rock_red_black_tree_node_destroy(p);
-    rock_red_black_tree_node_destroy(c);
-    rock_red_black_tree_node_destroy(a);
+    struct rock_red_black_tree_node a, c, p, X, Y;
+    assert_true(rock_red_black_tree_node_init(&a));
+    assert_true(rock_red_black_tree_node_init(&c));
+    assert_true(rock_red_black_tree_node_init(&p));
+    assert_true(rock_red_black_tree_node_init(&X));
+    assert_true(rock_red_black_tree_node_init(&Y));
+    /*
+     *       p
+     *        \
+     *         X
+     *        / \
+     *       Y   c
+     *      /
+     *     a
+     */
+    assert_true(rock_red_black_tree_node_set_right(&p, &X));
+    assert_true(rock_red_black_tree_node_set_parent(&X, &p));
+    assert_true(rock_red_black_tree_node_set_right(&X, &c));
+    assert_true(rock_red_black_tree_node_set_parent(&c, &X));
+    assert_true(rock_red_black_tree_node_set_left(&X, &Y));
+    assert_true(rock_red_black_tree_node_set_parent(&Y, &X));
+    assert_true(rock_red_black_tree_node_set_left(&Y, &a));
+    assert_true(rock_red_black_tree_node_set_parent(&a, &Y));
+    assert_true(rock_red_black_tree_rotate_right(&Y));
+    /*
+     *       p
+     *        \
+     *         Y
+     *        / \
+     *       a   X
+     *            \
+     *             c
+     */
+    struct rock_red_black_tree_node *a_, *b_, *c_, *p_, *X_, *Y_;
+    assert_true(rock_red_black_tree_node_get_right(&p, &Y_));
+    assert_ptr_equal(&Y, Y_);
+    assert_true(rock_red_black_tree_node_get_parent(&Y, &p_));
+    assert_ptr_equal(&p, p_);
+    assert_true(rock_red_black_tree_node_get_right(&Y, &X_));
+    assert_ptr_equal(&X, X_);
+    assert_true(rock_red_black_tree_node_get_parent(&X, &Y_));
+    assert_ptr_equal(&Y, Y_);
+    assert_true(rock_red_black_tree_node_get_left(&Y, &a_));
+    assert_ptr_equal(&a, a_);
+    assert_true(rock_red_black_tree_node_get_parent(&a, &Y_));
+    assert_ptr_equal(&Y, Y_);
+    assert_true(rock_red_black_tree_node_get_left(&X, &b_));
+    assert_null(b_);
+    assert_true(rock_red_black_tree_node_get_right(&X, &c_));
+    assert_ptr_equal(&c, c_);
+    assert_true(rock_red_black_tree_node_get_parent(&c, &X_));
+    assert_ptr_equal(&X, X_);
     rock_error = ROCK_ERROR_NONE;
 }
 
 static void check_rotate_right_a_c_X_Y(void **state) {
     rock_error = ROCK_ERROR_NONE;
-    void *a, *c, *X, *Y;
-    assert_true(rock_red_black_tree_node(0, &a));
-    assert_true(rock_red_black_tree_node(0, &c));
-    assert_true(rock_red_black_tree_node(0, &X));
-    assert_true(rock_red_black_tree_node(0, &Y));
-    assert_true(rock_red_black_tree_node_set_right(X, c)
-                && rock_red_black_tree_node_set_parent(c, X));
-    assert_true(rock_red_black_tree_node_set_left(X, Y)
-                && rock_red_black_tree_node_set_parent(Y, X));
-    assert_true(rock_red_black_tree_node_set_left(Y, a)
-                && rock_red_black_tree_node_set_parent(a, Y));
-    assert_true(rock_red_black_tree_rotate_right(Y));
-    void *a_, *b_, *c_, *X_, *Y_, *root_;
-    assert_true(rock_red_black_tree_node_get_parent(Y, &root_)
-                && NULL == root_);
-    assert_true(rock_red_black_tree_node_get_right(Y, &X_)
-                && X == X_
-                && rock_red_black_tree_node_get_parent(X, &Y_)
-                && Y == Y_);
-    assert_true(rock_red_black_tree_node_get_left(Y, &a_)
-                && a == a_
-                && rock_red_black_tree_node_get_parent(a, &Y_)
-                && Y == Y_);
-    assert_true(rock_red_black_tree_node_get_left(X, &b_)
-                && NULL == b_);
-    assert_true(rock_red_black_tree_node_get_right(X, &c_)
-                && c == c_
-                && rock_red_black_tree_node_get_parent(c, &X_)
-                && X == X_);
-    rock_red_black_tree_node_destroy(Y);
-    rock_red_black_tree_node_destroy(X);
-    rock_red_black_tree_node_destroy(c);
-    rock_red_black_tree_node_destroy(a);
+    struct rock_red_black_tree_node a, c, X, Y;
+    assert_true(rock_red_black_tree_node_init(&a));
+    assert_true(rock_red_black_tree_node_init(&c));
+    assert_true(rock_red_black_tree_node_init(&X));
+    assert_true(rock_red_black_tree_node_init(&Y));
+    /*
+     *         X
+     *        / \
+     *       Y   c
+     *      /
+     *     a
+     */
+    assert_true(rock_red_black_tree_node_set_right(&X, &c));
+    assert_true(rock_red_black_tree_node_set_parent(&c, &X));
+    assert_true(rock_red_black_tree_node_set_left(&X, &Y));
+    assert_true(rock_red_black_tree_node_set_parent(&Y, &X));
+    assert_true(rock_red_black_tree_node_set_left(&Y, &a));
+    assert_true(rock_red_black_tree_node_set_parent(&a, &Y));
+    assert_true(rock_red_black_tree_rotate_right(&Y));
+    /*
+     *         Y
+     *        / \
+     *       a   X
+     *            \
+     *             c
+     */
+    struct rock_red_black_tree_node *a_, *b_, *c_, *X_, *Y_, *root_;
+    assert_true(rock_red_black_tree_node_get_parent(&Y, &root_));
+    assert_null(root_);
+    assert_true(rock_red_black_tree_node_get_right(&Y, &X_));
+    assert_ptr_equal(&X, X_);
+    assert_true(rock_red_black_tree_node_get_parent(&X, &Y_));
+    assert_ptr_equal(&Y, Y_);
+    assert_true(rock_red_black_tree_node_get_left(&Y, &a_));
+    assert_ptr_equal(&a, a_);
+    assert_true(rock_red_black_tree_node_get_parent(&a, &Y_));
+    assert_ptr_equal(&Y, Y_);
+    assert_true(rock_red_black_tree_node_get_left(&X, &b_));
+    assert_null(b_);
+    assert_true(rock_red_black_tree_node_get_right(&X, &c_));
+    assert_ptr_equal(&c, c_);
+    assert_true(rock_red_black_tree_node_get_parent(&c, &X_));
+    assert_ptr_equal(&X, X_);
     rock_error = ROCK_ERROR_NONE;
 }
 
@@ -918,197 +990,212 @@ static void check_rotate_left_right_error_on_Y_is_null(void **state) {
 
 static void check_rotate_left_right_error_on_Y_has_no_parent(void **state) {
     rock_error = ROCK_ERROR_NONE;
-    void *Y;
-    assert_true(rock_red_black_tree_node(0, &Y));
-    assert_false(rock_red_black_tree_rotate_left_right(Y));
+    struct rock_red_black_tree_node Y;
+    assert_true(rock_red_black_tree_node_init(&Y));
+    assert_false(rock_red_black_tree_rotate_left_right(&Y));
     assert_int_equal(ROCK_RED_BLACK_TREE_ERROR_Y_HAS_NO_PARENT, rock_error);
-    rock_red_black_tree_node_destroy(Y);
     rock_error = ROCK_ERROR_NONE;
 }
 
 static void check_rotate_left_right_error_on_X_has_no_parent(void **state) {
     rock_error = ROCK_ERROR_NONE;
-    void *X, *Y;
-    assert_true(rock_red_black_tree_node(0, &X));
-    assert_true(rock_red_black_tree_node(0, &Y));
-    assert_true(rock_red_black_tree_node_set_parent(Y, X)
-                && rock_red_black_tree_node_set_right(X, Y));
-    assert_false(rock_red_black_tree_rotate_left_right(Y));
+    struct rock_red_black_tree_node X, Y;
+    assert_true(rock_red_black_tree_node_init(&X));
+    assert_true(rock_red_black_tree_node_init(&Y));
+    assert_true(rock_red_black_tree_node_set_parent(&Y, &X));
+    assert_true(rock_red_black_tree_node_set_right(&X, &Y));
+    assert_false(rock_red_black_tree_rotate_left_right(&Y));
     assert_int_equal(ROCK_RED_BLACK_TREE_ERROR_X_HAS_NO_PARENT, rock_error);
-    rock_red_black_tree_node_destroy(X);
-    rock_red_black_tree_node_destroy(Y);
     rock_error = ROCK_ERROR_NONE;
 }
 
 static void
 check_rotate_left_right_error_on_Y_is_not_right_child_of_X(void **state) {
     rock_error = ROCK_ERROR_NONE;
-    void *X, *Y, *Z;
-    assert_true(rock_red_black_tree_node(0, &X));
-    assert_true(rock_red_black_tree_node(0, &Y));
-    assert_true(rock_red_black_tree_node(0, &Z));
-    assert_true(rock_red_black_tree_node_set_parent(Y, X)
-                && rock_red_black_tree_node_set_left(X, Y));
-    assert_true(rock_red_black_tree_node_set_parent(X, Z)
-                && rock_red_black_tree_node_set_left(Z, X));
-    assert_false(rock_red_black_tree_rotate_left_right(Y));
+    struct rock_red_black_tree_node X, Y, Z;
+    assert_true(rock_red_black_tree_node_init(&X));
+    assert_true(rock_red_black_tree_node_init(&Y));
+    assert_true(rock_red_black_tree_node_init(&Z));
+    assert_true(rock_red_black_tree_node_set_parent(&Y, &X));
+    assert_true(rock_red_black_tree_node_set_left(&X, &Y));
+    assert_true(rock_red_black_tree_node_set_parent(&X, &Z));
+    assert_true(rock_red_black_tree_node_set_left(&Z, &X));
+    assert_false(rock_red_black_tree_rotate_left_right(&Y));
     assert_int_equal(ROCK_RED_BLACK_TREE_ERROR_Y_IS_NOT_RIGHT_CHILD_OF_X,
                      rock_error);
-    rock_red_black_tree_node_destroy(X);
-    rock_red_black_tree_node_destroy(Y);
-    rock_red_black_tree_node_destroy(Z);
     rock_error = ROCK_ERROR_NONE;
 }
 
 static void
 check_rotate_left_right_error_on_X_is_not_left_child_of_Z(void **state) {
     rock_error = ROCK_ERROR_NONE;
-    void *X, *Y, *Z;
-    assert_true(rock_red_black_tree_node(0, &X));
-    assert_true(rock_red_black_tree_node(0, &Y));
-    assert_true(rock_red_black_tree_node(0, &Z));
-    assert_true(rock_red_black_tree_node_set_parent(Y, X)
-                && rock_red_black_tree_node_set_right(X, Y));
-    assert_true(rock_red_black_tree_node_set_parent(X, Z)
-                && rock_red_black_tree_node_set_right(Z, X));
-    assert_false(rock_red_black_tree_rotate_left_right(Y));
+    struct rock_red_black_tree_node X, Y, Z;
+    assert_true(rock_red_black_tree_node_init(&X));
+    assert_true(rock_red_black_tree_node_init(&Y));
+    assert_true(rock_red_black_tree_node_init(&Z));
+    assert_true(rock_red_black_tree_node_set_parent(&Y, &X));
+    assert_true(rock_red_black_tree_node_set_right(&X, &Y));
+    assert_true(rock_red_black_tree_node_set_parent(&X, &Z));
+    assert_true(rock_red_black_tree_node_set_right(&Z, &X));
+    assert_false(rock_red_black_tree_rotate_left_right(&Y));
     assert_int_equal(ROCK_RED_BLACK_TREE_ERROR_X_IS_NOT_LEFT_CHILD_OF_Z,
                      rock_error);
-    rock_red_black_tree_node_destroy(X);
-    rock_red_black_tree_node_destroy(Y);
-    rock_red_black_tree_node_destroy(Z);
     rock_error = ROCK_ERROR_NONE;
 }
 
 static void check_rotate_left_right_a_b_c_d_pL_X_Y_Z(void **state) {
     rock_error = ROCK_ERROR_NONE;
-    void *a, *b, *c, *d, *p, *X, *Y, *Z;
-    assert_true(rock_red_black_tree_node(0, &a));
-    assert_true(rock_red_black_tree_node(0, &b));
-    assert_true(rock_red_black_tree_node(0, &c));
-    assert_true(rock_red_black_tree_node(0, &d));
-    assert_true(rock_red_black_tree_node(0, &p));
-    assert_true(rock_red_black_tree_node(0, &X));
-    assert_true(rock_red_black_tree_node(0, &Y));
-    assert_true(rock_red_black_tree_node(0, &Z));
-    assert_true(rock_red_black_tree_node_set_parent(Y, X)
-                && rock_red_black_tree_node_set_right(X, Y));
-    assert_true(rock_red_black_tree_node_set_parent(X, Z)
-                && rock_red_black_tree_node_set_left(Z, X));
-    assert_true(rock_red_black_tree_node_set_parent(Z, p)
-                && rock_red_black_tree_node_set_left(p, Z));
-    assert_true(rock_red_black_tree_node_set_parent(a, X)
-                && rock_red_black_tree_node_set_left(X, a));
-    assert_true(rock_red_black_tree_node_set_parent(b, Y)
-                && rock_red_black_tree_node_set_left(Y, b));
-    assert_true(rock_red_black_tree_node_set_parent(c, Y)
-                && rock_red_black_tree_node_set_right(Y, c));
-    assert_true(rock_red_black_tree_node_set_parent(d, Z)
-                && rock_red_black_tree_node_set_right(Z, d));
-    assert_true(rock_red_black_tree_rotate_left_right(Y));
-    void *a_, *b_, *c_, *d_, *p_, *X_, *Y_, *Z_;
-    assert_true(rock_red_black_tree_node_get_parent(a, &X_)
-                && X == X_
-                && rock_red_black_tree_node_get_left(X, &a_)
-                && a == a_);
-    assert_true(rock_red_black_tree_node_get_parent(b, &X_)
-                && X == X_
-                && rock_red_black_tree_node_get_right(X, &b_)
-                && b == b_);
-    assert_true(rock_red_black_tree_node_get_parent(c, &Z_)
-                && Z == Z_
-                && rock_red_black_tree_node_get_left(Z, &c_)
-                && c == c_);
-    assert_true(rock_red_black_tree_node_get_parent(d, &Z_)
-                && Z == Z_
-                && rock_red_black_tree_node_get_right(Z, &d_)
-                && d == d_);
-    assert_true(rock_red_black_tree_node_get_parent(X, &Y_)
-                && Y == Y_
-                && rock_red_black_tree_node_get_left(Y, &X_)
-                && X == X_);
-    assert_true(rock_red_black_tree_node_get_parent(Z, &Y_)
-                && Y == Y_
-                && rock_red_black_tree_node_get_right(Y, &Z_)
-                && Z == Z_);
-    assert_true(rock_red_black_tree_node_get_parent(Y, &p_)
-                && p == p_
-                && rock_red_black_tree_node_get_left(p, &Y)
-                && Y == Y_);
-    rock_red_black_tree_node_destroy(a);
-    rock_red_black_tree_node_destroy(b);
-    rock_red_black_tree_node_destroy(c);
-    rock_red_black_tree_node_destroy(d);
-    rock_red_black_tree_node_destroy(p);
-    rock_red_black_tree_node_destroy(X);
-    rock_red_black_tree_node_destroy(Y);
-    rock_red_black_tree_node_destroy(Z);
+    struct rock_red_black_tree_node a, b, c, d, p, X, Y, Z;
+    assert_true(rock_red_black_tree_node_init(&a));
+    assert_true(rock_red_black_tree_node_init(&b));
+    assert_true(rock_red_black_tree_node_init(&c));
+    assert_true(rock_red_black_tree_node_init(&d));
+    assert_true(rock_red_black_tree_node_init(&p));
+    assert_true(rock_red_black_tree_node_init(&X));
+    assert_true(rock_red_black_tree_node_init(&Y));
+    assert_true(rock_red_black_tree_node_init(&Z));
+    /*
+     *           p
+     *          /
+     *         Z
+     *        / \
+     *       X   d
+     *      / \
+     *     a   Y
+     *        / \
+     *       c   d
+     */
+    assert_true(rock_red_black_tree_node_set_parent(&Y, &X));
+    assert_true(rock_red_black_tree_node_set_right(&X, &Y));
+    assert_true(rock_red_black_tree_node_set_parent(&X, &Z));
+    assert_true(rock_red_black_tree_node_set_left(&Z, &X));
+    assert_true(rock_red_black_tree_node_set_parent(&Z, &p));
+    assert_true(rock_red_black_tree_node_set_left(&p, &Z));
+    assert_true(rock_red_black_tree_node_set_parent(&a, &X));
+    assert_true(rock_red_black_tree_node_set_left(&X, &a));
+    assert_true(rock_red_black_tree_node_set_parent(&b, &Y));
+    assert_true(rock_red_black_tree_node_set_left(&Y, &b));
+    assert_true(rock_red_black_tree_node_set_parent(&c, &Y));
+    assert_true(rock_red_black_tree_node_set_right(&Y, &c));
+    assert_true(rock_red_black_tree_node_set_parent(&d, &Z));
+    assert_true(rock_red_black_tree_node_set_right(&Z, &d));
+    assert_true(rock_red_black_tree_rotate_left_right(&Y));
+    /*
+     *          p
+     *         /
+     *        Y
+     *       / \
+     *      X   Z
+     *     / \ / \
+     *    a   bc  d
+     */
+    struct rock_red_black_tree_node *a_, *b_, *c_, *d_, *p_, *X_, *Y_, *Z_;
+    assert_true(rock_red_black_tree_node_get_parent(&a, &X_));
+    assert_ptr_equal(&X, X_);
+    assert_true(rock_red_black_tree_node_get_left(&X, &a_));
+    assert_ptr_equal(&a, a_);
+    assert_true(rock_red_black_tree_node_get_parent(&b, &X_));
+    assert_ptr_equal(&X, X_);
+    assert_true(rock_red_black_tree_node_get_right(&X, &b_));
+    assert_ptr_equal(&b, b_);
+    assert_true(rock_red_black_tree_node_get_parent(&c, &Z_));
+    assert_ptr_equal(&Z, Z_);
+    assert_true(rock_red_black_tree_node_get_left(&Z, &c_));
+    assert_ptr_equal(&c, c_);
+    assert_true(rock_red_black_tree_node_get_parent(&d, &Z_));
+    assert_ptr_equal(&Z, Z_);
+    assert_true(rock_red_black_tree_node_get_right(&Z, &d_));
+    assert_ptr_equal(&d, d_);
+    assert_true(rock_red_black_tree_node_get_parent(&X, &Y_));
+    assert_ptr_equal(&Y, Y_);
+    assert_true(rock_red_black_tree_node_get_left(&Y, &X_));
+    assert_ptr_equal(&X, X_);
+    assert_true(rock_red_black_tree_node_get_parent(&Z, &Y_));
+    assert_ptr_equal(&Y, Y_);
+    assert_true(rock_red_black_tree_node_get_right(&Y, &Z_));
+    assert_ptr_equal(&Z, Z_);
+    assert_true(rock_red_black_tree_node_get_parent(&Y, &p_));
+    assert_ptr_equal(&p, p_);
+    assert_true(rock_red_black_tree_node_get_left(&p, &Y_));
+    assert_ptr_equal(&Y, Y_);
     rock_error = ROCK_ERROR_NONE;
 }
 
 static void check_rotate_left_right_a_b_c_d_pR_X_Y_Z(void **state) {
     rock_error = ROCK_ERROR_NONE;
-    void *a, *b, *c, *d, *p, *X, *Y, *Z;
-    assert_true(rock_red_black_tree_node(0, &a));
-    assert_true(rock_red_black_tree_node(0, &b));
-    assert_true(rock_red_black_tree_node(0, &c));
-    assert_true(rock_red_black_tree_node(0, &d));
-    assert_true(rock_red_black_tree_node(0, &p));
-    assert_true(rock_red_black_tree_node(0, &X));
-    assert_true(rock_red_black_tree_node(0, &Y));
-    assert_true(rock_red_black_tree_node(0, &Z));
-    assert_true(rock_red_black_tree_node_set_parent(Y, X)
-                && rock_red_black_tree_node_set_right(X, Y));
-    assert_true(rock_red_black_tree_node_set_parent(X, Z)
-                && rock_red_black_tree_node_set_left(Z, X));
-    assert_true(rock_red_black_tree_node_set_parent(Z, p)
-                && rock_red_black_tree_node_set_right(p, Z));
-    assert_true(rock_red_black_tree_node_set_parent(a, X)
-                && rock_red_black_tree_node_set_left(X, a));
-    assert_true(rock_red_black_tree_node_set_parent(b, Y)
-                && rock_red_black_tree_node_set_left(Y, b));
-    assert_true(rock_red_black_tree_node_set_parent(c, Y)
-                && rock_red_black_tree_node_set_right(Y, c));
-    assert_true(rock_red_black_tree_node_set_parent(d, Z)
-                && rock_red_black_tree_node_set_right(Z, d));
-    assert_true(rock_red_black_tree_rotate_left_right(Y));
-    void *a_, *b_, *c_, *d_, *p_, *X_, *Y_, *Z_;
-    assert_true(rock_red_black_tree_node_get_parent(a, &X_)
-                && X == X_
-                && rock_red_black_tree_node_get_left(X, &a_)
-                && a == a_);
-    assert_true(rock_red_black_tree_node_get_parent(b, &X_)
-                && X == X_
-                && rock_red_black_tree_node_get_right(X, &b_)
-                && b == b_);
-    assert_true(rock_red_black_tree_node_get_parent(c, &Z_)
-                && Z == Z_
-                && rock_red_black_tree_node_get_left(Z, &c_)
-                && c == c_);
-    assert_true(rock_red_black_tree_node_get_parent(d, &Z_)
-                && Z == Z_
-                && rock_red_black_tree_node_get_right(Z, &d_)
-                && d == d_);
-    assert_true(rock_red_black_tree_node_get_parent(X, &Y_)
-                && Y == Y_
-                && rock_red_black_tree_node_get_left(Y, &X_)
-                && X == X_);
-    assert_true(rock_red_black_tree_node_get_parent(Z, &Y_)
-                && Y == Y_
-                && rock_red_black_tree_node_get_right(Y, &Z_)
-                && Z == Z_);
-    assert_true(rock_red_black_tree_node_get_parent(Y, &p_)
-                && p == p_
-                && rock_red_black_tree_node_get_right(p, &Y)
-                && Y == Y_);
-    rock_red_black_tree_node_destroy(a);
-    rock_red_black_tree_node_destroy(b);
-    rock_red_black_tree_node_destroy(c);
-    rock_red_black_tree_node_destroy(d);
-    rock_red_black_tree_node_destroy(p);
-    rock_red_black_tree_node_destroy(X);
-    rock_red_black_tree_node_destroy(Y);
-    rock_red_black_tree_node_destroy(Z);
+    struct rock_red_black_tree_node a, b, c, d, p, X, Y, Z;
+    assert_true(rock_red_black_tree_node_init(&a));
+    assert_true(rock_red_black_tree_node_init(&b));
+    assert_true(rock_red_black_tree_node_init(&c));
+    assert_true(rock_red_black_tree_node_init(&d));
+    assert_true(rock_red_black_tree_node_init(&p));
+    assert_true(rock_red_black_tree_node_init(&X));
+    assert_true(rock_red_black_tree_node_init(&Y));
+    assert_true(rock_red_black_tree_node_init(&Z));
+    /*
+     *       p
+     *        \
+     *         Z
+     *        / \
+     *       X   d
+     *      / \
+     *     a   Y
+     *        / \
+     *       c   d
+     */
+    assert_true(rock_red_black_tree_node_set_parent(&Y, &X));
+    assert_true(rock_red_black_tree_node_set_right(&X, &Y));
+    assert_true(rock_red_black_tree_node_set_parent(&X, &Z));
+    assert_true(rock_red_black_tree_node_set_left(&Z, &X));
+    assert_true(rock_red_black_tree_node_set_parent(&Z, &p));
+    assert_true(rock_red_black_tree_node_set_right(&p, &Z));
+    assert_true(rock_red_black_tree_node_set_parent(&a, &X));
+    assert_true(rock_red_black_tree_node_set_left(&X, &a));
+    assert_true(rock_red_black_tree_node_set_parent(&b, &Y));
+    assert_true(rock_red_black_tree_node_set_left(&Y, &b));
+    assert_true(rock_red_black_tree_node_set_parent(&c, &Y));
+    assert_true(rock_red_black_tree_node_set_right(&Y, &c));
+    assert_true(rock_red_black_tree_node_set_parent(&d, &Z));
+    assert_true(rock_red_black_tree_node_set_right(&Z, &d));
+    assert_true(rock_red_black_tree_rotate_left_right(&Y));
+    /*
+     *      p
+     *       \
+     *        Y
+     *       / \
+     *      X   Z
+     *     / \ / \
+     *    a   bc  d
+     */
+    struct rock_red_black_tree_node *a_, *b_, *c_, *d_, *p_, *X_, *Y_, *Z_;
+    assert_true(rock_red_black_tree_node_get_parent(&a, &X_));
+    assert_ptr_equal(&X, X_);
+    assert_true(rock_red_black_tree_node_get_left(&X, &a_));
+    assert_ptr_equal(&a, a_);
+    assert_true(rock_red_black_tree_node_get_parent(&b, &X_));
+    assert_ptr_equal(&X, X_);
+    assert_true(rock_red_black_tree_node_get_right(&X, &b_));
+    assert_ptr_equal(&b, b_);
+    assert_true(rock_red_black_tree_node_get_parent(&c, &Z_));
+    assert_ptr_equal(&Z, Z_);
+    assert_true(rock_red_black_tree_node_get_left(&Z, &c_));
+    assert_ptr_equal(&c, c_);
+    assert_true(rock_red_black_tree_node_get_parent(&d, &Z_));
+    assert_ptr_equal(&Z, Z_);
+    assert_true(rock_red_black_tree_node_get_right(&Z, &d_));
+    assert_ptr_equal(&d, d_);
+    assert_true(rock_red_black_tree_node_get_parent(&X, &Y_));
+    assert_ptr_equal(&Y, Y_);
+    assert_true(rock_red_black_tree_node_get_left(&Y, &X_));
+    assert_ptr_equal(&X, X_);
+    assert_true(rock_red_black_tree_node_get_parent(&Z, &Y_));
+    assert_ptr_equal(&Y, Y_);
+    assert_true(rock_red_black_tree_node_get_right(&Y, &Z_));
+    assert_ptr_equal(&Z, Z_);
+    assert_true(rock_red_black_tree_node_get_parent(&Y, &p_));
+    assert_ptr_equal(&p, p_);
+    assert_true(rock_red_black_tree_node_get_right(&p, &Y_));
+    assert_ptr_equal(&Y, Y_);
     rock_error = ROCK_ERROR_NONE;
 }
 
@@ -1121,205 +1208,218 @@ static void check_rotate_right_left_error_on_Y_is_null(void **state) {
 
 static void check_rotate_right_left_error_on_Y_has_no_parent(void **state) {
     rock_error = ROCK_ERROR_NONE;
-    void *Y;
-    assert_true(rock_red_black_tree_node(0, &Y));
-    assert_false(rock_red_black_tree_rotate_right_left(Y));
+    struct rock_red_black_tree_node Y;
+    assert_true(rock_red_black_tree_node_init(&Y));
+    assert_false(rock_red_black_tree_rotate_right_left(&Y));
     assert_int_equal(ROCK_RED_BLACK_TREE_ERROR_Y_HAS_NO_PARENT, rock_error);
-    rock_red_black_tree_node_destroy(Y);
     rock_error = ROCK_ERROR_NONE;
 }
 
 static void check_rotate_right_left_error_on_X_has_no_parent(void **state) {
     rock_error = ROCK_ERROR_NONE;
-    void *X, *Y;
-    assert_true(rock_red_black_tree_node(0, &X));
-    assert_true(rock_red_black_tree_node(0, &Y));
-    assert_true(rock_red_black_tree_node_set_parent(Y, X)
-                && rock_red_black_tree_node_set_left(X, Y));
-    assert_false(rock_red_black_tree_rotate_right_left(Y));
+    struct rock_red_black_tree_node X, Y;
+    assert_true(rock_red_black_tree_node_init(&X));
+    assert_true(rock_red_black_tree_node_init(&Y));
+    assert_true(rock_red_black_tree_node_set_parent(&Y, &X));
+    assert_true(rock_red_black_tree_node_set_left(&X, &Y));
+    assert_false(rock_red_black_tree_rotate_right_left(&Y));
     assert_int_equal(ROCK_RED_BLACK_TREE_ERROR_X_HAS_NO_PARENT, rock_error);
-    rock_red_black_tree_node_destroy(X);
-    rock_red_black_tree_node_destroy(Y);
     rock_error = ROCK_ERROR_NONE;
 }
 
 static void
 check_rotate_right_left_error_on_Y_is_not_left_child_of_X(void **state) {
     rock_error = ROCK_ERROR_NONE;
-    void *X, *Y, *Z;
-    assert_true(rock_red_black_tree_node(0, &X));
-    assert_true(rock_red_black_tree_node(0, &Y));
-    assert_true(rock_red_black_tree_node(0, &Z));
-    assert_true(rock_red_black_tree_node_set_parent(Y, X)
-                && rock_red_black_tree_node_set_right(X, Y));
-    assert_true(rock_red_black_tree_node_set_parent(X, Z)
-                && rock_red_black_tree_node_set_left(Z, X));
-    assert_false(rock_red_black_tree_rotate_right_left(Y));
+    struct rock_red_black_tree_node X, Y, Z;
+    assert_true(rock_red_black_tree_node_init(&X));
+    assert_true(rock_red_black_tree_node_init(&Y));
+    assert_true(rock_red_black_tree_node_init(&Z));
+    assert_true(rock_red_black_tree_node_set_parent(&Y, &X));
+    assert_true(rock_red_black_tree_node_set_right(&X, &Y));
+    assert_true(rock_red_black_tree_node_set_parent(&X, &Z));
+    assert_true(rock_red_black_tree_node_set_left(&Z, &X));
+    assert_false(rock_red_black_tree_rotate_right_left(&Y));
     assert_int_equal(ROCK_RED_BLACK_TREE_ERROR_Y_IS_NOT_LEFT_CHILD_OF_X,
                      rock_error);
-    rock_red_black_tree_node_destroy(X);
-    rock_red_black_tree_node_destroy(Y);
-    rock_red_black_tree_node_destroy(Z);
     rock_error = ROCK_ERROR_NONE;
 }
 
 static void
 check_rotate_right_left_error_on_X_is_not_right_child_of_Z(void **state) {
     rock_error = ROCK_ERROR_NONE;
-    void *X, *Y, *Z;
-    assert_true(rock_red_black_tree_node(0, &X));
-    assert_true(rock_red_black_tree_node(0, &Y));
-    assert_true(rock_red_black_tree_node(0, &Z));
-    assert_true(rock_red_black_tree_node_set_parent(Y, X)
-                && rock_red_black_tree_node_set_left(X, Y));
-    assert_true(rock_red_black_tree_node_set_parent(X, Z)
-                && rock_red_black_tree_node_set_left(Z, X));
-    assert_false(rock_red_black_tree_rotate_right_left(Y));
+    struct rock_red_black_tree_node X, Y, Z;
+    assert_true(rock_red_black_tree_node_init(&X));
+    assert_true(rock_red_black_tree_node_init(&Y));
+    assert_true(rock_red_black_tree_node_init(&Z));
+    assert_true(rock_red_black_tree_node_set_parent(&Y, &X));
+    assert_true(rock_red_black_tree_node_set_left(&X, &Y));
+    assert_true(rock_red_black_tree_node_set_parent(&X, &Z));
+    assert_true(rock_red_black_tree_node_set_left(&Z, &X));
+    assert_false(rock_red_black_tree_rotate_right_left(&Y));
     assert_int_equal(ROCK_RED_BLACK_TREE_ERROR_X_IS_NOT_RIGHT_CHILD_OF_Z,
                      rock_error);
-    rock_red_black_tree_node_destroy(X);
-    rock_red_black_tree_node_destroy(Y);
-    rock_red_black_tree_node_destroy(Z);
     rock_error = ROCK_ERROR_NONE;
 }
 
 static void check_rotate_right_left_a_b_c_d_pL_X_Y_Z(void **state) {
     rock_error = ROCK_ERROR_NONE;
-    void *a, *b, *c, *d, *p, *X, *Y, *Z;
-    assert_true(rock_red_black_tree_node(0, &a));
-    assert_true(rock_red_black_tree_node(0, &b));
-    assert_true(rock_red_black_tree_node(0, &c));
-    assert_true(rock_red_black_tree_node(0, &d));
-    assert_true(rock_red_black_tree_node(0, &p));
-    assert_true(rock_red_black_tree_node(0, &X));
-    assert_true(rock_red_black_tree_node(0, &Y));
-    assert_true(rock_red_black_tree_node(0, &Z));
-    assert_true(rock_red_black_tree_node_set_parent(Y, X)
-                && rock_red_black_tree_node_set_left(X, Y));
-    assert_true(rock_red_black_tree_node_set_parent(X, Z)
-                && rock_red_black_tree_node_set_right(Z, X));
-    assert_true(rock_red_black_tree_node_set_parent(Z, p)
-                && rock_red_black_tree_node_set_left(p, Z));
-    assert_true(rock_red_black_tree_node_set_parent(a, Z)
-                && rock_red_black_tree_node_set_left(Z, a));
-    assert_true(rock_red_black_tree_node_set_parent(b, Y)
-                && rock_red_black_tree_node_set_left(Y, b));
-    assert_true(rock_red_black_tree_node_set_parent(c, Y)
-                && rock_red_black_tree_node_set_right(Y, c));
-    assert_true(rock_red_black_tree_node_set_parent(d, X)
-                && rock_red_black_tree_node_set_right(X, d));
-    assert_true(rock_red_black_tree_rotate_right_left(Y));
-    void *a_, *b_, *c_, *d_, *p_, *X_, *Y_, *Z_;
-    assert_true(rock_red_black_tree_node_get_parent(a, &Z_)
-                && Z == Z_
-                && rock_red_black_tree_node_get_left(Z, &a_)
-                && a == a_);
-    assert_true(rock_red_black_tree_node_get_parent(b, &Z_)
-                && Z == Z_
-                && rock_red_black_tree_node_get_right(Z, &b_)
-                && b == b_);
-    assert_true(rock_red_black_tree_node_get_parent(c, &X_)
-                && X == X_
-                && rock_red_black_tree_node_get_left(X, &c_)
-                && c == c_);
-    assert_true(rock_red_black_tree_node_get_parent(d, &X_)
-                && X == X_
-                && rock_red_black_tree_node_get_right(X, &d_)
-                && d == d_);
-    assert_true(rock_red_black_tree_node_get_parent(X, &Y_)
-                && Y == Y_
-                && rock_red_black_tree_node_get_right(Y, &X_)
-                && X == X_);
-    assert_true(rock_red_black_tree_node_get_parent(Z, &Y_)
-                && Y == Y_
-                && rock_red_black_tree_node_get_left(Y, &Z_)
-                && Z == Z_);
-    assert_true(rock_red_black_tree_node_get_parent(Y, &p_)
-                && p == p_
-                && rock_red_black_tree_node_get_left(p, &Y)
-                && Y == Y_);
-    rock_red_black_tree_node_destroy(a);
-    rock_red_black_tree_node_destroy(b);
-    rock_red_black_tree_node_destroy(c);
-    rock_red_black_tree_node_destroy(d);
-    rock_red_black_tree_node_destroy(p);
-    rock_red_black_tree_node_destroy(X);
-    rock_red_black_tree_node_destroy(Y);
-    rock_red_black_tree_node_destroy(Z);
+    struct rock_red_black_tree_node a, b, c, d, p, X, Y, Z;
+    assert_true(rock_red_black_tree_node_init(&a));
+    assert_true(rock_red_black_tree_node_init(&b));
+    assert_true(rock_red_black_tree_node_init(&c));
+    assert_true(rock_red_black_tree_node_init(&d));
+    assert_true(rock_red_black_tree_node_init(&p));
+    assert_true(rock_red_black_tree_node_init(&X));
+    assert_true(rock_red_black_tree_node_init(&Y));
+    assert_true(rock_red_black_tree_node_init(&Z));
+    /*
+     *        p
+     *       /
+     *      Z
+     *     / \
+     *    a   X
+     *       / \
+     *      Y   d
+     *     / \
+     *    b   c
+     */
+    assert_true(rock_red_black_tree_node_set_parent(&Y, &X));
+    assert_true(rock_red_black_tree_node_set_left(&X, &Y));
+    assert_true(rock_red_black_tree_node_set_parent(&X, &Z));
+    assert_true(rock_red_black_tree_node_set_right(&Z, &X));
+    assert_true(rock_red_black_tree_node_set_parent(&Z, &p));
+    assert_true(rock_red_black_tree_node_set_left(&p, &Z));
+    assert_true(rock_red_black_tree_node_set_parent(&a, &Z));
+    assert_true(rock_red_black_tree_node_set_left(&Z, &a));
+    assert_true(rock_red_black_tree_node_set_parent(&b, &Y));
+    assert_true(rock_red_black_tree_node_set_left(&Y, &b));
+    assert_true(rock_red_black_tree_node_set_parent(&c, &Y));
+    assert_true(rock_red_black_tree_node_set_right(&Y, &c));
+    assert_true(rock_red_black_tree_node_set_parent(&d, &X));
+    assert_true(rock_red_black_tree_node_set_right(&X, &d));
+    assert_true(rock_red_black_tree_rotate_right_left(&Y));
+    /*
+     *          p
+     *         /
+     *        Y
+     *       / \
+     *      Z   X
+     *     / \ / \
+     *    a   bc  d
+     */
+    struct rock_red_black_tree_node *a_, *b_, *c_, *d_, *p_, *X_, *Y_, *Z_;
+    assert_true(rock_red_black_tree_node_get_parent(&a, &Z_));
+    assert_ptr_equal(&Z, Z_);
+    assert_true(rock_red_black_tree_node_get_left(&Z, &a_));
+    assert_ptr_equal(&a, a_);
+    assert_true(rock_red_black_tree_node_get_parent(&b, &Z_));
+    assert_ptr_equal(&Z, Z_);
+    assert_true(rock_red_black_tree_node_get_right(&Z, &b_));
+    assert_ptr_equal(&b, b_);
+    assert_true(rock_red_black_tree_node_get_parent(&c, &X_));
+    assert_ptr_equal(&X, X_);
+    assert_true(rock_red_black_tree_node_get_left(&X, &c_));
+    assert_ptr_equal(&c, c_);
+    assert_true(rock_red_black_tree_node_get_parent(&d, &X_));
+    assert_ptr_equal(&X, X_);
+    assert_true(rock_red_black_tree_node_get_right(&X, &d_));
+    assert_ptr_equal(&d, d_);
+    assert_true(rock_red_black_tree_node_get_parent(&X, &Y_));
+    assert_ptr_equal(&Y, Y_);
+    assert_true(rock_red_black_tree_node_get_right(&Y, &X_));
+    assert_ptr_equal(&X, X_);
+    assert_true(rock_red_black_tree_node_get_parent(&Z, &Y_));
+    assert_ptr_equal(&Y, Y_);
+    assert_true(rock_red_black_tree_node_get_left(&Y, &Z_));
+    assert_ptr_equal(&Z, Z_);
+    assert_true(rock_red_black_tree_node_get_parent(&Y, &p_));
+    assert_ptr_equal(&p, p_);
+    assert_true(rock_red_black_tree_node_get_left(&p, &Y_));
+    assert_ptr_equal(&Y, Y_);
     rock_error = ROCK_ERROR_NONE;
 }
 
 static void check_rotate_right_left_a_b_c_d_pR_X_Y_Z(void **state) {
     rock_error = ROCK_ERROR_NONE;
-    void *a, *b, *c, *d, *p, *X, *Y, *Z;
-    assert_true(rock_red_black_tree_node(0, &a));
-    assert_true(rock_red_black_tree_node(0, &b));
-    assert_true(rock_red_black_tree_node(0, &c));
-    assert_true(rock_red_black_tree_node(0, &d));
-    assert_true(rock_red_black_tree_node(0, &p));
-    assert_true(rock_red_black_tree_node(0, &X));
-    assert_true(rock_red_black_tree_node(0, &Y));
-    assert_true(rock_red_black_tree_node(0, &Z));
-    assert_true(rock_red_black_tree_node_set_parent(Y, X)
-                && rock_red_black_tree_node_set_left(X, Y));
-    assert_true(rock_red_black_tree_node_set_parent(X, Z)
-                && rock_red_black_tree_node_set_right(Z, X));
-    assert_true(rock_red_black_tree_node_set_parent(Z, p)
-                && rock_red_black_tree_node_set_right(p, Z));
-    assert_true(rock_red_black_tree_node_set_parent(a, Z)
-                && rock_red_black_tree_node_set_left(Z, a));
-    assert_true(rock_red_black_tree_node_set_parent(b, Y)
-                && rock_red_black_tree_node_set_left(Y, b));
-    assert_true(rock_red_black_tree_node_set_parent(c, Y)
-                && rock_red_black_tree_node_set_right(Y, c));
-    assert_true(rock_red_black_tree_node_set_parent(d, X)
-                && rock_red_black_tree_node_set_right(X, d));
-    assert_true(rock_red_black_tree_rotate_right_left(Y));
-    void *a_, *b_, *c_, *d_, *p_, *X_, *Y_, *Z_;
-    assert_true(rock_red_black_tree_node_get_parent(a, &Z_)
-                && Z == Z_
-                && rock_red_black_tree_node_get_left(Z, &a_)
-                && a == a_);
-    assert_true(rock_red_black_tree_node_get_parent(b, &Z_)
-                && Z == Z_
-                && rock_red_black_tree_node_get_right(Z, &b_)
-                && b == b_);
-    assert_true(rock_red_black_tree_node_get_parent(c, &X_)
-                && X == X_
-                && rock_red_black_tree_node_get_left(X, &c_)
-                && c == c_);
-    assert_true(rock_red_black_tree_node_get_parent(d, &X_)
-                && X == X_
-                && rock_red_black_tree_node_get_right(X, &d_)
-                && d == d_);
-    assert_true(rock_red_black_tree_node_get_parent(X, &Y_)
-                && Y == Y_
-                && rock_red_black_tree_node_get_right(Y, &X_)
-                && X == X_);
-    assert_true(rock_red_black_tree_node_get_parent(Z, &Y_)
-                && Y == Y_
-                && rock_red_black_tree_node_get_left(Y, &Z_)
-                && Z == Z_);
-    assert_true(rock_red_black_tree_node_get_parent(Y, &p_)
-                && p == p_
-                && rock_red_black_tree_node_get_right(p, &Y)
-                && Y == Y_);
-    rock_red_black_tree_node_destroy(a);
-    rock_red_black_tree_node_destroy(b);
-    rock_red_black_tree_node_destroy(c);
-    rock_red_black_tree_node_destroy(d);
-    rock_red_black_tree_node_destroy(p);
-    rock_red_black_tree_node_destroy(X);
-    rock_red_black_tree_node_destroy(Y);
-    rock_red_black_tree_node_destroy(Z);
+    struct rock_red_black_tree_node a, b, c, d, p, X, Y, Z;
+    assert_true(rock_red_black_tree_node_init(&a));
+    assert_true(rock_red_black_tree_node_init(&b));
+    assert_true(rock_red_black_tree_node_init(&c));
+    assert_true(rock_red_black_tree_node_init(&d));
+    assert_true(rock_red_black_tree_node_init(&p));
+    assert_true(rock_red_black_tree_node_init(&X));
+    assert_true(rock_red_black_tree_node_init(&Y));
+    assert_true(rock_red_black_tree_node_init(&Z));
+    /*
+     *    p
+     *     \
+     *      Z
+     *     / \
+     *    a   X
+     *       / \
+     *      Y   d
+     *     / \
+     *    a   b
+     */
+    assert_true(rock_red_black_tree_node_set_parent(&Y, &X));
+    assert_true(rock_red_black_tree_node_set_left(&X, &Y));
+    assert_true(rock_red_black_tree_node_set_parent(&X, &Z));
+    assert_true(rock_red_black_tree_node_set_right(&Z, &X));
+    assert_true(rock_red_black_tree_node_set_parent(&Z, &p));
+    assert_true(rock_red_black_tree_node_set_right(&p, &Z));
+    assert_true(rock_red_black_tree_node_set_parent(&a, &Z));
+    assert_true(rock_red_black_tree_node_set_left(&Z, &a));
+    assert_true(rock_red_black_tree_node_set_parent(&b, &Y));
+    assert_true(rock_red_black_tree_node_set_left(&Y, &b));
+    assert_true(rock_red_black_tree_node_set_parent(&c, &Y));
+    assert_true(rock_red_black_tree_node_set_right(&Y, &c));
+    assert_true(rock_red_black_tree_node_set_parent(&d, &X));
+    assert_true(rock_red_black_tree_node_set_right(&X, &d));
+    assert_true(rock_red_black_tree_rotate_right_left(&Y));
+    /*
+     *      p
+     *       \
+     *        Y
+     *       / \
+     *      Z   X
+     *     / \ / \
+     *    a   bc  d
+     */
+    struct rock_red_black_tree_node *a_, *b_, *c_, *d_, *p_, *X_, *Y_, *Z_;
+    assert_true(rock_red_black_tree_node_get_parent(&a, &Z_));
+    assert_ptr_equal(&Z, Z_);
+    assert_true(rock_red_black_tree_node_get_left(&Z, &a_));
+    assert_ptr_equal(&a, a_);
+    assert_true(rock_red_black_tree_node_get_parent(&b, &Z_));
+    assert_ptr_equal(&Z, Z_);
+    assert_true(rock_red_black_tree_node_get_right(&Z, &b_));
+    assert_ptr_equal(&b, b_);
+    assert_true(rock_red_black_tree_node_get_parent(&c, &X_));
+    assert_ptr_equal(&X, X_);
+    assert_true(rock_red_black_tree_node_get_left(&X, &c_));
+    assert_ptr_equal(&c, c_);
+    assert_true(rock_red_black_tree_node_get_parent(&d, &X_));
+    assert_ptr_equal(&X, X_);
+    assert_true(rock_red_black_tree_node_get_right(&X, &d_));
+    assert_ptr_equal(&d, d_);
+    assert_true(rock_red_black_tree_node_get_parent(&X, &Y_));
+    assert_ptr_equal(&Y, Y_);
+    assert_true(rock_red_black_tree_node_get_right(&Y, &X_));
+    assert_ptr_equal(&X, X_);
+    assert_true(rock_red_black_tree_node_get_parent(&Z, &Y_));
+    assert_ptr_equal(&Y, Y_);
+    assert_true(rock_red_black_tree_node_get_left(&Y, &Z_));
+    assert_ptr_equal(&Z, Z_);
+    assert_true(rock_red_black_tree_node_get_parent(&Y, &p_));
+    assert_ptr_equal(&p, p_);
+    assert_true(rock_red_black_tree_node_get_right(&p, &Y_));
+    assert_ptr_equal(&Y, Y_);
     rock_error = ROCK_ERROR_NONE;
 }
 
 static void check_init_error_on_object_is_null(void **state) {
     rock_error = ROCK_ERROR_NONE;
-    int (*compare)(const void *, const void *) = (void *) 1;
-    assert_false(rock_red_black_tree_init(NULL,
-                                           compare));
+    assert_false(rock_red_black_tree_init(NULL, (void *) 1));
     assert_int_equal(ROCK_RED_BLACK_TREE_ERROR_OBJECT_IS_NULL, rock_error);
     rock_error = ROCK_ERROR_NONE;
 }
@@ -1334,12 +1434,15 @@ static void check_init_error_on_compare_is_null(void **state) {
 static void check_init(void **state) {
     rock_error = ROCK_ERROR_NONE;
     struct rock_red_black_tree object = {
-            .root = (void *)SIZE_MAX,
+            .root = (void *)UINTPTR_MAX,
             .count = (-1),
-            .compare = (void *)SIZE_MAX,
+            .compare = (void *)UINTPTR_MAX,
     };
-    assert_true(rock_red_black_tree_init(&object,
-                                         seagrass_void_ptr_compare));
+    assert_true(rock_red_black_tree_init(
+            &object,
+            (int (*)(const struct rock_red_black_tree_node *,
+                             const struct rock_red_black_tree_node *))
+                           seagrass_void_ptr_compare));
     assert_null(object.root);
     assert_ptr_equal(seagrass_void_ptr_compare, object.compare);
     assert_int_equal(0, object.count);
@@ -1348,47 +1451,48 @@ static void check_init(void **state) {
 
 static void check_invalidate_on_object_is_null(void **state) {
     rock_error = ROCK_ERROR_NONE;
-    void (*on_node_destroy)(void *) = (void *) 1;
-    assert_false(rock_red_black_tree_invalidate(NULL, on_node_destroy));
+    assert_false(rock_red_black_tree_invalidate(NULL, (void *) 1));
     assert_int_equal(ROCK_RED_BLACK_TREE_ERROR_OBJECT_IS_NULL, rock_error);
     rock_error = ROCK_ERROR_NONE;
 }
 
-static void on_node_destroy(void *node) {
+static void on_node_destroy(struct rock_red_black_tree_node *node) {
     function_called();
     assert_non_null(node);
 }
 
 static void check_invalidate(void **state) {
     rock_error = ROCK_ERROR_NONE;
-    void *a, *b, *c, *d, *p, *X, *Y, *Z;
-    assert_true(rock_red_black_tree_node(0, &a));
-    assert_true(rock_red_black_tree_node(0, &b));
-    assert_true(rock_red_black_tree_node(0, &c));
-    assert_true(rock_red_black_tree_node(0, &d));
-    assert_true(rock_red_black_tree_node(0, &p));
-    assert_true(rock_red_black_tree_node(0, &X));
-    assert_true(rock_red_black_tree_node(0, &Y));
-    assert_true(rock_red_black_tree_node(0, &Z));
-    assert_true(rock_red_black_tree_node_set_parent(Y, X)
-                && rock_red_black_tree_node_set_left(X, Y));
-    assert_true(rock_red_black_tree_node_set_parent(X, Z)
-                && rock_red_black_tree_node_set_right(Z, X));
-    assert_true(rock_red_black_tree_node_set_parent(Z, p)
-                && rock_red_black_tree_node_set_right(p, Z));
-    assert_true(rock_red_black_tree_node_set_parent(a, Z)
-                && rock_red_black_tree_node_set_left(Z, a));
-    assert_true(rock_red_black_tree_node_set_parent(b, Y)
-                && rock_red_black_tree_node_set_left(Y, b));
-    assert_true(rock_red_black_tree_node_set_parent(c, Y)
-                && rock_red_black_tree_node_set_right(Y, c));
-    assert_true(rock_red_black_tree_node_set_parent(d, X)
-                && rock_red_black_tree_node_set_right(X, d));
+    struct rock_red_black_tree_node a, b, c, d, p, X, Y, Z;
+    assert_true(rock_red_black_tree_node_init(&a));
+    assert_true(rock_red_black_tree_node_init(&b));
+    assert_true(rock_red_black_tree_node_init(&c));
+    assert_true(rock_red_black_tree_node_init(&d));
+    assert_true(rock_red_black_tree_node_init(&p));
+    assert_true(rock_red_black_tree_node_init(&X));
+    assert_true(rock_red_black_tree_node_init(&Y));
+    assert_true(rock_red_black_tree_node_init(&Z));
+
+    assert_true(rock_red_black_tree_node_set_parent(&Y, &X));
+    assert_true(rock_red_black_tree_node_set_left(&X, &Y));
+    assert_true(rock_red_black_tree_node_set_parent(&X, &Z));
+    assert_true(rock_red_black_tree_node_set_right(&Z, &X));
+    assert_true(rock_red_black_tree_node_set_parent(&Z, &p));
+    assert_true(rock_red_black_tree_node_set_right(&p, &Z));
+    assert_true(rock_red_black_tree_node_set_parent(&a, &Z));
+    assert_true(rock_red_black_tree_node_set_left(&Z, &a));
+    assert_true(rock_red_black_tree_node_set_parent(&b, &Y));
+    assert_true(rock_red_black_tree_node_set_left(&Y, &b));
+    assert_true(rock_red_black_tree_node_set_parent(&c, &Y));
+    assert_true(rock_red_black_tree_node_set_right(&Y, &c));
+    assert_true(rock_red_black_tree_node_set_parent(&d, &X));
+    assert_true(rock_red_black_tree_node_set_right(&X, &d));
     struct rock_red_black_tree object = {
-            .root = p
+            .root = &p
     };
     expect_function_calls(on_node_destroy, 8);
-    assert_true(rock_red_black_tree_invalidate(&object, on_node_destroy));
+    assert_true(rock_red_black_tree_invalidate(&object,
+                                               on_node_destroy));
     assert_null(object.root);
     assert_null(object.compare);
     assert_int_equal(0, object.count);
@@ -1410,11 +1514,16 @@ static void check_count_error_on_out_is_null(void **state) {
 }
 
 static void check_count(void **state) {
+    srand(time(NULL));
     rock_error = ROCK_ERROR_NONE;
     struct rock_red_black_tree object = {.count = 2732};
-    assert_true(rock_red_black_tree_init(&object, seagrass_void_ptr_compare));
+    assert_true(rock_red_black_tree_init(
+            &object,
+            (int (*)(const struct rock_red_black_tree_node *,
+                     const struct rock_red_black_tree_node *))
+                             seagrass_void_ptr_compare));
     assert_int_equal(0, object.count);
-    object.count = 62213;
+    object.count = (rand() % UINTMAX_MAX);
     uintmax_t count;
     assert_true(rock_red_black_tree_count(&object, &count));
     assert_int_equal(object.count, count);
@@ -1431,11 +1540,11 @@ static void check_find_error_on_object_is_null(void **state) {
     rock_error = ROCK_ERROR_NONE;
 }
 
-static void check_find_error_on_value_is_null(void **state) {
+static void check_find_error_on_needle_is_null(void **state) {
     rock_error = ROCK_ERROR_NONE;
     assert_false(rock_red_black_tree_find(
             (void *) 1, NULL, NULL, (void *) 1));
-    assert_int_equal(ROCK_RED_BLACK_TREE_ERROR_VALUE_IS_NULL, rock_error);
+    assert_int_equal(ROCK_RED_BLACK_TREE_ERROR_NEEDLE_IS_NULL, rock_error);
     rock_error = ROCK_ERROR_NONE;
 }
 
@@ -1447,108 +1556,174 @@ static void check_find_error_on_out_is_null(void **state) {
     rock_error = ROCK_ERROR_NONE;
 }
 
-static void check_find_error_on_value_not_found(void **state) {
+struct entry {
+    uintmax_t value;
+    struct rock_red_black_tree_node node;
+};
+
+static int compare_entry(const struct rock_red_black_tree_node *a,
+                         const struct rock_red_black_tree_node *b) {
+    struct entry* A = rock_container_of(a, struct entry, node);
+    struct entry* B = rock_container_of(b, struct entry, node);
+    return seagrass_uintmax_t_compare(A->value, B->value);
+}
+
+static void assert_node(const struct rock_red_black_tree_node *object,
+        const struct rock_red_black_tree_node *parent,
+        const bool is_left_on_parent,
+        const struct rock_red_black_tree_node *left,
+        const struct rock_red_black_tree_node *right,
+        const bool color) {
+    bool color_;
+    assert_true(rock_red_black_tree_node_get_color(object, &color_));
+    assert_int_equal(color_, color);
+    struct rock_red_black_tree_node *out;
+
+    assert_true(rock_red_black_tree_node_get_parent(object, &out));
+    if (!parent) {
+        assert_null(out);
+    } else {
+        assert_ptr_equal(out, parent);
+        assert_true(is_left_on_parent
+            ? rock_red_black_tree_node_get_left(parent, &out)
+            : rock_red_black_tree_node_get_right(parent, &out));
+        assert_ptr_equal(out, object);
+    }
+
+    assert_true(rock_red_black_tree_node_get_left(object, &out));
+    if (!left) {
+        assert_null(out);
+    } else {
+        assert_ptr_equal(out, left);
+        assert_true(rock_red_black_tree_node_get_parent(left, &out));
+        assert_ptr_equal(out, object);
+    }
+
+    assert_true(rock_red_black_tree_node_get_right(object, &out));
+    if (!right) {
+        assert_null(out);
+    } else {
+        assert_ptr_equal(out, right);
+        assert_true(rock_red_black_tree_node_get_parent(right, &out));
+        assert_ptr_equal(out, object);
+    }
+}
+
+static void check_find_error_on_node_not_found(void **state) {
     rock_error = ROCK_ERROR_NONE;
-    const size_t size = sizeof(uintmax_t);
-    uintmax_t *a, *b, *c, *d, *e, *f, *g;
-    assert_true(rock_red_black_tree_node(size, (void **) &a));
-    assert_true(rock_red_black_tree_node(size, (void **) &b));
-    assert_true(rock_red_black_tree_node(size, (void **) &c));
-    assert_true(rock_red_black_tree_node(size, (void **) &d));
-    assert_true(rock_red_black_tree_node(size, (void **) &e));
-    assert_true(rock_red_black_tree_node(size, (void **) &f));
-    assert_true(rock_red_black_tree_node(size, (void **) &g));
-    *a = 0;
-    *b = 1;
-    *c = 2;
-    *d = 3;
-    *e = 4;
-    *f = 5;
-    *g = 6;
-    seagrass_required_true(rock_red_black_tree_node_set_parent(b, d)
-                        && rock_red_black_tree_node_set_left(d, b));
-    seagrass_required_true(rock_red_black_tree_node_set_parent(f, d)
-                        && rock_red_black_tree_node_set_right(d, f));
-    seagrass_required_true(rock_red_black_tree_node_set_parent(a, b)
-                        && rock_red_black_tree_node_set_left(b, a));
-    seagrass_required_true(rock_red_black_tree_node_set_parent(c, b)
-                        && rock_red_black_tree_node_set_right(b, c));
-    seagrass_required_true(rock_red_black_tree_node_set_parent(e, f)
-                        && rock_red_black_tree_node_set_left(f, e));
-    seagrass_required_true(rock_red_black_tree_node_set_parent(g, f)
-                        && rock_red_black_tree_node_set_right(f, g));
+    struct entry a, b, c, d, e, f, g;
+    assert_true(rock_red_black_tree_node_init(&a.node));
+    assert_true(rock_red_black_tree_node_init(&b.node));
+    assert_true(rock_red_black_tree_node_init(&c.node));
+    assert_true(rock_red_black_tree_node_init(&d.node));
+    assert_true(rock_red_black_tree_node_init(&e.node));
+    assert_true(rock_red_black_tree_node_init(&f.node));
+    assert_true(rock_red_black_tree_node_init(&g.node));
+    a.value = 0;
+    b.value = 1;
+    c.value = 2;
+    d.value = 3;
+    e.value = 4;
+    f.value = 5;
+    g.value = 6;
+    /*
+     *           d(3)
+     *          /    \
+     *       b(1)     f(5)
+     *      /   \     /  \
+     *    a(0)  c(2) e(4) g(6)
+     */
+    assert_true(rock_red_black_tree_node_set_parent(&b.node, &d.node));
+    assert_true(rock_red_black_tree_node_set_left(&d.node, &b.node));
+    assert_true(rock_red_black_tree_node_set_parent(&f.node, &d.node));
+    assert_true(rock_red_black_tree_node_set_right(&d.node, &f.node));
+    assert_true(rock_red_black_tree_node_set_parent(&a.node, &b.node));
+    assert_true(rock_red_black_tree_node_set_left(&b.node, &a.node));
+    assert_true(rock_red_black_tree_node_set_parent(&c.node, &b.node));
+    assert_true(rock_red_black_tree_node_set_right(&b.node, &c.node));
+    assert_true(rock_red_black_tree_node_set_parent(&e.node, &f.node));
+    assert_true(rock_red_black_tree_node_set_left(&f.node, &e.node));
+    assert_true(rock_red_black_tree_node_set_parent(&g.node, &f.node));
+    assert_true(rock_red_black_tree_node_set_right(&f.node, &g.node));
     struct rock_red_black_tree tree = {
-            .root = d,
-            .compare = (int (*)(const void *, const void *))seagrass_uintmax_t_ptr_compare
+            .root = &d.node,
+            .compare = compare_entry
     };
-    uintmax_t *item = NULL;
-    uintmax_t key = 10;
-    assert_false(rock_red_black_tree_find(&tree, NULL, &key, (void **) &item));
-    assert_int_equal(ROCK_RED_BLACK_TREE_ERROR_VALUE_NOT_FOUND, rock_error);
-    assert_ptr_equal(g, item); /* insertion point found in tree */
+    struct rock_red_black_tree_node *out = NULL;
+    struct entry needle = { .value = 10 };
+    assert_true(rock_red_black_tree_node_init(&needle.node));
+    assert_false(rock_red_black_tree_find(&tree, NULL, &needle.node, &out));
+    assert_int_equal(ROCK_RED_BLACK_TREE_ERROR_NODE_NOT_FOUND, rock_error);
+    assert_non_null(out);
+    assert_ptr_equal(&g.node, out); /* insertion point found in tree */
     assert_true(rock_red_black_tree_invalidate(&tree, NULL));
     rock_error = ROCK_ERROR_NONE;
 }
 
 static void check_find_empty_tree(void **state) {
     rock_error = ROCK_ERROR_NONE;
-    uintmax_t value = 12;
+    struct entry needle = { .value = 12 };
+    assert_true(rock_red_black_tree_node_init(&needle.node));
     struct rock_red_black_tree tree = {};
-    void *at = &value;
-    assert_false(rock_red_black_tree_find(
-            &tree, NULL, &value, &at));
-    assert_int_equal(ROCK_RED_BLACK_TREE_ERROR_VALUE_NOT_FOUND, rock_error);
-    assert_null(at);
+    struct rock_red_black_tree_node *out;
+    assert_false(rock_red_black_tree_find(&tree, NULL, &needle.node, &out));
+    assert_int_equal(ROCK_RED_BLACK_TREE_ERROR_NODE_NOT_FOUND, rock_error);
+    assert_null(out);
     rock_error = ROCK_ERROR_NONE;
 }
 
 static void check_find(void **state) {
     rock_error = ROCK_ERROR_NONE;
-    const size_t size = sizeof(uintmax_t);
-    uintmax_t *a, *b, *c, *d, *e, *f, *g;
-    assert_true(rock_red_black_tree_node(size, (void **) &a));
-    assert_true(rock_red_black_tree_node(size, (void **) &b));
-    assert_true(rock_red_black_tree_node(size, (void **) &c));
-    assert_true(rock_red_black_tree_node(size, (void **) &d));
-    assert_true(rock_red_black_tree_node(size, (void **) &e));
-    assert_true(rock_red_black_tree_node(size, (void **) &f));
-    assert_true(rock_red_black_tree_node(size, (void **) &g));
-    *a = 0;
-    *b = 1;
-    *c = 2;
-    *d = 3;
-    *e = 4;
-    *f = 5;
-    *g = 6;
-    assert_true(rock_red_black_tree_node_set_parent(b, d)
-                        && rock_red_black_tree_node_set_left(d, b));
-    assert_true(rock_red_black_tree_node_set_parent(f, d)
-                        && rock_red_black_tree_node_set_right(d, f));
-    assert_true(rock_red_black_tree_node_set_parent(a, b)
-                        && rock_red_black_tree_node_set_left(b, a));
-    assert_true(rock_red_black_tree_node_set_parent(c, b)
-                        && rock_red_black_tree_node_set_right(b, c));
-    assert_true(rock_red_black_tree_node_set_parent(e, f)
-                        && rock_red_black_tree_node_set_left(f, e));
-    assert_true(rock_red_black_tree_node_set_parent(g, f)
-                        && rock_red_black_tree_node_set_right(f, g));
+    struct entry a, b, c, d, e, f, g;
+    assert_true(rock_red_black_tree_node_init(&a.node));
+    assert_true(rock_red_black_tree_node_init(&b.node));
+    assert_true(rock_red_black_tree_node_init(&c.node));
+    assert_true(rock_red_black_tree_node_init(&d.node));
+    assert_true(rock_red_black_tree_node_init(&e.node));
+    assert_true(rock_red_black_tree_node_init(&f.node));
+    assert_true(rock_red_black_tree_node_init(&g.node));
+    a.value = 0;
+    b.value = 1;
+    c.value = 2;
+    d.value = 3;
+    e.value = 4;
+    f.value = 5;
+    g.value = 6;
+    /*
+     *           d(3)
+     *          /    \
+     *       b(1)     f(5)
+     *      /   \     /  \
+     *    a(0)  c(2) e(4) g(6)
+     */
+    assert_true(rock_red_black_tree_node_set_parent(&b.node, &d.node));
+    assert_true(rock_red_black_tree_node_set_left(&d.node, &b.node));
+    assert_true(rock_red_black_tree_node_set_parent(&f.node, &d.node));
+    assert_true(rock_red_black_tree_node_set_right(&d.node, &f.node));
+    assert_true(rock_red_black_tree_node_set_parent(&a.node, &b.node));
+    assert_true(rock_red_black_tree_node_set_left(&b.node, &a.node));
+    assert_true(rock_red_black_tree_node_set_parent(&c.node, &b.node));
+    assert_true(rock_red_black_tree_node_set_right(&b.node, &c.node));
+    assert_true(rock_red_black_tree_node_set_parent(&e.node, &f.node));
+    assert_true(rock_red_black_tree_node_set_left(&f.node, &e.node));
+    assert_true(rock_red_black_tree_node_set_parent(&g.node, &f.node));
+    assert_true(rock_red_black_tree_node_set_right(&f.node, &g.node));
     struct rock_red_black_tree tree = {
-            .root = d,
-            .compare = (int (*)(const void *, const void *))seagrass_uintmax_t_ptr_compare
+            .root = &d.node,
+            .compare = compare_entry
     };
-    uintmax_t *item = NULL;
-    uintmax_t key = 2;
-    assert_true(rock_red_black_tree_find(
-            &tree, NULL, &key, (void **) &item));
-    assert_ptr_equal(c, item); /* exact match found in tree */
+    struct rock_red_black_tree_node *out = NULL;
+    struct entry needle = { .value = 2 };
+    assert_true(rock_red_black_tree_node_init(&needle.node));
+    assert_true(rock_red_black_tree_find(&tree, NULL, &needle.node, &out));
+    assert_ptr_equal(&c.node, out); /* exact match found in tree */
     assert_true(rock_red_black_tree_invalidate(&tree, NULL));
     rock_error = ROCK_ERROR_NONE;
 }
 
 static void check_insert_error_on_object_is_null(void **state) {
     rock_error = ROCK_ERROR_NONE;
-    assert_false(rock_red_black_tree_insert(
-            NULL, (void *) 1, (void *) 1));
+    assert_false(rock_red_black_tree_insert(NULL, (void *) 1, (void *) 1));
     assert_int_equal(ROCK_RED_BLACK_TREE_ERROR_OBJECT_IS_NULL, rock_error);
     rock_error = ROCK_ERROR_NONE;
 }
@@ -1558,8 +1733,7 @@ static void check_insert_error_on_insertion_point_is_null(void **state) {
     struct rock_red_black_tree object = {
             .root = (void *) 1
     };
-    assert_false(rock_red_black_tree_insert(
-            &object, NULL, (void *) 1));
+    assert_false(rock_red_black_tree_insert(&object, NULL, (void *) 1));
     assert_int_equal(ROCK_RED_BLACK_TREE_ERROR_INSERTION_POINT_IS_NULL,
                      rock_error);
     rock_error = ROCK_ERROR_NONE;
@@ -1570,58 +1744,50 @@ static void check_insert_error_on_node_is_null(void **state) {
     struct rock_red_black_tree object = {
             .root = (void *) 1
     };
-    assert_false(rock_red_black_tree_insert(
-            &object, (void *) 1, NULL));
+    assert_false(rock_red_black_tree_insert(&object, (void *) 1, NULL));
     assert_int_equal(ROCK_RED_BLACK_TREE_ERROR_NODE_IS_NULL, rock_error);
     rock_error = ROCK_ERROR_NONE;
 }
 
 static void check_insert_error_on_node_already_exists(void **state) {
+    srand(time(NULL));
     rock_error = ROCK_ERROR_NONE;
-    struct rock_red_black_tree object = {};
-    assert_true(rock_red_black_tree_init(
-            &object,
-            (int (*)(const void *, const void *))seagrass_uintmax_t_ptr_compare));
-    uintmax_t *value;
-    assert_true(rock_red_black_tree_node(
-            sizeof(*value), (void **) &value));
-    *value = 99;
-    object.root = value;
+    struct rock_red_black_tree object;
+    assert_true(rock_red_black_tree_init(&object, compare_entry));
+    struct entry a, b;
+    assert_true(rock_red_black_tree_node_init(&a.node));
+    assert_true(rock_red_black_tree_node_init(&b.node));
+    object.root = &a.node;
     assert_true(rock_red_black_tree_node_set_color(
-            value, ROCK_RED_BLACK_TREE_COLOR_BLACK));
-    uintmax_t *node;
-    assert_true(rock_red_black_tree_node(
-            sizeof(*node), (void **) &node));
-    *node = 99;
-    assert_ptr_not_equal(value, node);
-    assert_false(rock_red_black_tree_insert(&object, value, node));
+            object.root, ROCK_RED_BLACK_TREE_COLOR_BLACK));
+    a.value = b.value = (rand() % UINTMAX_MAX);
+    assert_ptr_not_equal(&a.node, &b.node);
+    assert_false(rock_red_black_tree_insert(&object, object.root, &b.node));
     assert_int_equal(ROCK_RED_BLACK_TREE_ERROR_NODE_ALREADY_EXISTS, rock_error);
-    rock_red_black_tree_node_destroy(node);
     assert_true(rock_red_black_tree_invalidate(&object, NULL));
     rock_error = ROCK_ERROR_NONE;
 }
 
 static void check_insert_case_0(void **state) {
+    srand(time(NULL));
     rock_error = ROCK_ERROR_NONE;
     struct rock_red_black_tree object = {};
-    assert_true(rock_red_black_tree_init(
-            &object,
-            (int (*)(const void *, const void *))seagrass_uintmax_t_ptr_compare));
-    uintmax_t *a;
-    assert_true(rock_red_black_tree_node(sizeof(*a), (void **) &a));
-    *a = 45;
+    assert_true(rock_red_black_tree_init(&object, compare_entry));
+    struct entry a;
+    assert_true(rock_red_black_tree_node_init(&a.node));
+    a.value = (rand() % UINTMAX_MAX);
     bool color = ROCK_RED_BLACK_TREE_COLOR_BLACK;
-    assert_true(rock_red_black_tree_node_get_color(a, &color));
+    assert_true(rock_red_black_tree_node_get_color(&a.node, &color));
     assert_int_equal(ROCK_RED_BLACK_TREE_COLOR_RED, color);
-    void *at;
-    assert_false(rock_red_black_tree_find(&object, NULL, a, &at));
-    assert_int_equal(ROCK_RED_BLACK_TREE_ERROR_VALUE_NOT_FOUND, rock_error);
-    assert_null(at);
+    struct rock_red_black_tree_node *out;
+    assert_false(rock_red_black_tree_find(&object, NULL, &a.node, &out));
+    assert_int_equal(ROCK_RED_BLACK_TREE_ERROR_NODE_NOT_FOUND, rock_error);
+    assert_null(out);
     assert_null(object.root);
-    assert_true(rock_red_black_tree_insert(&object, at, a));
-    assert_true(rock_red_black_tree_node_get_color(a, &color));
-    assert_int_equal(ROCK_RED_BLACK_TREE_COLOR_BLACK, color);
-    assert_ptr_equal(a, object.root);
+    /* insert 'a' into an empty tree */
+    assert_true(rock_red_black_tree_insert(&object, out, &a.node));
+    assert_node(&a.node, NULL, false, NULL, NULL,
+                ROCK_RED_BLACK_TREE_COLOR_BLACK);
     assert_true(rock_red_black_tree_invalidate(&object, NULL));
     rock_error = ROCK_ERROR_NONE;
 }
@@ -1629,46 +1795,39 @@ static void check_insert_case_0(void **state) {
 static void check_insert_case_1(void **state) {
     rock_error = ROCK_ERROR_NONE;
     struct rock_red_black_tree object = {};
-    assert_true(rock_red_black_tree_init(
-            &object,
-            (int (*)(const void *, const void *))seagrass_uintmax_t_ptr_compare));
-    uintmax_t *root, *a, *b;
-    assert_true(rock_red_black_tree_node(sizeof(*root), (void **) &root));
-    *root = 199;
-    object.root = root;
-    assert_true(rock_red_black_tree_node_set_color(
-            root, ROCK_RED_BLACK_TREE_COLOR_BLACK));
-    assert_true(rock_red_black_tree_node(sizeof(*a), (void **) &a));
-    *a = 50;
-    assert_true(rock_red_black_tree_insert(&object, root, a));
-    void *root_, *a_, *b_;
-    bool color = ROCK_RED_BLACK_TREE_COLOR_RED;
-    assert_true(object.root == root
-                && rock_red_black_tree_node_get_color(root, &color)
-                && ROCK_RED_BLACK_TREE_COLOR_BLACK == color
-                && rock_red_black_tree_node_get_left(root, &a_)
-                && a == a_
-                && rock_red_black_tree_node_get_color(a, &color)
-                && ROCK_RED_BLACK_TREE_COLOR_RED == color
-                && rock_red_black_tree_node_get_right(root, &b_)
-                && NULL == b_);
-    assert_true(rock_red_black_tree_node(sizeof(*b), (void **) &b));
-    *b = 263;
-    assert_true(rock_red_black_tree_insert(&object, root, b));
-    color = ROCK_RED_BLACK_TREE_COLOR_BLACK;
-    assert_true(object.root == root
-                && rock_red_black_tree_node_get_left(root, &a_)
-                && a == a_
-                && rock_red_black_tree_node_get_parent(a, &root_)
-                && root == root_
-                && rock_red_black_tree_node_get_color(a, &color)
-                && ROCK_RED_BLACK_TREE_COLOR_RED == color
-                && rock_red_black_tree_node_get_right(root, &b_)
-                && b == b_
-                && rock_red_black_tree_node_get_parent(b, &root_)
-                && root == root_
-                && rock_red_black_tree_node_get_color(b, &color)
-                && ROCK_RED_BLACK_TREE_COLOR_RED == color);
+    assert_true(rock_red_black_tree_init(&object, compare_entry));
+    struct entry root, a, b;
+    assert_true(rock_red_black_tree_node_init(&root.node));
+    assert_true(rock_red_black_tree_node_init(&a.node));
+    assert_true(rock_red_black_tree_node_init(&b.node));
+    root.value = 199;
+    a.value = 50;
+    b.value = 263;
+    assert_true(rock_red_black_tree_insert(&object, NULL, &root.node));
+    assert_true(rock_red_black_tree_insert(&object, &root.node, &a.node));
+    /*
+     *      root(199B)
+     *        /
+     *     a(50R)
+     */
+    assert_ptr_equal(object.root, &root.node);
+    assert_node(&root.node, NULL, false, &a.node, NULL,
+                ROCK_RED_BLACK_TREE_COLOR_BLACK);
+    assert_node(&a.node, &root.node, true, NULL, NULL,
+                ROCK_RED_BLACK_TREE_COLOR_RED);
+    assert_true(rock_red_black_tree_insert(&object, &root.node, &b.node));
+    /*
+     *      root(199B)
+     *        /    \
+     *     a(50R)  b(263R)
+     */
+    assert_ptr_equal(object.root, &root.node);
+    assert_node(&root.node, NULL, false, &a.node, &b.node,
+                ROCK_RED_BLACK_TREE_COLOR_BLACK);
+    assert_node(&a.node, &root.node, true, NULL, NULL,
+                ROCK_RED_BLACK_TREE_COLOR_RED);
+    assert_node(&b.node, &root.node, false, NULL, NULL,
+                ROCK_RED_BLACK_TREE_COLOR_RED);
     assert_true(rock_red_black_tree_invalidate(&object, NULL));
     rock_error = ROCK_ERROR_NONE;
 }
@@ -1676,43 +1835,39 @@ static void check_insert_case_1(void **state) {
 static void check_insert_case_2b_configuration_3(void **state) {
     rock_error = ROCK_ERROR_NONE;
     struct rock_red_black_tree object = {};
-    assert_true(rock_red_black_tree_init(
-            &object,
-            (int (*)(const void *, const void *))seagrass_uintmax_t_ptr_compare));
-    uintmax_t *a, *b, *c;
-    assert_true(rock_red_black_tree_node(sizeof(*a), (void **) &a));
-    assert_true(rock_red_black_tree_node(sizeof(*b), (void **) &b));
-    assert_true(rock_red_black_tree_node(sizeof(*c), (void **) &c));
-    *a = 4;
-    *b = 2;
-    *c = 1;
-    assert_true(rock_red_black_tree_insert(&object, NULL, a));
-    assert_true(rock_red_black_tree_insert(&object, a, b));
-    void *a_, *b_, *c_;
-    bool color = ROCK_RED_BLACK_TREE_COLOR_RED;
-    assert_true(object.root == a
-                && rock_red_black_tree_node_get_color(a, &color)
-                && ROCK_RED_BLACK_TREE_COLOR_BLACK == color
-                && rock_red_black_tree_node_get_left(a, &b_)
-                && b == b_
-                && rock_red_black_tree_node_get_color(b, &color)
-                && color == ROCK_RED_BLACK_TREE_COLOR_RED);
-    assert_true(rock_red_black_tree_insert(&object, b, c));
-    assert_true(object.root == b
-                && rock_red_black_tree_node_get_color(b, &color)
-                && ROCK_RED_BLACK_TREE_COLOR_BLACK == color
-                && rock_red_black_tree_node_get_left(b, &c_)
-                && c == c_
-                && rock_red_black_tree_node_get_color(c, &color)
-                && ROCK_RED_BLACK_TREE_COLOR_RED == color
-                && rock_red_black_tree_node_get_parent(c, &b_)
-                && b == b_
-                && rock_red_black_tree_node_get_right(b, &a_)
-                && a == a_
-                && rock_red_black_tree_node_get_color(a, &color)
-                && ROCK_RED_BLACK_TREE_COLOR_RED == color
-                && rock_red_black_tree_node_get_parent(a, &b_)
-                && b == b_);
+    assert_true(rock_red_black_tree_init(&object, compare_entry));
+    struct entry a, b, c;
+    assert_true(rock_red_black_tree_node_init(&a.node));
+    assert_true(rock_red_black_tree_node_init(&b.node));
+    assert_true(rock_red_black_tree_node_init(&c.node));
+    a.value = 4;
+    b.value = 2;
+    c.value = 1;
+    assert_true(rock_red_black_tree_insert(&object, NULL, &a.node));
+    assert_true(rock_red_black_tree_insert(&object, &a.node, &b.node));
+    /*
+     *         a(4B)
+     *         /
+     *     b(2R)
+     */
+    assert_ptr_equal(object.root, &a.node);
+    assert_node(&a.node, NULL, false, &b.node, NULL,
+                ROCK_RED_BLACK_TREE_COLOR_BLACK);
+    assert_node(&b.node, &a.node, true, NULL, NULL,
+                ROCK_RED_BLACK_TREE_COLOR_RED);
+    assert_true(rock_red_black_tree_insert(&object, &b.node, &c.node));
+    /*
+     *         b(2B)
+     *         /  \
+     *     c(1R)  a(4R)
+     */
+    assert_ptr_equal(object.root, &b.node);
+    assert_node(&b.node, NULL, false, &c.node, &a.node,
+                ROCK_RED_BLACK_TREE_COLOR_BLACK);
+    assert_node(&c.node, &b.node, true, NULL, NULL,
+                ROCK_RED_BLACK_TREE_COLOR_RED);
+    assert_node(&a.node, &b.node, false, NULL, NULL,
+                ROCK_RED_BLACK_TREE_COLOR_RED);
     assert_true(rock_red_black_tree_invalidate(&object, NULL));
     rock_error = ROCK_ERROR_NONE;
 }
@@ -1720,43 +1875,39 @@ static void check_insert_case_2b_configuration_3(void **state) {
 static void check_insert_case_2b_configuration_2(void **state) {
     rock_error = ROCK_ERROR_NONE;
     struct rock_red_black_tree object = {};
-    assert_true(rock_red_black_tree_init(
-            &object,
-            (int (*)(const void *, const void *))seagrass_uintmax_t_ptr_compare));
-    uintmax_t *a, *b, *c;
-    assert_true(rock_red_black_tree_node(sizeof(*a), (void **) &a));
-    assert_true(rock_red_black_tree_node(sizeof(*b), (void **) &b));
-    assert_true(rock_red_black_tree_node(sizeof(*c), (void **) &c));
-    *a = 4;
-    *b = 2;
-    *c = 1;
-    assert_true(rock_red_black_tree_insert(&object, NULL, a));
-    assert_true(rock_red_black_tree_insert(&object, a, c));
-    void *a_, *b_, *c_;
-    bool color = ROCK_RED_BLACK_TREE_COLOR_RED;
-    assert_true(object.root == a
-                && rock_red_black_tree_node_get_color(a, &color)
-                && ROCK_RED_BLACK_TREE_COLOR_BLACK == color
-                && rock_red_black_tree_node_get_left(a, &c_)
-                && c == c_
-                && rock_red_black_tree_node_get_color(c, &color)
-                && ROCK_RED_BLACK_TREE_COLOR_RED == color);
-    assert_true(rock_red_black_tree_insert(&object, c, b));
-    assert_true(object.root == b
-                && rock_red_black_tree_node_get_color(b, &color)
-                && ROCK_RED_BLACK_TREE_COLOR_BLACK == color
-                && rock_red_black_tree_node_get_left(b, &c_)
-                && c == c_
-                && rock_red_black_tree_node_get_color(c, &color)
-                && ROCK_RED_BLACK_TREE_COLOR_RED == color
-                && rock_red_black_tree_node_get_parent(c, &b_)
-                && b == b_
-                && rock_red_black_tree_node_get_right(b, &a_)
-                && a == a_
-                && rock_red_black_tree_node_get_color(a, &color)
-                && ROCK_RED_BLACK_TREE_COLOR_RED == color
-                && rock_red_black_tree_node_get_parent(a, &b_)
-                && b == b_);
+    assert_true(rock_red_black_tree_init(&object, compare_entry));
+    struct entry a, b, c;
+    assert_true(rock_red_black_tree_node_init(&a.node));
+    assert_true(rock_red_black_tree_node_init(&b.node));
+    assert_true(rock_red_black_tree_node_init(&c.node));
+    a.value = 4;
+    b.value = 2;
+    c.value = 1;
+    assert_true(rock_red_black_tree_insert(&object, NULL, &a.node));
+    assert_true(rock_red_black_tree_insert(&object, &a.node, &c.node));
+    /*
+     *         a(4B)
+     *         /
+     *     c(1R)
+     */
+    assert_ptr_equal(object.root, &a.node);
+    assert_node(&a.node, NULL, false, &c.node, NULL,
+                ROCK_RED_BLACK_TREE_COLOR_BLACK);
+    assert_node(&c.node, &a.node, true, NULL, NULL,
+                ROCK_RED_BLACK_TREE_COLOR_RED);
+    assert_true(rock_red_black_tree_insert(&object, &c.node, &b.node));
+    /*
+     *         b(2B)
+     *         /  \
+     *     c(1R)  a(4R)
+     */
+    assert_ptr_equal(object.root, &b.node);
+    assert_node(&b.node, NULL, false, &c.node, &a.node,
+                ROCK_RED_BLACK_TREE_COLOR_BLACK);
+    assert_node(&c.node, &b.node, true, NULL, NULL,
+                ROCK_RED_BLACK_TREE_COLOR_RED);
+    assert_node(&a.node, &b.node, false, NULL, NULL,
+                ROCK_RED_BLACK_TREE_COLOR_RED);
     assert_true(rock_red_black_tree_invalidate(&object, NULL));
     rock_error = ROCK_ERROR_NONE;
 }
@@ -1764,43 +1915,39 @@ static void check_insert_case_2b_configuration_2(void **state) {
 static void check_insert_case_2b_configuration_1(void **state) {
     rock_error = ROCK_ERROR_NONE;
     struct rock_red_black_tree object = {};
-    assert_true(rock_red_black_tree_init(
-            &object,
-            (int (*)(const void *, const void *))seagrass_uintmax_t_ptr_compare));
-    uintmax_t *a, *b, *c;
-    assert_true(rock_red_black_tree_node(sizeof(*a), (void **) &a));
-    assert_true(rock_red_black_tree_node(sizeof(*b), (void **) &b));
-    assert_true(rock_red_black_tree_node(sizeof(*c), (void **) &c));
-    *a = 4;
-    *b = 2;
-    *c = 1;
-    assert_true(rock_red_black_tree_insert(&object, NULL, c));
-    assert_true(rock_red_black_tree_insert(&object, c, a));
-    void *a_, *b_, *c_;
-    bool color = ROCK_RED_BLACK_TREE_COLOR_RED;
-    assert_true(object.root == c
-                && rock_red_black_tree_node_get_color(c, &color)
-                && ROCK_RED_BLACK_TREE_COLOR_BLACK == color
-                && rock_red_black_tree_node_get_right(c, &a_)
-                && a == a_
-                && rock_red_black_tree_node_get_color(a, &color)
-                && ROCK_RED_BLACK_TREE_COLOR_RED == color);
-    assert_true(rock_red_black_tree_insert(&object, a, b));
-    assert_true(object.root == b
-                && rock_red_black_tree_node_get_color(b, &color)
-                && ROCK_RED_BLACK_TREE_COLOR_BLACK == color
-                && rock_red_black_tree_node_get_left(b, &c_)
-                && c == c_
-                && rock_red_black_tree_node_get_color(c, &color)
-                && ROCK_RED_BLACK_TREE_COLOR_RED == color
-                && rock_red_black_tree_node_get_parent(c, &b_)
-                && b == b_
-                && rock_red_black_tree_node_get_right(b, &a_)
-                && a == a_
-                && rock_red_black_tree_node_get_color(a, &color)
-                && ROCK_RED_BLACK_TREE_COLOR_RED == color
-                && rock_red_black_tree_node_get_parent(a, &b_)
-                && b == b_);
+    assert_true(rock_red_black_tree_init(&object, compare_entry));
+    struct entry a, b, c;
+    assert_true(rock_red_black_tree_node_init(&a.node));
+    assert_true(rock_red_black_tree_node_init(&b.node));
+    assert_true(rock_red_black_tree_node_init(&c.node));
+    a.value = 4;
+    b.value = 2;
+    c.value = 1;
+    assert_true(rock_red_black_tree_insert(&object, NULL, &c.node));
+    assert_true(rock_red_black_tree_insert(&object, &c.node, &a.node));
+    /*
+     *         c(1B)
+     *             \
+     *             a(4R)
+     */
+    assert_ptr_equal(object.root, &c.node);
+    assert_node(&c.node, NULL, false, NULL, &a.node,
+                ROCK_RED_BLACK_TREE_COLOR_BLACK);
+    assert_node(&a.node, &c.node, false, NULL, NULL,
+                ROCK_RED_BLACK_TREE_COLOR_RED);
+    assert_true(rock_red_black_tree_insert(&object, &a.node, &b.node));
+    /*
+     *         b(2B)
+     *         /  \
+     *     c(1R)  a(4R)
+     */
+    assert_ptr_equal(object.root, &b.node);
+    assert_node(&b.node, NULL, false, &c.node, &a.node,
+                ROCK_RED_BLACK_TREE_COLOR_BLACK);
+    assert_node(&c.node, &b.node, true, NULL, NULL,
+                ROCK_RED_BLACK_TREE_COLOR_RED);
+    assert_node(&a.node, &b.node, false, NULL, NULL,
+                ROCK_RED_BLACK_TREE_COLOR_RED);
     assert_true(rock_red_black_tree_invalidate(&object, NULL));
     rock_error = ROCK_ERROR_NONE;
 }
@@ -1808,43 +1955,39 @@ static void check_insert_case_2b_configuration_1(void **state) {
 static void check_insert_case_2b_configuration_0(void **state) {
     rock_error = ROCK_ERROR_NONE;
     struct rock_red_black_tree object = {};
-    assert_true(rock_red_black_tree_init(
-            &object,
-            (int (*)(const void *, const void *))seagrass_uintmax_t_ptr_compare));
-    uintmax_t *a, *b, *c;
-    assert_true(rock_red_black_tree_node(sizeof(*a), (void **) &a));
-    assert_true(rock_red_black_tree_node(sizeof(*b), (void **) &b));
-    assert_true(rock_red_black_tree_node(sizeof(*c), (void **) &c));
-    *a = 4;
-    *b = 2;
-    *c = 1;
-    assert_true(rock_red_black_tree_insert(&object, NULL, c));
-    assert_true(rock_red_black_tree_insert(&object, c, b));
-    void *a_, *b_, *c_;
-    bool color = ROCK_RED_BLACK_TREE_COLOR_RED;
-    assert_true(object.root == c
-                && rock_red_black_tree_node_get_color(c, &color)
-                && ROCK_RED_BLACK_TREE_COLOR_BLACK == color
-                && rock_red_black_tree_node_get_right(c, &b_)
-                && b == b_
-                && rock_red_black_tree_node_get_color(b, &color)
-                && ROCK_RED_BLACK_TREE_COLOR_RED == color);
-    assert_true(rock_red_black_tree_insert(&object, b, a));
-    assert_true(object.root == b
-                && rock_red_black_tree_node_get_color(b, &color)
-                && ROCK_RED_BLACK_TREE_COLOR_BLACK == color
-                && rock_red_black_tree_node_get_left(b, &c_)
-                && c == c_
-                && rock_red_black_tree_node_get_color(c, &color)
-                && ROCK_RED_BLACK_TREE_COLOR_RED == color
-                && rock_red_black_tree_node_get_parent(c, &b_)
-                && b == b_
-                && rock_red_black_tree_node_get_right(b, &a_)
-                && a == a_
-                && rock_red_black_tree_node_get_color(a, &color)
-                && ROCK_RED_BLACK_TREE_COLOR_RED == color
-                && rock_red_black_tree_node_get_parent(a, &b_)
-                && b == b_);
+    assert_true(rock_red_black_tree_init(&object, compare_entry));
+    struct entry a, b, c;
+    assert_true(rock_red_black_tree_node_init(&a.node));
+    assert_true(rock_red_black_tree_node_init(&b.node));
+    assert_true(rock_red_black_tree_node_init(&c.node));
+    a.value = 4;
+    b.value = 2;
+    c.value = 1;
+    assert_true(rock_red_black_tree_insert(&object, NULL, &c.node));
+    assert_true(rock_red_black_tree_insert(&object, &c.node, &b.node));
+    /*
+     *         c(1B)
+     *             \
+     *             b(2R)
+     */
+    assert_ptr_equal(object.root, &c.node);
+    assert_node(&c.node, NULL, false, NULL, &b.node,
+                ROCK_RED_BLACK_TREE_COLOR_BLACK);
+    assert_node(&b.node, &c.node, false, NULL, NULL,
+                ROCK_RED_BLACK_TREE_COLOR_RED);
+    assert_true(rock_red_black_tree_insert(&object, &b.node, &a.node));
+    /*
+     *         b(2B)
+     *         /  \
+     *     c(1R)  a(4R)
+     */
+    assert_ptr_equal(object.root, &b.node);
+    assert_node(&b.node, NULL, false, &c.node, &a.node,
+                ROCK_RED_BLACK_TREE_COLOR_BLACK);
+    assert_node(&c.node, &b.node, true, NULL, NULL,
+                ROCK_RED_BLACK_TREE_COLOR_RED);
+    assert_node(&a.node, &b.node, false, NULL, NULL,
+                ROCK_RED_BLACK_TREE_COLOR_RED);
     assert_true(rock_red_black_tree_invalidate(&object, NULL));
     rock_error = ROCK_ERROR_NONE;
 }
@@ -1852,50 +1995,48 @@ static void check_insert_case_2b_configuration_0(void **state) {
 static void check_insert_case_2a(void **state) {
     rock_error = ROCK_ERROR_NONE;
     struct rock_red_black_tree object = {};
-    assert_true(rock_red_black_tree_init(
-            &object,
-            (int (*)(const void *, const void *))seagrass_uintmax_t_ptr_compare));
-    uintmax_t *a, *b, *c, *d;
-    assert_true(rock_red_black_tree_node(sizeof(*a), (void **) &a));
-    assert_true(rock_red_black_tree_node(sizeof(*b), (void **) &b));
-    assert_true(rock_red_black_tree_node(sizeof(*c), (void **) &c));
-    assert_true(rock_red_black_tree_node(sizeof(*d), (void **) &d));
-    *a = 5;
-    *b = 4;
-    *c = 2;
-    *d = 1;
-    assert_true(rock_red_black_tree_insert(&object, NULL, b));
-    assert_true(rock_red_black_tree_insert(&object, b, a));
-    assert_true(rock_red_black_tree_insert(&object, b, c));
-    void *a_, *b_, *c_, *d_;
-    bool color = ROCK_RED_BLACK_TREE_COLOR_RED;
-    assert_true(object.root == b
-                && rock_red_black_tree_node_get_color(b, &color)
-                && ROCK_RED_BLACK_TREE_COLOR_BLACK == color
-                && rock_red_black_tree_node_get_right(b, &a_)
-                && a == a_
-                && rock_red_black_tree_node_get_color(a, &color)
-                && ROCK_RED_BLACK_TREE_COLOR_RED == color
-                && rock_red_black_tree_node_get_left(b, &c_)
-                && c == c_
-                && rock_red_black_tree_node_get_color(c, &color)
-                && ROCK_RED_BLACK_TREE_COLOR_RED == color);
-    assert_true(rock_red_black_tree_insert(&object, c, d));
-    assert_true(object.root == b
-                && rock_red_black_tree_node_get_color(b, &color)
-                && ROCK_RED_BLACK_TREE_COLOR_BLACK == color
-                && rock_red_black_tree_node_get_right(b, &a_)
-                && a == a_
-                && rock_red_black_tree_node_get_color(a, &color)
-                && ROCK_RED_BLACK_TREE_COLOR_BLACK == color
-                && rock_red_black_tree_node_get_left(b, &c_)
-                && c == c_
-                && rock_red_black_tree_node_get_color(c, &color)
-                && ROCK_RED_BLACK_TREE_COLOR_BLACK == color
-                && rock_red_black_tree_node_get_left(c, &d_)
-                && d == d_
-                && rock_red_black_tree_node_get_color(d, &color)
-                && ROCK_RED_BLACK_TREE_COLOR_RED == color);
+    assert_true(rock_red_black_tree_init(&object, compare_entry));
+    struct entry a, b, c, d;
+    assert_true(rock_red_black_tree_node_init(&a.node));
+    assert_true(rock_red_black_tree_node_init(&b.node));
+    assert_true(rock_red_black_tree_node_init(&c.node));
+    assert_true(rock_red_black_tree_node_init(&d.node));
+    a.value = 5;
+    b.value = 4;
+    c.value = 2;
+    d.value = 1;
+    assert_true(rock_red_black_tree_insert(&object, NULL, &b.node));
+    assert_true(rock_red_black_tree_insert(&object, &b.node, &a.node));
+    assert_true(rock_red_black_tree_insert(&object, &b.node, &c.node));
+    /*
+     *         b(4B)
+     *         /  \
+     *     c(2R)  a(5R)
+     */
+    assert_ptr_equal(object.root, &b.node);
+    assert_node(&b.node, NULL, false, &c.node, &a.node,
+                ROCK_RED_BLACK_TREE_COLOR_BLACK);
+    assert_node(&c.node, &b.node, true, NULL, NULL,
+                ROCK_RED_BLACK_TREE_COLOR_RED);
+    assert_node(&a.node, &b.node, false, NULL, NULL,
+                ROCK_RED_BLACK_TREE_COLOR_RED);
+    assert_true(rock_red_black_tree_insert(&object, &c.node, &d.node));
+    /*
+     *         b(4B)
+     *         /  \
+     *     c(2B)  a(5B)
+     *     /
+     *   d(1R)
+     */
+    assert_ptr_equal(object.root, &b.node);
+    assert_node(&b.node, NULL, false, &c.node, &a.node,
+                ROCK_RED_BLACK_TREE_COLOR_BLACK);
+    assert_node(&c.node, &b.node, true, &d.node, NULL,
+                ROCK_RED_BLACK_TREE_COLOR_BLACK);
+    assert_node(&a.node, &b.node, false, NULL, NULL,
+                ROCK_RED_BLACK_TREE_COLOR_BLACK);
+    assert_node(&d.node, &c.node, true, NULL, NULL,
+                ROCK_RED_BLACK_TREE_COLOR_RED);
     assert_true(rock_red_black_tree_invalidate(&object, NULL));
     rock_error = ROCK_ERROR_NONE;
 }
@@ -1903,98 +2044,77 @@ static void check_insert_case_2a(void **state) {
 static void check_insert(void **state) {
     rock_error = ROCK_ERROR_NONE;
     struct rock_red_black_tree object = {};
-    assert_true(rock_red_black_tree_init(
-            &object,
-            (int (*)(const void *, const void *))seagrass_uintmax_t_ptr_compare));
-    uintmax_t *a, *b, *c, *d, *e;
-    assert_true(rock_red_black_tree_node(sizeof(*a), (void **) &a));
-    assert_true(rock_red_black_tree_node(sizeof(*b), (void **) &b));
-    assert_true(rock_red_black_tree_node(sizeof(*c), (void **) &c));
-    assert_true(rock_red_black_tree_node(sizeof(*d), (void **) &d));
-    assert_true(rock_red_black_tree_node(sizeof(*e), (void **) &e));
-    *a = 9;
-    *b = 5;
-    *c = 2;
-    *d = 4;
-    *e = 1;
-    assert_true(rock_red_black_tree_insert(&object, NULL, a));
-    assert_true(rock_red_black_tree_insert(&object, a, b));
-    assert_true(rock_red_black_tree_insert(&object, b, c));
-    void *a_, *b_, *c_, *d_, *e_;
-    bool color = ROCK_RED_BLACK_TREE_COLOR_RED;
-    assert_true(object.root == b
-                && rock_red_black_tree_node_get_color(b, &color)
-                && ROCK_RED_BLACK_TREE_COLOR_BLACK == color
-                && rock_red_black_tree_node_get_left(b, &c_)
-                && c == c_
-                && rock_red_black_tree_node_get_color(c, &color)
-                && ROCK_RED_BLACK_TREE_COLOR_RED == color
-                && rock_red_black_tree_node_get_parent(c, &b_)
-                && b == b_
-                && rock_red_black_tree_node_get_right(b, &a_)
-                && a == a_
-                && rock_red_black_tree_node_get_color(a, &color)
-                && ROCK_RED_BLACK_TREE_COLOR_RED == color
-                && rock_red_black_tree_node_get_parent(a, &b_)
-                && b == b_);
-    assert_true(rock_red_black_tree_insert(&object, b, d));
-    assert_true(object.root == b
-                && rock_red_black_tree_node_get_color(b, &color)
-                && ROCK_RED_BLACK_TREE_COLOR_BLACK == color
-                && rock_red_black_tree_node_get_left(b, &d_)
-                && d == d_
-                && rock_red_black_tree_node_get_color(d, &color)
-                && ROCK_RED_BLACK_TREE_COLOR_BLACK == color
-                && rock_red_black_tree_node_get_parent(d, &b_)
-                && b == b_
-                && rock_red_black_tree_node_get_left(d, &c_)
-                && c == c_
-                && rock_red_black_tree_node_get_color(c, &color)
-                && ROCK_RED_BLACK_TREE_COLOR_RED == color
-                && rock_red_black_tree_node_get_parent(c, &d_)
-                && d == d_
-                && rock_red_black_tree_node_get_right(b, &a_)
-                && a == a_
-                && rock_red_black_tree_node_get_color(a, &color)
-                && ROCK_RED_BLACK_TREE_COLOR_BLACK == color
-                && rock_red_black_tree_node_get_parent(a, &b_)
-                && b == b_);
-    assert_true(rock_red_black_tree_insert(&object, c, e));
-    assert_true(object.root == b
-                && rock_red_black_tree_node_get_color(b, &color)
-                && ROCK_RED_BLACK_TREE_COLOR_BLACK == color
-                && rock_red_black_tree_node_get_right(b, &a_)
-                && a == a_
-                && rock_red_black_tree_node_get_color(a, &color)
-                && ROCK_RED_BLACK_TREE_COLOR_BLACK == color
-                && rock_red_black_tree_node_get_parent(a, &b_)
-                && b == b_
-                && rock_red_black_tree_node_get_left(b, &c_)
-                && c == c_
-                && rock_red_black_tree_node_get_color(c, &color)
-                && ROCK_RED_BLACK_TREE_COLOR_BLACK == color
-                && rock_red_black_tree_node_get_parent(a, &c_)
-                && b == b_
-                && rock_red_black_tree_node_get_right(c, &d_)
-                && d == d_
-                && rock_red_black_tree_node_get_color(d, &color)
-                && ROCK_RED_BLACK_TREE_COLOR_RED == color
-                && rock_red_black_tree_node_get_parent(d, &c_)
-                && c == c_
-                && rock_red_black_tree_node_get_left(c, &e_)
-                && e == e_
-                && rock_red_black_tree_node_get_color(e, &color)
-                && ROCK_RED_BLACK_TREE_COLOR_RED == color
-                && rock_red_black_tree_node_get_parent(e, &c_)
-                && c == c_);
+    assert_true(rock_red_black_tree_init(&object, compare_entry));
+    struct entry a, b, c, d, e;
+    assert_true(rock_red_black_tree_node_init(&a.node));
+    assert_true(rock_red_black_tree_node_init(&b.node));
+    assert_true(rock_red_black_tree_node_init(&c.node));
+    assert_true(rock_red_black_tree_node_init(&d.node));
+    assert_true(rock_red_black_tree_node_init(&e.node));
+    a.value = 9;
+    b.value = 5;
+    c.value = 2;
+    d.value = 4;
+    e.value = 1;
+    assert_true(rock_red_black_tree_insert(&object, NULL, &a.node));
+    assert_true(rock_red_black_tree_insert(&object, &a.node, &b.node));
+    assert_true(rock_red_black_tree_insert(&object, &b.node, &c.node));
+    /*
+     *         b(5B)
+     *         /  \
+     *     c(2R)  a(9R)
+     */
+    assert_ptr_equal(object.root, &b.node);
+    assert_node(&b.node, NULL, false, &c.node, &a.node,
+                ROCK_RED_BLACK_TREE_COLOR_BLACK);
+    assert_node(&c.node, &b.node, true, NULL, NULL,
+                ROCK_RED_BLACK_TREE_COLOR_RED);
+    assert_node(&a.node, &b.node, false, NULL, NULL,
+                ROCK_RED_BLACK_TREE_COLOR_RED);
+    assert_true(rock_red_black_tree_insert(&object, &b.node, &d.node));
+    /*
+     *         b(5B)
+     *         /  \
+     *     d(4B)  a(9B)
+     *       /
+     *   c(2R)
+     */
+    assert_ptr_equal(object.root, &b.node);
+    assert_node(&b.node, NULL, false, &d.node, &a.node,
+                ROCK_RED_BLACK_TREE_COLOR_BLACK);
+    assert_node(&d.node, &b.node, true, &c.node, NULL,
+                ROCK_RED_BLACK_TREE_COLOR_BLACK);
+    assert_node(&a.node, &b.node, false, NULL, NULL,
+                ROCK_RED_BLACK_TREE_COLOR_BLACK);
+    assert_node(&c.node, &d.node, true, NULL, NULL,
+                ROCK_RED_BLACK_TREE_COLOR_RED);
+    assert_true(rock_red_black_tree_insert(&object, &c.node, &e.node));
+    /*
+     *         b(5B)
+     *         /  \
+     *     c(2B)  a(9B)
+     *       / \
+     *   e(1R) d(4R)
+     */
+    assert_ptr_equal(object.root, &b.node);
+    assert_node(&b.node, NULL, false, &c.node, &a.node,
+                ROCK_RED_BLACK_TREE_COLOR_BLACK);
+    assert_node(&c.node, &b.node, true, &e.node, &d.node,
+                ROCK_RED_BLACK_TREE_COLOR_BLACK);
+    assert_node(&a.node, &b.node, false, NULL, NULL,
+                ROCK_RED_BLACK_TREE_COLOR_BLACK);
+    assert_node(&e.node, &c.node, true, NULL, NULL,
+                ROCK_RED_BLACK_TREE_COLOR_RED);
+    assert_node(&d.node, &c.node, false, NULL, NULL,
+                ROCK_RED_BLACK_TREE_COLOR_RED);
     assert_true(rock_red_black_tree_invalidate(&object, NULL));
     rock_error = ROCK_ERROR_NONE;
 }
 
 static void check_first_error_on_object_is_null(void **state) {
     rock_error = ROCK_ERROR_NONE;
-    void *node;
-    assert_false(rock_red_black_tree_first(NULL, &node));
+    struct rock_red_black_tree_node *out;
+    assert_false(rock_red_black_tree_first(NULL, &out));
     assert_int_equal(ROCK_RED_BLACK_TREE_ERROR_OBJECT_IS_NULL, rock_error);
     rock_error = ROCK_ERROR_NONE;
 }
@@ -2009,7 +2129,7 @@ static void check_first_error_on_out_is_null(void **state) {
 static void check_first_error_on_tree_is_empty(void **state) {
     rock_error = ROCK_ERROR_NONE;
     struct rock_red_black_tree tree = {};
-    void *node;
+    struct rock_red_black_tree_node *node;
     assert_false(rock_red_black_tree_first(&tree, &node));
     assert_int_equal(ROCK_RED_BLACK_TREE_ERROR_TREE_IS_EMPTY, rock_error);
     rock_error = ROCK_ERROR_NONE;
@@ -2018,49 +2138,52 @@ static void check_first_error_on_tree_is_empty(void **state) {
 static void check_first(void **state) {
     rock_error = ROCK_ERROR_NONE;
     struct rock_red_black_tree object = {};
-    assert_true(rock_red_black_tree_init(
-            &object,
-            (int (*)(const void *, const void *))seagrass_uintmax_t_ptr_compare));
-    uintmax_t *a, *b, *c, *d, *e;
-    assert_true(rock_red_black_tree_node(sizeof(*a), (void **) &a));
-    assert_true(rock_red_black_tree_node(sizeof(*b), (void **) &b));
-    assert_true(rock_red_black_tree_node(sizeof(*c), (void **) &c));
-    assert_true(rock_red_black_tree_node(sizeof(*d), (void **) &d));
-    assert_true(rock_red_black_tree_node(sizeof(*e), (void **) &e));
-    *a = 9;
-    *b = 5;
-    *c = 4;
-    *d = 2;
-    *e = 1;
-    assert_true(rock_red_black_tree_insert(&object, NULL, a));
-    void *first;
+    assert_true(rock_red_black_tree_init(&object, compare_entry));
+    struct entry a, b, c, d, e;
+    assert_true(rock_red_black_tree_node_init(&a.node));
+    assert_true(rock_red_black_tree_node_init(&b.node));
+    assert_true(rock_red_black_tree_node_init(&c.node));
+    assert_true(rock_red_black_tree_node_init(&d.node));
+    assert_true(rock_red_black_tree_node_init(&e.node));
+    a.value = 9;
+    b.value = 5;
+    c.value = 4;
+    d.value = 2;
+    e.value = 1;
+    assert_true(rock_red_black_tree_insert(&object, NULL, &a.node));
+    struct rock_red_black_tree_node *first;
     assert_true(rock_red_black_tree_first(&object, &first));
-    assert_ptr_equal(a, first);
-    assert_int_equal(*a, *(uintmax_t *) first);
-    assert_true(rock_red_black_tree_insert(&object, a, b));
+    assert_ptr_equal(&a.node, first);
+    uintmax_t value = rock_container_of(first, struct entry, node)->value;
+    assert_int_equal(a.value, value);
+    assert_true(rock_red_black_tree_insert(&object, &a.node, &b.node));
     assert_true(rock_red_black_tree_first(&object, &first));
-    assert_ptr_equal(b, first);
-    assert_int_equal(*b, *(uintmax_t *) first);
-    assert_true(rock_red_black_tree_insert(&object, b, c));
+    assert_ptr_equal(&b.node, first);
+    value = rock_container_of(first, struct entry, node)->value;
+    assert_int_equal(b.value, value);
+    assert_true(rock_red_black_tree_insert(&object, &b.node, &c.node));
     assert_true(rock_red_black_tree_first(&object, &first));
-    assert_ptr_equal(c, first);
-    assert_int_equal(*c, *(uintmax_t *) first);
-    assert_true(rock_red_black_tree_insert(&object, c, d));
+    assert_ptr_equal(&c.node, first);
+    value = rock_container_of(first, struct entry, node)->value;
+    assert_int_equal(c.value, value);
+    assert_true(rock_red_black_tree_insert(&object, &c.node, &d.node));
     assert_true(rock_red_black_tree_first(&object, &first));
-    assert_ptr_equal(d, first);
-    assert_int_equal(*d, *(uintmax_t *) first);
-    assert_true(rock_red_black_tree_insert(&object, d, e));
+    assert_ptr_equal(&d.node, first);
+    value = rock_container_of(first, struct entry, node)->value;
+    assert_int_equal(d.value, value);
+    assert_true(rock_red_black_tree_insert(&object, &d.node, &e.node));
     assert_true(rock_red_black_tree_first(&object, &first));
-    assert_ptr_equal(e, first);
-    assert_int_equal(*e, *(uintmax_t *) first);
+    assert_ptr_equal(&e.node, first);
+    value = rock_container_of(first, struct entry, node)->value;
+    assert_int_equal(e.value, value);
     assert_true(rock_red_black_tree_invalidate(&object, NULL));
     rock_error = ROCK_ERROR_NONE;
 }
 
 static void check_last_error_on_object_is_null(void **state) {
     rock_error = ROCK_ERROR_NONE;
-    void *node;
-    assert_false(rock_red_black_tree_last(NULL, &node));
+    struct rock_red_black_tree_node *out;
+    assert_false(rock_red_black_tree_last(NULL, &out));
     assert_int_equal(ROCK_RED_BLACK_TREE_ERROR_OBJECT_IS_NULL, rock_error);
     rock_error = ROCK_ERROR_NONE;
 }
@@ -2068,7 +2191,6 @@ static void check_last_error_on_object_is_null(void **state) {
 static void check_last_error_on_null_out_is_null(void **state) {
     rock_error = ROCK_ERROR_NONE;
     struct rock_red_black_tree tree = {};
-    void *node;
     assert_false(rock_red_black_tree_last(&tree, NULL));
     assert_int_equal(ROCK_RED_BLACK_TREE_ERROR_OUT_IS_NULL, rock_error);
     rock_error = ROCK_ERROR_NONE;
@@ -2077,8 +2199,8 @@ static void check_last_error_on_null_out_is_null(void **state) {
 static void check_last_error_on_tree_is_empty(void **state) {
     rock_error = ROCK_ERROR_NONE;
     struct rock_red_black_tree tree = {};
-    void *node;
-    assert_false(rock_red_black_tree_last(&tree, &node));
+    struct rock_red_black_tree_node *out;
+    assert_false(rock_red_black_tree_last(&tree, &out));
     assert_int_equal(ROCK_RED_BLACK_TREE_ERROR_TREE_IS_EMPTY, rock_error);
     rock_error = ROCK_ERROR_NONE;
 }
@@ -2086,49 +2208,52 @@ static void check_last_error_on_tree_is_empty(void **state) {
 static void check_last(void **state) {
     rock_error = ROCK_ERROR_NONE;
     struct rock_red_black_tree object = {};
-    assert_true(rock_red_black_tree_init(
-            &object,
-            (int (*)(const void *, const void *))seagrass_uintmax_t_ptr_compare));
-    uintmax_t *a, *b, *c, *d, *e;
-    assert_true(rock_red_black_tree_node(sizeof(*a), (void **) &a));
-    assert_true(rock_red_black_tree_node(sizeof(*b), (void **) &b));
-    assert_true(rock_red_black_tree_node(sizeof(*c), (void **) &c));
-    assert_true(rock_red_black_tree_node(sizeof(*d), (void **) &d));
-    assert_true(rock_red_black_tree_node(sizeof(*e), (void **) &e));
-    *a = 1;
-    *b = 2;
-    *c = 4;
-    *d = 5;
-    *e = 9;
-    assert_true(rock_red_black_tree_insert(&object, NULL, a));
-    void *last;
+    assert_true(rock_red_black_tree_init(&object, compare_entry));
+    struct entry a, b, c, d, e;
+    assert_true(rock_red_black_tree_node_init(&a.node));
+    assert_true(rock_red_black_tree_node_init(&b.node));
+    assert_true(rock_red_black_tree_node_init(&c.node));
+    assert_true(rock_red_black_tree_node_init(&d.node));
+    assert_true(rock_red_black_tree_node_init(&e.node));
+    a.value = 1;
+    b.value = 2;
+    c.value = 4;
+    d.value = 5;
+    e.value = 9;
+    assert_true(rock_red_black_tree_insert(&object, NULL, &a.node));
+    struct rock_red_black_tree_node *last;
     assert_true(rock_red_black_tree_last(&object, &last));
-    assert_ptr_equal(a, last);
-    assert_int_equal(*a, *(uintmax_t *) last);
-    assert_true(rock_red_black_tree_insert(&object, a, b));
+    assert_ptr_equal(&a.node, last);
+    uintmax_t value = rock_container_of(last, struct entry, node)->value;
+    assert_int_equal(a.value, value);
+    assert_true(rock_red_black_tree_insert(&object, &a.node, &b.node));
     assert_true(rock_red_black_tree_last(&object, &last));
-    assert_ptr_equal(b, last);
-    assert_int_equal(*b, *(uintmax_t *) last);
-    assert_true(rock_red_black_tree_insert(&object, b, c));
+    assert_ptr_equal(&b.node, last);
+    value = rock_container_of(last, struct entry, node)->value;
+    assert_int_equal(b.value, value);
+    assert_true(rock_red_black_tree_insert(&object, &b.node, &c.node));
     assert_true(rock_red_black_tree_last(&object, &last));
-    assert_ptr_equal(c, last);
-    assert_int_equal(*c, *(uintmax_t *) last);
-    assert_true(rock_red_black_tree_insert(&object, c, d));
+    assert_ptr_equal(&c.node, last);
+    value = rock_container_of(last, struct entry, node)->value;
+    assert_int_equal(c.value, value);
+    assert_true(rock_red_black_tree_insert(&object, &c.node, &d.node));
     assert_true(rock_red_black_tree_last(&object, &last));
-    assert_ptr_equal(d, last);
-    assert_int_equal(*d, *(uintmax_t *) last);
-    assert_true(rock_red_black_tree_insert(&object, d, e));
+    assert_ptr_equal(&d.node, last);
+    value = rock_container_of(last, struct entry, node)->value;
+    assert_int_equal(d.value, value);
+    assert_true(rock_red_black_tree_insert(&object, &d.node, &e.node));
     assert_true(rock_red_black_tree_last(&object, &last));
-    assert_ptr_equal(e, last);
-    assert_int_equal(*e, *(uintmax_t *) last);
+    assert_ptr_equal(&e.node, last);
+    value = rock_container_of(last, struct entry, node)->value;
+    assert_int_equal(e.value, value);
     assert_true(rock_red_black_tree_invalidate(&object, NULL));
     rock_error = ROCK_ERROR_NONE;
 }
 
 static void check_next_error_on_node_is_null(void **state) {
     rock_error = ROCK_ERROR_NONE;
-    void *node;
-    assert_false(rock_red_black_tree_next(NULL, &node));
+    struct rock_red_black_tree_node *out;
+    assert_false(rock_red_black_tree_next(NULL, &out));
     assert_int_equal(ROCK_RED_BLACK_TREE_ERROR_NODE_IS_NULL, rock_error);
     rock_error = ROCK_ERROR_NONE;
 }
@@ -2143,41 +2268,44 @@ static void check_next_error_on_out_is_null(void **state) {
 static void check_next(void **state) {
     rock_error = ROCK_ERROR_NONE;
     struct rock_red_black_tree object = {};
-    assert_true(rock_red_black_tree_init(
-            &object,
-            (int (*)(const void *, const void *))seagrass_uintmax_t_ptr_compare));
-    uintmax_t *a, *b, *c, *d, *e;
-    assert_true(rock_red_black_tree_node(sizeof(*a), (void **) &a));
-    assert_true(rock_red_black_tree_node(sizeof(*b), (void **) &b));
-    assert_true(rock_red_black_tree_node(sizeof(*c), (void **) &c));
-    assert_true(rock_red_black_tree_node(sizeof(*d), (void **) &d));
-    assert_true(rock_red_black_tree_node(sizeof(*e), (void **) &e));
-    *a = 9;
-    *b = 5;
-    *c = 4;
-    *d = 2;
-    *e = 1;
-    assert_true(rock_red_black_tree_insert(&object, NULL, a));
-    assert_true(rock_red_black_tree_insert(&object, a, b));
-    assert_true(rock_red_black_tree_insert(&object, b, c));
-    assert_true(rock_red_black_tree_insert(&object, c, d));
-    assert_true(rock_red_black_tree_insert(&object, d, e));
-    void *node;
+    assert_true(rock_red_black_tree_init(&object, compare_entry));
+    struct entry a, b, c, d, e;
+    assert_true(rock_red_black_tree_node_init(&a.node));
+    assert_true(rock_red_black_tree_node_init(&b.node));
+    assert_true(rock_red_black_tree_node_init(&c.node));
+    assert_true(rock_red_black_tree_node_init(&d.node));
+    assert_true(rock_red_black_tree_node_init(&e.node));
+    a.value = 9;
+    b.value = 5;
+    c.value = 4;
+    d.value = 2;
+    e.value = 1;
+    assert_true(rock_red_black_tree_insert(&object, NULL, &a.node));
+    assert_true(rock_red_black_tree_insert(&object, &a.node, &b.node));
+    assert_true(rock_red_black_tree_insert(&object, &b.node, &c.node));
+    assert_true(rock_red_black_tree_insert(&object, &c.node, &d.node));
+    assert_true(rock_red_black_tree_insert(&object, &d.node, &e.node));
+    struct rock_red_black_tree_node *node;
     assert_true(rock_red_black_tree_first(&object, &node));
-    assert_ptr_equal(e, node);
-    assert_int_equal(1, *(uintmax_t *) node);
+    assert_ptr_equal(&e.node, node);
+    uintmax_t value = rock_container_of(node, struct entry, node)->value;
+    assert_int_equal(1, value);
     assert_true(rock_red_black_tree_next(node, &node));
-    assert_ptr_equal(d, node);
-    assert_int_equal(2, *(uintmax_t *) node);
+    assert_ptr_equal(&d.node, node);
+    value = rock_container_of(node, struct entry, node)->value;
+    assert_int_equal(2, value);
     assert_true(rock_red_black_tree_next(node, &node));
-    assert_ptr_equal(c, node);
-    assert_int_equal(4, *(uintmax_t *) node);
+    assert_ptr_equal(&c.node, node);
+    value = rock_container_of(node, struct entry, node)->value;
+    assert_int_equal(4, value);
     assert_true(rock_red_black_tree_next(node, &node));
-    assert_ptr_equal(b, node);
-    assert_int_equal(5, *(uintmax_t *) node);
+    assert_ptr_equal(&b.node, node);
+    value = rock_container_of(node, struct entry, node)->value;
+    assert_int_equal(5, value);
     assert_true(rock_red_black_tree_next(node, &node));
-    assert_ptr_equal(a, node);
-    assert_int_equal(9, *(uintmax_t *) node);
+    assert_ptr_equal(&a.node, node);
+    value = rock_container_of(node, struct entry, node)->value;
+    assert_int_equal(9, value);
     assert_false(rock_red_black_tree_next(node, &node));
     assert_int_equal(ROCK_RED_BLACK_TREE_ERROR_END_OF_SEQUENCE, rock_error);
     assert_true(rock_red_black_tree_invalidate(&object, NULL));
@@ -2186,7 +2314,7 @@ static void check_next(void **state) {
 
 static void check_prev_error_on_node_is_null(void **state) {
     rock_error = ROCK_ERROR_NONE;
-    void *node;
+    struct rock_red_black_tree_node *node;
     assert_false(rock_red_black_tree_prev(NULL, &node));
     assert_int_equal(ROCK_RED_BLACK_TREE_ERROR_NODE_IS_NULL, rock_error);
     rock_error = ROCK_ERROR_NONE;
@@ -2202,127 +2330,120 @@ static void check_get_prev_error_on_out_is_null(void **state) {
 static void check_prev(void **state) {
     rock_error = ROCK_ERROR_NONE;
     struct rock_red_black_tree object = {};
-    assert_true(rock_red_black_tree_init(
-            &object,
-            (int (*)(const void *, const void *))seagrass_uintmax_t_ptr_compare));
-    uintmax_t *a, *b, *c, *d, *e;
-    assert_true(rock_red_black_tree_node(sizeof(*a), (void **) &a));
-    assert_true(rock_red_black_tree_node(sizeof(*b), (void **) &b));
-    assert_true(rock_red_black_tree_node(sizeof(*c), (void **) &c));
-    assert_true(rock_red_black_tree_node(sizeof(*d), (void **) &d));
-    assert_true(rock_red_black_tree_node(sizeof(*e), (void **) &e));
-    *a = 1;
-    *b = 2;
-    *c = 4;
-    *d = 5;
-    *e = 9;
-    assert_true(rock_red_black_tree_insert(&object, NULL, a));
-    assert_true(rock_red_black_tree_insert(&object, a, b));
-    assert_true(rock_red_black_tree_insert(&object, b, c));
-    assert_true(rock_red_black_tree_insert(&object, c, d));
-    assert_true(rock_red_black_tree_insert(&object, d, e));
-    void *node;
+    assert_true(rock_red_black_tree_init(&object, compare_entry));
+    struct entry a, b, c, d, e;
+    assert_true(rock_red_black_tree_node_init(&a.node));
+    assert_true(rock_red_black_tree_node_init(&b.node));
+    assert_true(rock_red_black_tree_node_init(&c.node));
+    assert_true(rock_red_black_tree_node_init(&d.node));
+    assert_true(rock_red_black_tree_node_init(&e.node));
+    a.value = 1;
+    b.value = 2;
+    c.value = 4;
+    d.value = 5;
+    e.value = 9;
+    assert_true(rock_red_black_tree_insert(&object, NULL, &a.node));
+    assert_true(rock_red_black_tree_insert(&object, &a.node, &b.node));
+    assert_true(rock_red_black_tree_insert(&object, &b.node, &c.node));
+    assert_true(rock_red_black_tree_insert(&object, &c.node, &d.node));
+    assert_true(rock_red_black_tree_insert(&object, &d.node, &e.node));
+    struct rock_red_black_tree_node *node;
     assert_true(rock_red_black_tree_last(&object, &node));
-    assert_ptr_equal(e, node);
-    assert_int_equal(9, *(uintmax_t *) node);
+    assert_ptr_equal(&e.node, node);
+    uintmax_t value = rock_container_of(node, struct entry, node)->value;
+    assert_int_equal(9, value);
     assert_true(rock_red_black_tree_prev(node, &node));
-    assert_ptr_equal(d, node);
-    assert_int_equal(5, *(uintmax_t *) node);
+    assert_ptr_equal(&d.node, node);
+    value = rock_container_of(node, struct entry, node)->value;
+    assert_int_equal(5, value);
     assert_true(rock_red_black_tree_prev(node, &node));
-    assert_ptr_equal(c, node);
-    assert_int_equal(4, *(uintmax_t *) node);
+    assert_ptr_equal(&c.node, node);
+    value = rock_container_of(node, struct entry, node)->value;
+    assert_int_equal(4, value);
     assert_true(rock_red_black_tree_prev(node, &node));
-    assert_ptr_equal(b, node);
-    assert_int_equal(2, *(uintmax_t *) node);
+    assert_ptr_equal(&b.node, node);
+    value = rock_container_of(node, struct entry, node)->value;
+    assert_int_equal(2, value);
     assert_true(rock_red_black_tree_prev(node, &node));
-    assert_ptr_equal(a, node);
-    assert_int_equal(1, *(uintmax_t *) node);
+    assert_ptr_equal(&a.node, node);
+    value = rock_container_of(node, struct entry, node)->value;
+    assert_int_equal(1, value);
     assert_false(rock_red_black_tree_prev(node, &node));
     assert_int_equal(ROCK_RED_BLACK_TREE_ERROR_END_OF_SEQUENCE, rock_error);
     assert_true(rock_red_black_tree_invalidate(&object, NULL));
     rock_error = ROCK_ERROR_NONE;
 }
 
-static void check_delete_error_on_object_is_null(void **state) {
+static void check_remove_error_on_object_is_null(void **state) {
     rock_error = ROCK_ERROR_NONE;
-    assert_false(rock_red_black_tree_delete(NULL, (void *)1));
+    assert_false(rock_red_black_tree_remove(NULL, (void *)1));
     assert_int_equal(ROCK_RED_BLACK_TREE_ERROR_OBJECT_IS_NULL, rock_error);
     rock_error = ROCK_ERROR_NONE;
 }
 
-static void check_delete_error_on_node_is_null(void **state) {
+static void check_remove_error_on_node_is_null(void **state) {
     rock_error = ROCK_ERROR_NONE;
-    assert_false(rock_red_black_tree_delete((void*)1, NULL));
+    assert_false(rock_red_black_tree_remove((void*)1, NULL));
     assert_int_equal(ROCK_RED_BLACK_TREE_ERROR_NODE_IS_NULL, rock_error);
     rock_error = ROCK_ERROR_NONE;
 }
 
-static void check_delete_leaf_nodes(void **state) {
+static void check_remove_leaf_nodes(void **state) {
     rock_error = ROCK_ERROR_NONE;
     struct rock_red_black_tree object = {};
-    assert_true(rock_red_black_tree_init(
-            &object,
-            (int (*)(const void *, const void *))seagrass_uintmax_t_ptr_compare));
-    uintmax_t *a, *b;
-    assert_true(rock_red_black_tree_node(sizeof(*a), (void **) &a));
-    assert_true(rock_red_black_tree_node(sizeof(*b), (void **) &b));
-    *a = 9;
-    *b = 4;
-    assert_true(rock_red_black_tree_insert(&object, NULL, a));
-    assert_true(rock_red_black_tree_insert(&object, a, b));
-    bool color;
-    void *a_, *b_, *_;
-    assert_true(object.root == a
-                && rock_red_black_tree_node_get_color(a, &color)
-                && ROCK_RED_BLACK_TREE_COLOR_BLACK == color
-                && rock_red_black_tree_node_get_left(a, &b_)
-                && b == b_
-                && rock_red_black_tree_node_get_parent(b, &a_)
-                && a == a_
-                && rock_red_black_tree_node_get_color(b, &color)
-                && ROCK_RED_BLACK_TREE_COLOR_RED == color
-                && rock_red_black_tree_node_get_right(a, &_)
-                && NULL == _);
-    /* delete leaf */
-    assert_true(rock_red_black_tree_delete(&object, b));
-    assert_true(object.root == a
-                && rock_red_black_tree_node_get_color(a, &color)
-                && ROCK_RED_BLACK_TREE_COLOR_BLACK == color
-                && rock_red_black_tree_node_get_left(a, &_)
-                && NULL == _
-                && rock_red_black_tree_node_get_right(a, &_)
-                && NULL == _);
-    /* delete root */
-    assert_true(rock_red_black_tree_delete(&object, a));
+    assert_true(rock_red_black_tree_init(&object, compare_entry));
+    struct entry a, b;
+    assert_true(rock_red_black_tree_node_init(&a.node));
+    assert_true(rock_red_black_tree_node_init(&b.node));
+    a.value = 9;
+    b.value = 4;
+    assert_true(rock_red_black_tree_insert(&object, NULL, &a.node));
+    assert_true(rock_red_black_tree_insert(&object, &a.node, &b.node));
+    /*
+     *         a(9B)
+     *         /
+     *     b(4R)
+     */
+    assert_ptr_equal(object.root, &a.node);
+    assert_node(&a.node, NULL, false, &b.node, NULL,
+                ROCK_RED_BLACK_TREE_COLOR_BLACK);
+    assert_node(&b.node, &a.node, true, NULL, NULL,
+                ROCK_RED_BLACK_TREE_COLOR_RED);
+    /* remove leaf */
+    assert_true(rock_red_black_tree_remove(&object, &b.node));
+    /*
+     *         a(9B)
+     */
+    assert_ptr_equal(object.root, &a.node);
+    assert_node(&a.node, NULL, false, NULL, NULL,
+                ROCK_RED_BLACK_TREE_COLOR_BLACK);
+    /* remove root */
+    assert_true(rock_red_black_tree_remove(&object, &a.node));
     assert_null(object.root);
     assert_true(rock_red_black_tree_invalidate(&object, NULL));
     rock_error = ROCK_ERROR_NONE;
 }
 
-static void check_delete_node_with_single_child(void **state) {
+static void check_remove_node_with_single_child(void **state) {
     rock_error = ROCK_ERROR_NONE;
     struct rock_red_black_tree object = {};
-    assert_true(rock_red_black_tree_init(
-            &object,
-            (int (*)(const void *, const void *))seagrass_uintmax_t_ptr_compare));
-    uintmax_t *a, *b, *c, *d, *e;
-    assert_true(rock_red_black_tree_node(sizeof(*a), (void **) &a));
-    assert_true(rock_red_black_tree_node(sizeof(*b), (void **) &b));
-    assert_true(rock_red_black_tree_node(sizeof(*c), (void **) &c));
-    assert_true(rock_red_black_tree_node(sizeof(*d), (void **) &d));
-    assert_true(rock_red_black_tree_node(sizeof(*e), (void **) &e));
-    *a = 1;
-    *b = 7;
-    *c = 4;
-    *d = 3;
-    *e = 9;
-    assert_true(rock_red_black_tree_insert(&object, NULL, c));
-    assert_true(rock_red_black_tree_insert(&object, c, d));
-    assert_true(rock_red_black_tree_insert(&object, c, b));
-    assert_true(rock_red_black_tree_insert(&object, d, a));
-    assert_true(rock_red_black_tree_insert(&object, b, e));
-    bool color;
-    void *a_, *b_, *c_, *d_, *e_, *_;
+    assert_true(rock_red_black_tree_init(&object, compare_entry));
+    struct entry a, b, c, d, e;
+    assert_true(rock_red_black_tree_node_init(&a.node));
+    assert_true(rock_red_black_tree_node_init(&b.node));
+    assert_true(rock_red_black_tree_node_init(&c.node));
+    assert_true(rock_red_black_tree_node_init(&d.node));
+    assert_true(rock_red_black_tree_node_init(&e.node));
+    a.value = 1;
+    b.value = 7;
+    c.value = 4;
+    d.value = 3;
+    e.value = 9;
+    assert_true(rock_red_black_tree_insert(&object, NULL, &c.node));
+    assert_true(rock_red_black_tree_insert(&object, &c.node, &d.node));
+    assert_true(rock_red_black_tree_insert(&object, &c.node, &b.node));
+    assert_true(rock_red_black_tree_insert(&object, &d.node, &a.node));
+    assert_true(rock_red_black_tree_insert(&object, &b.node, &e.node));
     /*
      *         c(4B)
      *         /  \
@@ -2330,47 +2451,18 @@ static void check_delete_node_with_single_child(void **state) {
      *      /        \
      *    a(1R)      e(9R)
      */
-    assert_true(object.root == c
-                && rock_red_black_tree_node_get_color(c, &color)
-                && ROCK_RED_BLACK_TREE_COLOR_BLACK == color
-                && rock_red_black_tree_node_get_left(c, &d_)
-                && d == d_
-                && rock_red_black_tree_node_get_color(d, &color)
-                && ROCK_RED_BLACK_TREE_COLOR_BLACK == color
-                && rock_red_black_tree_node_get_parent(d, &c_)
-                && c == c_
-                && rock_red_black_tree_node_get_right(c, &b_)
-                && b == b_
-                && rock_red_black_tree_node_get_color(b, &color)
-                && ROCK_RED_BLACK_TREE_COLOR_BLACK == color
-                && rock_red_black_tree_node_get_parent(b, &c_)
-                && c == c_
-                && rock_red_black_tree_node_get_right(d, &_)
-                && NULL == _
-                && rock_red_black_tree_node_get_left(d, &a_)
-                && a == a_
-                && rock_red_black_tree_node_get_color(a, &color)
-                && ROCK_RED_BLACK_TREE_COLOR_RED == color
-                && rock_red_black_tree_node_get_left(a, &_)
-                && NULL == _
-                && rock_red_black_tree_node_get_right(a, &_)
-                && NULL == _
-                && rock_red_black_tree_node_get_parent(a, &d_)
-                && d == d_
-                && rock_red_black_tree_node_get_left(b, &_)
-                && NULL == _
-                && rock_red_black_tree_node_get_right(b, &e_)
-                && e == e_
-                && rock_red_black_tree_node_get_color(e, &color)
-                && ROCK_RED_BLACK_TREE_COLOR_RED == color
-                && rock_red_black_tree_node_get_left(e, &_)
-                && NULL == _
-                && rock_red_black_tree_node_get_right(e, &_)
-                && NULL == _
-                && rock_red_black_tree_node_get_parent(e, &b_)
-                && b == b_);
-    /* single left node */
-    assert_true(rock_red_black_tree_delete(&object, d));
+    assert_ptr_equal(object.root, &c.node);
+    assert_node(&c.node, NULL, false, &d.node, &b.node,
+                ROCK_RED_BLACK_TREE_COLOR_BLACK);
+    assert_node(&d.node, &c.node, true, &a.node, NULL,
+                ROCK_RED_BLACK_TREE_COLOR_BLACK);
+    assert_node(&b.node, &c.node, false, NULL, &e.node,
+                ROCK_RED_BLACK_TREE_COLOR_BLACK);
+    assert_node(&a.node, &d.node, true, NULL, NULL,
+                ROCK_RED_BLACK_TREE_COLOR_RED);
+    assert_node(&e.node, &b.node, false, NULL, NULL,
+                ROCK_RED_BLACK_TREE_COLOR_RED);
+    assert_true(rock_red_black_tree_remove(&object, &d.node));
     /*
      *         c(4B)
      *         /  \
@@ -2378,91 +2470,52 @@ static void check_delete_node_with_single_child(void **state) {
      *               \
      *               e(9R)
      */
-    assert_true(object.root == c
-                && rock_red_black_tree_node_get_color(c, &color)
-                && ROCK_RED_BLACK_TREE_COLOR_BLACK == color
-                && rock_red_black_tree_node_get_left(c, &a_)
-                && a == a_
-                && rock_red_black_tree_node_get_color(a, &color)
-                && ROCK_RED_BLACK_TREE_COLOR_BLACK == color
-                && rock_red_black_tree_node_get_parent(a, &c_)
-                && c == c_
-                && rock_red_black_tree_node_get_left(a, &_)
-                && NULL == _
-                && rock_red_black_tree_node_get_right(a, &_)
-                && NULL == _
-                && rock_red_black_tree_node_get_right(c, &b_)
-                && b == b_
-                && rock_red_black_tree_node_get_color(b, &color)
-                && ROCK_RED_BLACK_TREE_COLOR_BLACK == color
-                && rock_red_black_tree_node_get_parent(b, &c_)
-                && c == c_
-                && rock_red_black_tree_node_get_left(b, &_)
-                && NULL == _
-                && rock_red_black_tree_node_get_right(b, &e_)
-                && e == e_
-                && rock_red_black_tree_node_get_color(e, &color)
-                && ROCK_RED_BLACK_TREE_COLOR_RED == color
-                && rock_red_black_tree_node_get_parent(e, &b_)
-                && b == b_);
-    /* single right node */
-    assert_true(rock_red_black_tree_delete(&object, b));
+    assert_ptr_equal(object.root, &c.node);
+    assert_node(&c.node, NULL, false, &a.node, &b.node,
+                ROCK_RED_BLACK_TREE_COLOR_BLACK);
+    assert_node(&a.node, &c.node, true, NULL, NULL,
+                ROCK_RED_BLACK_TREE_COLOR_BLACK);
+    assert_node(&b.node, &c.node, false, NULL, &e.node,
+                ROCK_RED_BLACK_TREE_COLOR_BLACK);
+    assert_node(&e.node, &b.node, false, NULL, NULL,
+                ROCK_RED_BLACK_TREE_COLOR_RED);
+    assert_true(rock_red_black_tree_remove(&object, &b.node));
     /*
      *         c(4B)
      *         /  \
      *     a(1B)  e(9B)
      */
-    assert_true(object.root == c
-                && rock_red_black_tree_node_get_color(c, &color)
-                && ROCK_RED_BLACK_TREE_COLOR_BLACK == color
-                && rock_red_black_tree_node_get_left(c, &a_)
-                && a == a_
-                && rock_red_black_tree_node_get_color(a, &color)
-                && ROCK_RED_BLACK_TREE_COLOR_BLACK == color
-                && rock_red_black_tree_node_get_left(a, &_)
-                && NULL == _
-                && rock_red_black_tree_node_get_right(a, &_)
-                && NULL == _
-                && rock_red_black_tree_node_get_parent(a, &c_)
-                && c == c_
-                && rock_red_black_tree_node_get_right(c, &e_)
-                && e == e_
-                && rock_red_black_tree_node_get_color(e, &color)
-                && ROCK_RED_BLACK_TREE_COLOR_BLACK == color
-                && rock_red_black_tree_node_get_left(e, &_)
-                && NULL == _
-                && rock_red_black_tree_node_get_right(e, &_)
-                && NULL == _
-                && rock_red_black_tree_node_get_parent(e, &c_)
-                && c == c_);
+    assert_ptr_equal(object.root, &c.node);
+    assert_node(&c.node, NULL, false, &a.node, &e.node,
+                    ROCK_RED_BLACK_TREE_COLOR_BLACK);
+    assert_node(&a.node, &c.node, true, NULL, NULL,
+                    ROCK_RED_BLACK_TREE_COLOR_BLACK);
+    assert_node(&e.node, &c.node, false, NULL, NULL,
+                    ROCK_RED_BLACK_TREE_COLOR_BLACK);
     assert_true(rock_red_black_tree_invalidate(&object, NULL));
     rock_error = ROCK_ERROR_NONE;
 }
 
-static void check_delete_node_with_two_children(void **state) {
+static void check_remove_node_with_two_children(void **state) {
     rock_error = ROCK_ERROR_NONE;
     struct rock_red_black_tree object = {};
-    assert_true(rock_red_black_tree_init(
-            &object,
-            (int (*)(const void *, const void *))seagrass_uintmax_t_ptr_compare));
-    uintmax_t *a, *b, *c, *d, *e;
-    assert_true(rock_red_black_tree_node(sizeof(*a), (void **) &a));
-    assert_true(rock_red_black_tree_node(sizeof(*b), (void **) &b));
-    assert_true(rock_red_black_tree_node(sizeof(*c), (void **) &c));
-    assert_true(rock_red_black_tree_node(sizeof(*d), (void **) &d));
-    assert_true(rock_red_black_tree_node(sizeof(*e), (void **) &e));
-    *a = 1;
-    *b = 7;
-    *c = 4;
-    *d = 3;
-    *e = 9;
-    assert_true(rock_red_black_tree_insert(&object, NULL, c));
-    assert_true(rock_red_black_tree_insert(&object, c, d));
-    assert_true(rock_red_black_tree_insert(&object, c, b));
-    assert_true(rock_red_black_tree_insert(&object, d, a));
-    assert_true(rock_red_black_tree_insert(&object, b, e));
-    bool color;
-    void *a_, *b_, *c_, *d_, *e_, *_;
+    assert_true(rock_red_black_tree_init(&object, compare_entry));
+    struct entry a, b, c, d, e;
+    assert_true(rock_red_black_tree_node_init(&a.node));
+    assert_true(rock_red_black_tree_node_init(&b.node));
+    assert_true(rock_red_black_tree_node_init(&c.node));
+    assert_true(rock_red_black_tree_node_init(&d.node));
+    assert_true(rock_red_black_tree_node_init(&e.node));
+    a.value = 1;
+    b.value = 7;
+    c.value = 4;
+    d.value = 3;
+    e.value = 9;
+    assert_true(rock_red_black_tree_insert(&object, NULL, &c.node));
+    assert_true(rock_red_black_tree_insert(&object, &c.node, &d.node));
+    assert_true(rock_red_black_tree_insert(&object, &c.node, &b.node));
+    assert_true(rock_red_black_tree_insert(&object, &d.node, &a.node));
+    assert_true(rock_red_black_tree_insert(&object, &b.node, &e.node));
     /*
      *         c(4B)
      *         /  \
@@ -2470,47 +2523,18 @@ static void check_delete_node_with_two_children(void **state) {
      *      /        \
      *    a(1R)      e(9R)
      */
-    assert_true(object.root == c
-                && rock_red_black_tree_node_get_color(c, &color)
-                && ROCK_RED_BLACK_TREE_COLOR_BLACK == color
-                && rock_red_black_tree_node_get_left(c, &d_)
-                && d == d_
-                && rock_red_black_tree_node_get_color(d, &color)
-                && ROCK_RED_BLACK_TREE_COLOR_BLACK == color
-                && rock_red_black_tree_node_get_right(d, &_)
-                && NULL == _
-                && rock_red_black_tree_node_get_parent(d, &c_)
-                && c == c_
-                && rock_red_black_tree_node_get_right(c, &b_)
-                && b == b_
-                && rock_red_black_tree_node_get_color(b, &color)
-                && ROCK_RED_BLACK_TREE_COLOR_BLACK == color
-                && rock_red_black_tree_node_get_left(b, &_)
-                && NULL == _
-                && rock_red_black_tree_node_get_parent(b, &c_)
-                && c == c_
-                && rock_red_black_tree_node_get_left(d, &a_)
-                && a == a_
-                && rock_red_black_tree_node_get_color(a, &color)
-                && ROCK_RED_BLACK_TREE_COLOR_RED == color
-                && rock_red_black_tree_node_get_left(a, &_)
-                && NULL == _
-                && rock_red_black_tree_node_get_right(a, &_)
-                && NULL == _
-                && rock_red_black_tree_node_get_parent(a, &d_)
-                && d == d_
-                && rock_red_black_tree_node_get_right(b, &e_)
-                && e == e_
-                && rock_red_black_tree_node_get_color(e, &color)
-                && ROCK_RED_BLACK_TREE_COLOR_RED == color
-                && rock_red_black_tree_node_get_left(e, &_)
-                && NULL == _
-                && rock_red_black_tree_node_get_right(e, &_)
-                && NULL == _
-                && rock_red_black_tree_node_get_parent(e, &b_)
-                && b == b_);
-    /* delete node with two children */
-    assert_true(rock_red_black_tree_delete(&object, c));
+    assert_ptr_equal(object.root, &c.node);
+    assert_node(&c.node, NULL, false, &d.node, &b.node,
+                ROCK_RED_BLACK_TREE_COLOR_BLACK);
+    assert_node(&d.node, &c.node, true, &a.node, NULL,
+                ROCK_RED_BLACK_TREE_COLOR_BLACK);
+    assert_node(&b.node, &c.node, false, NULL, &e.node,
+                ROCK_RED_BLACK_TREE_COLOR_BLACK);
+    assert_node(&a.node, &d.node, true, NULL, NULL,
+                ROCK_RED_BLACK_TREE_COLOR_RED);
+    assert_node(&e.node, &b.node, false, NULL, NULL,
+                ROCK_RED_BLACK_TREE_COLOR_RED);
+    assert_true(rock_red_black_tree_remove(&object, &c.node));
     /*
      *         b(7B)
      *         /  \
@@ -2518,37 +2542,15 @@ static void check_delete_node_with_two_children(void **state) {
      *      /
      *    a(1R)
      */
-    assert_true(object.root == b
-                && rock_red_black_tree_node_get_color(b, &color)
-                && ROCK_RED_BLACK_TREE_COLOR_BLACK == color
-                && rock_red_black_tree_node_get_left(b, &d_)
-                && d == d_
-                && rock_red_black_tree_node_get_color(d, &color)
-                && ROCK_RED_BLACK_TREE_COLOR_BLACK == color
-                && rock_red_black_tree_node_get_right(d, &_)
-                && NULL == _
-                && rock_red_black_tree_node_get_parent(d, &b_)
-                && b == b_
-                && rock_red_black_tree_node_get_left(d, &a_)
-                && a == a_
-                && rock_red_black_tree_node_get_color(a, &color)
-                && ROCK_RED_BLACK_TREE_COLOR_RED == color
-                && rock_red_black_tree_node_get_left(a, &_)
-                && NULL == _
-                && rock_red_black_tree_node_get_right(a, &_)
-                && NULL == _
-                && rock_red_black_tree_node_get_parent(a, &d_)
-                && d == d_
-                && rock_red_black_tree_node_get_right(b, &e_)
-                && e == e_
-                && rock_red_black_tree_node_get_color(e, &color)
-                && ROCK_RED_BLACK_TREE_COLOR_BLACK == color
-                && rock_red_black_tree_node_get_left(e, &_)
-                && NULL == _
-                && rock_red_black_tree_node_get_right(e, &_)
-                && NULL == _
-                && rock_red_black_tree_node_get_parent(e, &b_)
-                && b == b_);
+    assert_ptr_equal(object.root, &b.node);
+    assert_node(&b.node, NULL, false, &d.node, &e.node,
+                ROCK_RED_BLACK_TREE_COLOR_BLACK);
+    assert_node(&d.node, &b.node, true, &a.node, NULL,
+                ROCK_RED_BLACK_TREE_COLOR_BLACK);
+    assert_node(&e.node, &b.node, false, NULL, NULL,
+                ROCK_RED_BLACK_TREE_COLOR_BLACK);
+    assert_node(&a.node, &d.node, true, NULL, NULL,
+                ROCK_RED_BLACK_TREE_COLOR_RED);
     assert_true(rock_red_black_tree_invalidate(&object, NULL));
     rock_error = ROCK_ERROR_NONE;
 }
@@ -2556,23 +2558,25 @@ static void check_delete_node_with_two_children(void **state) {
 static void check_tree(void **state) {
     rock_error = ROCK_ERROR_NONE;
     struct rock_red_black_tree object = {};
-    assert_true(rock_red_black_tree_init(
-            &object,
-            (int (*)(const void *, const void *))seagrass_uintmax_t_ptr_compare));
-    uintmax_t *p = NULL;
+    assert_true(rock_red_black_tree_init(&object, compare_entry));
+    struct rock_red_black_tree_node *p = NULL;
     for (uintmax_t i = 0; i < 10000; i++) {
-        uintmax_t *n;
-        assert_true(rock_red_black_tree_node(sizeof(*n), (void **)&n));
-        *n = i;
+        struct entry *n = calloc(1, sizeof(*n));
+        assert_non_null(n);
+        assert_true(rock_red_black_tree_node_init(&n->node));
+        n->value = i;
         assert_int_equal(i, object.count);
-        assert_true(rock_red_black_tree_insert(&object, p, n));
+        assert_true(rock_red_black_tree_insert(&object, p, &n->node));
         assert_int_equal(1 + i, object.count);
-        p = n;
+        p = &n->node;
     }
     for (uintmax_t i = 0; i < 10000; i++) {
         assert_int_equal(10000 - i, object.count);
-        assert_true(rock_red_black_tree_delete(&object, object.root));
+        p = object.root;
+        assert_true(rock_red_black_tree_remove(&object, object.root));
         assert_int_equal(9999 - i, object.count);
+        struct entry *n = rock_container_of(p, struct entry, node);
+        free(n);
     }
     assert_null(object.root);
     assert_int_equal(0, object.count);
@@ -2581,14 +2585,8 @@ static void check_tree(void **state) {
 
 int main(int argc, char *argv[]) {
     const struct CMUnitTest tests[] = {
-            cmocka_unit_test(check_node_alloc_error_on_out_is_null),
-            cmocka_unit_test(check_node_alloc_error_on_memory_allocation_failed),
-            cmocka_unit_test(check_node_alloc),
             cmocka_unit_test(check_node_init_error_on_node_is_null),
             cmocka_unit_test(check_node_init),
-            cmocka_unit_test(check_node_error_on_out_is_null),
-            cmocka_unit_test(check_node_error_on_memory_allocation_failed),
-            cmocka_unit_test(check_node),
             cmocka_unit_test(check_node_set_parent_error_on_node_is_null),
             cmocka_unit_test(check_node_set_parent),
             cmocka_unit_test(check_node_get_parent_error_on_node_is_null),
@@ -2650,9 +2648,9 @@ int main(int argc, char *argv[]) {
             cmocka_unit_test(check_count_error_on_out_is_null),
             cmocka_unit_test(check_count),
             cmocka_unit_test(check_find_error_on_object_is_null),
-            cmocka_unit_test(check_find_error_on_value_is_null),
+            cmocka_unit_test(check_find_error_on_needle_is_null),
             cmocka_unit_test(check_find_error_on_out_is_null),
-            cmocka_unit_test(check_find_error_on_value_not_found),
+            cmocka_unit_test(check_find_error_on_node_not_found),
             cmocka_unit_test(check_find_empty_tree),
             cmocka_unit_test(check_find),
             cmocka_unit_test(check_insert_error_on_object_is_null),
@@ -2681,11 +2679,11 @@ int main(int argc, char *argv[]) {
             cmocka_unit_test(check_prev_error_on_node_is_null),
             cmocka_unit_test(check_get_prev_error_on_out_is_null),
             cmocka_unit_test(check_prev),
-            cmocka_unit_test(check_delete_error_on_object_is_null),
-            cmocka_unit_test(check_delete_error_on_node_is_null),
-            cmocka_unit_test(check_delete_leaf_nodes),
-            cmocka_unit_test(check_delete_node_with_single_child),
-            cmocka_unit_test(check_delete_node_with_two_children),
+            cmocka_unit_test(check_remove_error_on_object_is_null),
+            cmocka_unit_test(check_remove_error_on_node_is_null),
+            cmocka_unit_test(check_remove_leaf_nodes),
+            cmocka_unit_test(check_remove_node_with_single_child),
+            cmocka_unit_test(check_remove_node_with_two_children),
             cmocka_unit_test(check_tree)
     };
     //cmocka_set_message_output(CM_OUTPUT_XML);

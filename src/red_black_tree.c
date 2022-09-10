@@ -5,72 +5,22 @@
 #include "private/red_black_tree.h"
 #include "test/cmocka.h"
 
-struct rock_red_black_tree_node *rock_red_black_tree_node_from(void *node) {
-    seagrass_required(node);
-    const char *node_ = node;
-    return (struct rock_red_black_tree_node *)
-            (node_ - sizeof(struct rock_red_black_tree_node));
-}
-
-void *rock_red_black_tree_node_to(struct rock_red_black_tree_node *node) {
-    seagrass_required(node);
-    const char *node_ = (const char *) node;
-    return (void *) (node_ + sizeof(struct rock_red_black_tree_node));
-}
-
-bool rock_red_black_tree_node(const size_t size, void **out) {
-    if (rock_red_black_tree_node_alloc(size, out)) {
-        if (rock_red_black_tree_node_init(*out)) {
-            return true;
-        }
-        free(*out);
-        *out = NULL;
-    }
-    return false;
-}
-
-bool rock_red_black_tree_node_alloc(const size_t size, void **out) {
-    if (!out) {
-        rock_error = ROCK_RED_BLACK_TREE_ERROR_OUT_IS_NULL;
-        return false;
-    }
-    size_t alloc_size;
-    struct rock_red_black_tree_node *node;
-    if (!seagrass_uintmax_t_add(size, sizeof(*node), &alloc_size)) {
-        seagrass_required_true(SEAGRASS_UINTMAX_T_ERROR_RESULT_IS_INCONSISTENT
-                               == seagrass_error);
-        rock_error = ROCK_RED_BLACK_TREE_ERROR_MEMORY_ALLOCATION_FAILED;
-        return false;
-    }
-    node = calloc(1, alloc_size);
-    if (!node) {
-        rock_error = ROCK_RED_BLACK_TREE_ERROR_MEMORY_ALLOCATION_FAILED;
-        return false;
-    }
-    *out = rock_red_black_tree_node_to(node);
-    return true;
-}
-
-bool rock_red_black_tree_node_init(void *node) {
+bool rock_red_black_tree_node_init(
+        struct rock_red_black_tree_node *const node) {
     if (!node) {
         rock_error = ROCK_RED_BLACK_TREE_ERROR_NODE_IS_NULL;
         return false;
     }
-    struct rock_red_black_tree_node *node_;
-    node_ = rock_red_black_tree_node_from(node);
-    node_->parent = (void *) ROCK_RED_BLACK_TREE_COLOR_RED;
-    node_->left = NULL;
-    node_->right = NULL;
+    *node = (struct rock_red_black_tree_node) {0};
+    node->parent = (void *) ROCK_RED_BLACK_TREE_COLOR_RED;
+    node->left = NULL;
+    node->right = NULL;
     return true;
 }
 
-void rock_red_black_tree_node_destroy(void *node) {
-    if (node) {
-        free(rock_red_black_tree_node_from(node));
-    }
-}
-
-bool rock_red_black_tree_node_get_parent(void *node, void **out) {
+bool rock_red_black_tree_node_get_parent(
+        const struct rock_red_black_tree_node *const node,
+        struct rock_red_black_tree_node **const out) {
     if (!node) {
         rock_error = ROCK_RED_BLACK_TREE_ERROR_NODE_IS_NULL;
         return false;
@@ -79,28 +29,29 @@ bool rock_red_black_tree_node_get_parent(void *node, void **out) {
         rock_error = ROCK_RED_BLACK_TREE_ERROR_OUT_IS_NULL;
         return false;
     }
-    struct rock_red_black_tree_node *node_;
-    node_ = rock_red_black_tree_node_from(node);
-    *out = (void *) ((uintptr_t) node_->parent & ~1);
+    *out = (struct rock_red_black_tree_node *) ((uintptr_t) node->parent & ~1);
     return true;
 }
 
-bool rock_red_black_tree_node_set_parent(void *node, void *parent) {
+bool rock_red_black_tree_node_set_parent(
+        struct rock_red_black_tree_node *restrict const node,
+        struct rock_red_black_tree_node *restrict const parent) {
     if (!node) {
         rock_error = ROCK_RED_BLACK_TREE_ERROR_NODE_IS_NULL;
         return false;
     }
-    struct rock_red_black_tree_node *node_;
-    node_ = rock_red_black_tree_node_from(node);
+    seagrass_required_true(node != parent);
     bool color;
     seagrass_required_true(rock_red_black_tree_node_get_color(
             node, &color));
     const uintptr_t value = (uintptr_t) parent | color;
-    node_->parent = (struct rock_red_black_tree_node *) value;
+    node->parent = (struct rock_red_black_tree_node *) value;
     return true;
 }
 
-bool rock_red_black_tree_node_get_color(void *node, bool *out) {
+bool rock_red_black_tree_node_get_color(
+        const struct rock_red_black_tree_node *const node,
+        bool *const out) {
     if (!out) {
         rock_error = ROCK_RED_BLACK_TREE_ERROR_OUT_IS_NULL;
         return false;
@@ -109,25 +60,25 @@ bool rock_red_black_tree_node_get_color(void *node, bool *out) {
         *out = ROCK_RED_BLACK_TREE_COLOR_BLACK;
         return true;
     }
-    struct rock_red_black_tree_node *node_;
-    node_ = rock_red_black_tree_node_from(node);
-    *out = (uintmax_t) node_->parent & 1;
+    *out = (uintmax_t) node->parent & 1;
     return true;
 }
 
-bool rock_red_black_tree_node_set_color(void *node, const bool color) {
+bool rock_red_black_tree_node_set_color(
+        struct rock_red_black_tree_node *const node,
+        const bool color) {
     if (!node) {
         rock_error = ROCK_RED_BLACK_TREE_ERROR_NODE_IS_NULL;
         return false;
     }
-    struct rock_red_black_tree_node *node_;
-    node_ = rock_red_black_tree_node_from(node);
-    uintmax_t value = (~1 & (uintmax_t) node_->parent) | (uintmax_t) color;
-    node_->parent = (struct rock_red_black_tree_node *) value;
+    const uintmax_t value = (~1 & (uintmax_t) node->parent) | (uintmax_t) color;
+    node->parent = (struct rock_red_black_tree_node *) value;
     return true;
 }
 
-bool rock_red_black_tree_node_get_left(void *node, void **out) {
+bool rock_red_black_tree_node_get_left(
+        const struct rock_red_black_tree_node *const node,
+        struct rock_red_black_tree_node **const out) {
     if (!out) {
         rock_error = ROCK_RED_BLACK_TREE_ERROR_OUT_IS_NULL;
         return false;
@@ -136,24 +87,25 @@ bool rock_red_black_tree_node_get_left(void *node, void **out) {
         rock_error = ROCK_RED_BLACK_TREE_ERROR_END_OF_SEQUENCE;
         return false;
     }
-    struct rock_red_black_tree_node *node_;
-    node_ = rock_red_black_tree_node_from(node);
-    *out = node_->left;
+    *out = node->left;
     return true;
 }
 
-bool rock_red_black_tree_node_set_left(void *node, void *left) {
+bool rock_red_black_tree_node_set_left(
+        struct rock_red_black_tree_node *restrict const node,
+        struct rock_red_black_tree_node *restrict const left) {
     if (!node) {
         rock_error = ROCK_RED_BLACK_TREE_ERROR_NODE_IS_NULL;
         return false;
     }
-    struct rock_red_black_tree_node *node_;
-    node_ = rock_red_black_tree_node_from(node);
-    node_->left = left;
+    seagrass_required_true(node != left);
+    node->left = left;
     return true;
 }
 
-bool rock_red_black_tree_node_get_right(void *node, void **out) {
+bool rock_red_black_tree_node_get_right(
+        const struct rock_red_black_tree_node *const node,
+        struct rock_red_black_tree_node **const out) {
     if (!out) {
         rock_error = ROCK_RED_BLACK_TREE_ERROR_OUT_IS_NULL;
         return false;
@@ -162,34 +114,35 @@ bool rock_red_black_tree_node_get_right(void *node, void **out) {
         rock_error = ROCK_RED_BLACK_TREE_ERROR_END_OF_SEQUENCE;
         return false;
     }
-    struct rock_red_black_tree_node *node_;
-    node_ = rock_red_black_tree_node_from(node);
-    *out = node_->right;
+    *out = node->right;
     return true;
 }
 
-bool rock_red_black_tree_node_set_right(void *node, void *right) {
+bool rock_red_black_tree_node_set_right(
+        struct rock_red_black_tree_node *restrict const node,
+        struct rock_red_black_tree_node *restrict const right) {
     if (!node) {
         rock_error = ROCK_RED_BLACK_TREE_ERROR_NODE_IS_NULL;
         return false;
     }
-    struct rock_red_black_tree_node *node_;
-    node_ = rock_red_black_tree_node_from(node);
-    node_->right = right;
+    seagrass_required_true(node != right);
+    node->right = right;
     return true;
 }
 
-bool rock_red_black_tree_node_is_on_left(void *node, void *left) {
-    struct rock_red_black_tree_node *node_;
-    node_ = rock_red_black_tree_node_from(node);
-    const bool is_left = node_->left == left;
+bool rock_red_black_tree_node_is_on_left(
+        const struct rock_red_black_tree_node *const node,
+        const struct rock_red_black_tree_node *const left) {
+    seagrass_required(node);
+    const bool is_left = node->left == left;
     if (!is_left) {
-        seagrass_required_true(node_->right == left);
+        seagrass_required_true(node->right == left);
     }
     return is_left;
 }
 
-bool rock_red_black_tree_next(void *node, void **out) {
+bool rock_red_black_tree_next(const struct rock_red_black_tree_node *node,
+                              struct rock_red_black_tree_node **const out) {
     if (!node) {
         rock_error = ROCK_RED_BLACK_TREE_ERROR_NODE_IS_NULL;
         return false;
@@ -198,14 +151,14 @@ bool rock_red_black_tree_next(void *node, void **out) {
         rock_error = ROCK_RED_BLACK_TREE_ERROR_OUT_IS_NULL;
         return false;
     }
-    void *right;
+    struct rock_red_black_tree_node *right;
     seagrass_required_true(rock_red_black_tree_node_get_right(
             node, &right));
     if (right) {
         rock_red_black_tree_minimum(right, out);
         return true;
     }
-    void *parent;
+    struct rock_red_black_tree_node *parent;
     while (true) {
         seagrass_required_true(rock_red_black_tree_node_get_parent(
                 node, &parent));
@@ -224,7 +177,8 @@ bool rock_red_black_tree_next(void *node, void **out) {
     return false;
 }
 
-bool rock_red_black_tree_prev(void *node, void **out) {
+bool rock_red_black_tree_prev(const struct rock_red_black_tree_node *node,
+                              struct rock_red_black_tree_node **const out) {
     if (!node) {
         rock_error = ROCK_RED_BLACK_TREE_ERROR_NODE_IS_NULL;
         return false;
@@ -233,14 +187,14 @@ bool rock_red_black_tree_prev(void *node, void **out) {
         rock_error = ROCK_RED_BLACK_TREE_ERROR_OUT_IS_NULL;
         return false;
     }
-    void *left;
+    struct rock_red_black_tree_node *left;
     seagrass_required_true(rock_red_black_tree_node_get_left(
             node, &left));
     if (left) {
         rock_red_black_tree_maximum(left, out);
         return true;
     }
-    void *parent;
+    struct rock_red_black_tree_node *parent;
     while (true) {
         seagrass_required_true(rock_red_black_tree_node_get_parent(
                 node, &parent));
@@ -259,29 +213,42 @@ bool rock_red_black_tree_prev(void *node, void **out) {
     return false;
 }
 
-bool rock_red_black_tree_rotate_N(void *Y, const bool is_N_left) {
+bool rock_red_black_tree_rotate_N(struct rock_red_black_tree_node *const Y,
+                                  const bool is_N_left) {
     seagrass_required(Y);
-    bool (*const get_P)(void *, void **) = rock_red_black_tree_node_get_parent;
-    bool (*const set_P)(void *, void *) = rock_red_black_tree_node_set_parent;
-    void *X;
+    bool (*const get_P)(const struct rock_red_black_tree_node *,
+                        struct rock_red_black_tree_node **)
+    = rock_red_black_tree_node_get_parent;
+    bool (*const set_P)(struct rock_red_black_tree_node *,
+                        struct rock_red_black_tree_node *)
+    = rock_red_black_tree_node_set_parent;
+    struct rock_red_black_tree_node *X;
     seagrass_required_true(get_P(Y, &X));
     if (!X) {
         rock_error = ROCK_RED_BLACK_TREE_ERROR_Y_HAS_NO_PARENT;
         return false;
     }
-    bool (*const get_N)(void *, void **) = is_N_left
-                                           ? rock_red_black_tree_node_get_left
-                                           : rock_red_black_tree_node_get_right;
-    bool (*const set_N)(void *, void *) = is_N_left
-                                          ? rock_red_black_tree_node_set_left
-                                          : rock_red_black_tree_node_set_right;
-    bool (*const get_O)(void *, void **) = is_N_left
-                                           ? rock_red_black_tree_node_get_right
-                                           : rock_red_black_tree_node_get_left;
-    bool (*const set_O)(void *, void *) = is_N_left
-                                          ? rock_red_black_tree_node_set_right
-                                          : rock_red_black_tree_node_set_left;
-    void *y;
+    bool (*const get_N)(const struct rock_red_black_tree_node *,
+                        struct rock_red_black_tree_node **)
+    = is_N_left
+      ? rock_red_black_tree_node_get_left
+      : rock_red_black_tree_node_get_right;
+    bool (*const set_N)(struct rock_red_black_tree_node *,
+                        struct rock_red_black_tree_node *)
+    = is_N_left
+      ? rock_red_black_tree_node_set_left
+      : rock_red_black_tree_node_set_right;
+    bool (*const get_O)(const struct rock_red_black_tree_node *,
+                        struct rock_red_black_tree_node **)
+    = is_N_left
+      ? rock_red_black_tree_node_get_right
+      : rock_red_black_tree_node_get_left;
+    bool (*const set_O)(struct rock_red_black_tree_node *,
+                        struct rock_red_black_tree_node *)
+    = is_N_left
+      ? rock_red_black_tree_node_set_right
+      : rock_red_black_tree_node_set_left;
+    struct rock_red_black_tree_node *y;
     seagrass_required_true(get_O(X, &y));
     if (Y != y) {
         rock_error = is_N_left
@@ -289,18 +256,18 @@ bool rock_red_black_tree_rotate_N(void *Y, const bool is_N_left) {
                      : ROCK_RED_BLACK_TREE_ERROR_Y_IS_NOT_LEFT_CHILD_OF_X;
         return false;
     }
-    void *b;
+    struct rock_red_black_tree_node *b;
     seagrass_required_true(get_N(Y, &b));
     if (b) {
         seagrass_required_true(set_P(b, X));
     }
     seagrass_required_true(set_O(X, b));
-    void *p;
+    struct rock_red_black_tree_node *p;
     seagrass_required_true(get_P(X, &p));
     if (!p) {
         seagrass_required_true(set_P(Y, NULL));
     } else {
-        void *x;
+        struct rock_red_black_tree_node *x;
         seagrass_required_true(get_N(p, &x));
         if (X == x) {
             seagrass_required_true(set_N(p, Y));
@@ -313,7 +280,8 @@ bool rock_red_black_tree_rotate_N(void *Y, const bool is_N_left) {
     return true;
 }
 
-bool rock_red_black_tree_rotate_left(void *Y) {
+bool rock_red_black_tree_rotate_left(
+        struct rock_red_black_tree_node *const Y) {
     if (!Y) {
         rock_error = ROCK_RED_BLACK_TREE_ERROR_Y_IS_NULL;
         return false;
@@ -321,7 +289,8 @@ bool rock_red_black_tree_rotate_left(void *Y) {
     return rock_red_black_tree_rotate_N(Y, true);
 }
 
-bool rock_red_black_tree_rotate_right(void *Y) {
+bool rock_red_black_tree_rotate_right(
+        struct rock_red_black_tree_node *const Y) {
     if (!Y) {
         rock_error = ROCK_RED_BLACK_TREE_ERROR_Y_IS_NULL;
         return false;
@@ -329,27 +298,32 @@ bool rock_red_black_tree_rotate_right(void *Y) {
     return rock_red_black_tree_rotate_N(Y, false);
 }
 
-bool rock_red_black_tree_rotate_N_O(void *Y, const bool is_N_left) {
+bool rock_red_black_tree_rotate_N_O(struct rock_red_black_tree_node *const Y,
+                                    const bool is_N_left) {
     seagrass_required(Y);
-    bool (*const get_P)(void *, void **) = rock_red_black_tree_node_get_parent;
-    void *X;
+    bool (*const get_P)(const struct rock_red_black_tree_node *,
+                        struct rock_red_black_tree_node **)
+    = rock_red_black_tree_node_get_parent;
+    struct rock_red_black_tree_node *X;
     seagrass_required_true(get_P(Y, &X));
     if (!X) {
         rock_error = ROCK_RED_BLACK_TREE_ERROR_Y_HAS_NO_PARENT;
         return false;
     }
-    void *Z;
+    struct rock_red_black_tree_node *Z;
     seagrass_required_true(get_P(X, &Z));
     if (!Z) {
         rock_error = ROCK_RED_BLACK_TREE_ERROR_X_HAS_NO_PARENT;
         return false;
     }
-    bool (*const rotate_N)(void *) = is_N_left
-                                     ? rock_red_black_tree_rotate_left
-                                     : rock_red_black_tree_rotate_right;
-    bool (*const rotate_O)(void *) = is_N_left
-                                     ? rock_red_black_tree_rotate_right
-                                     : rock_red_black_tree_rotate_left;
+    bool (*const rotate_N)(struct rock_red_black_tree_node *)
+    = is_N_left
+      ? rock_red_black_tree_rotate_left
+      : rock_red_black_tree_rotate_right;
+    bool (*const rotate_O)(struct rock_red_black_tree_node *)
+    = is_N_left
+      ? rock_red_black_tree_rotate_right
+      : rock_red_black_tree_rotate_left;
     if (!rotate_N(Y)) {
         return false;
     }
@@ -379,7 +353,9 @@ bool rock_red_black_tree_rotate_N_O(void *Y, const bool is_N_left) {
     return true;
 }
 
-bool rock_red_black_tree_rotate_left_right(void *Y) {
+bool
+rock_red_black_tree_rotate_left_right(
+        struct rock_red_black_tree_node *const Y) {
     if (!Y) {
         rock_error = ROCK_RED_BLACK_TREE_ERROR_Y_IS_NULL;
         return false;
@@ -387,7 +363,9 @@ bool rock_red_black_tree_rotate_left_right(void *Y) {
     return rock_red_black_tree_rotate_N_O(Y, true);
 }
 
-bool rock_red_black_tree_rotate_right_left(void *Y) {
+bool
+rock_red_black_tree_rotate_right_left(
+        struct rock_red_black_tree_node *const Y) {
     if (!Y) {
         rock_error = ROCK_RED_BLACK_TREE_ERROR_Y_IS_NULL;
         return false;
@@ -395,9 +373,10 @@ bool rock_red_black_tree_rotate_right_left(void *Y) {
     return rock_red_black_tree_rotate_N_O(Y, false);
 }
 
-bool rock_red_black_tree_init(struct rock_red_black_tree *object,
-                              int (*compare)(const void *first,
-                                             const void *second)) {
+bool rock_red_black_tree_init(
+        struct rock_red_black_tree *const object,
+        int (*compare)(const struct rock_red_black_tree_node *first,
+                       const struct rock_red_black_tree_node *second)) {
     if (!object) {
         rock_error = ROCK_RED_BLACK_TREE_ERROR_OBJECT_IS_NULL;
         return false;
@@ -406,19 +385,20 @@ bool rock_red_black_tree_init(struct rock_red_black_tree *object,
         rock_error = ROCK_RED_BLACK_TREE_ERROR_COMPARE_IS_NULL;
         return false;
     }
-    (*object) = (struct rock_red_black_tree) {0};
+    *object = (struct rock_red_black_tree) {0};
     object->compare = compare;
     return true;
 }
 
-bool rock_red_black_tree_invalidate(struct rock_red_black_tree *object,
-                                    void (*on_destroy)(void *)) {
+bool rock_red_black_tree_invalidate(
+        struct rock_red_black_tree *const object,
+        void (*const on_destroy)(struct rock_red_black_tree_node *node)) {
     if (!object) {
         rock_error = ROCK_RED_BLACK_TREE_ERROR_OBJECT_IS_NULL;
         return false;
     }
-    for (void *node = object->root; node;) {
-        void *next;
+    for (struct rock_red_black_tree_node *node = object->root; node;) {
+        struct rock_red_black_tree_node *next;
         seagrass_required_true(rock_red_black_tree_node_get_left(
                 node, &next));
         if (next) {
@@ -440,15 +420,14 @@ bool rock_red_black_tree_invalidate(struct rock_red_black_tree *object,
         if (on_destroy) {
             on_destroy(node);
         }
-        rock_red_black_tree_node_destroy(node);
         node = next;
     }
-    (*object) = (struct rock_red_black_tree) {0};
+    *object = (struct rock_red_black_tree) {0};
     return true;
 }
 
-bool rock_red_black_tree_count(struct rock_red_black_tree *object,
-                               uintmax_t *out) {
+bool rock_red_black_tree_count(const struct rock_red_black_tree *const object,
+                               uintmax_t *const out) {
     if (!object) {
         rock_error = ROCK_RED_BLACK_TREE_ERROR_OBJECT_IS_NULL;
         return false;
@@ -461,8 +440,8 @@ bool rock_red_black_tree_count(struct rock_red_black_tree *object,
     return true;
 }
 
-bool rock_red_black_tree_first(struct rock_red_black_tree *object,
-                               void **out) {
+bool rock_red_black_tree_first(const struct rock_red_black_tree *const object,
+                               struct rock_red_black_tree_node **const out) {
     if (!object) {
         rock_error = ROCK_RED_BLACK_TREE_ERROR_OBJECT_IS_NULL;
         return false;
@@ -479,8 +458,8 @@ bool rock_red_black_tree_first(struct rock_red_black_tree *object,
     return true;
 }
 
-bool rock_red_black_tree_last(struct rock_red_black_tree *object,
-                              void **out) {
+bool rock_red_black_tree_last(const struct rock_red_black_tree *const object,
+                              struct rock_red_black_tree_node **const out) {
     if (!object) {
         rock_error = ROCK_RED_BLACK_TREE_ERROR_OBJECT_IS_NULL;
         return false;
@@ -497,46 +476,49 @@ bool rock_red_black_tree_last(struct rock_red_black_tree *object,
     return true;
 }
 
-void rock_red_black_tree_minimum(void *root, void **out) {
+void rock_red_black_tree_minimum(const struct rock_red_black_tree_node *root,
+                                 struct rock_red_black_tree_node **const out) {
     seagrass_required(root);
     seagrass_required(out);
-    void *left;
+    struct rock_red_black_tree_node *left;
     while (true) {
         seagrass_required_true(rock_red_black_tree_node_get_left(
                 root, &left));
         if (!left) {
-            *out = root;
+            *out = (struct rock_red_black_tree_node *) root;
             return;
         }
         root = left;
     }
 }
 
-void rock_red_black_tree_maximum(void *root, void **out) {
+void rock_red_black_tree_maximum(const struct rock_red_black_tree_node *root,
+                                 struct rock_red_black_tree_node **const out) {
     seagrass_required(root);
     seagrass_required(out);
-    void *right;
+    struct rock_red_black_tree_node *right;
     while (true) {
         seagrass_required_true(rock_red_black_tree_node_get_right(
                 root, &right));
         if (!right) {
-            *out = root;
+            *out = (struct rock_red_black_tree_node *) root;
             return;
         }
         root = right;
     }
 }
 
-bool rock_red_black_tree_find(struct rock_red_black_tree *object,
-                              const void *root,
-                              const void *value,
-                              void **out) {
+bool rock_red_black_tree_find(
+        const struct rock_red_black_tree *const object,
+        const struct rock_red_black_tree_node *const root,
+        const struct rock_red_black_tree_node *const needle,
+        struct rock_red_black_tree_node **const out) {
     if (!object) {
         rock_error = ROCK_RED_BLACK_TREE_ERROR_OBJECT_IS_NULL;
         return false;
     }
-    if (!value) {
-        rock_error = ROCK_RED_BLACK_TREE_ERROR_VALUE_IS_NULL;
+    if (!needle) {
+        rock_error = ROCK_RED_BLACK_TREE_ERROR_NEEDLE_IS_NULL;
         return false;
     }
     if (!out) {
@@ -544,9 +526,11 @@ bool rock_red_black_tree_find(struct rock_red_black_tree *object,
         return false;
     }
     *out = NULL;
-    for (void *node = (void *) (root ? root : object->root); node;) {
+    for (struct rock_red_black_tree_node *node
+            = (struct rock_red_black_tree_node *)
+                    (root ? root : object->root); node;) {
         *out = node;
-        const int result = object->compare(value, node);
+        const int result = object->compare(needle, node);
         if (!result) {
             return true;
         } else if (result < 0) {
@@ -557,12 +541,13 @@ bool rock_red_black_tree_find(struct rock_red_black_tree *object,
                     node, &node));
         }
     }
-    rock_error = ROCK_RED_BLACK_TREE_ERROR_VALUE_NOT_FOUND;
+    rock_error = ROCK_RED_BLACK_TREE_ERROR_NODE_NOT_FOUND;
     return false;
 }
 
-bool rock_red_black_tree_insert(struct rock_red_black_tree *object,
-                                void *parent, void *child) {
+bool rock_red_black_tree_insert(struct rock_red_black_tree *const object,
+                                struct rock_red_black_tree_node *parent,
+                                struct rock_red_black_tree_node *child) {
     if (!object) {
         rock_error = ROCK_RED_BLACK_TREE_ERROR_OBJECT_IS_NULL;
         return false;
@@ -592,13 +577,17 @@ bool rock_red_black_tree_insert(struct rock_red_black_tree *object,
             return false;
         }
         const bool is_N_left = result < 0;
-        bool (*const get_N)(void *, void **) = is_N_left
-                                               ? rock_red_black_tree_node_get_left
-                                               : rock_red_black_tree_node_get_right;
-        bool (*const set_N)(void *, void *) = is_N_left
-                                              ? rock_red_black_tree_node_set_left
-                                              : rock_red_black_tree_node_set_right;
-        void *node;
+        bool (*const get_N)(const struct rock_red_black_tree_node *,
+                            struct rock_red_black_tree_node **)
+        = is_N_left
+          ? rock_red_black_tree_node_get_left
+          : rock_red_black_tree_node_get_right;
+        bool (*const set_N)(struct rock_red_black_tree_node *,
+                            struct rock_red_black_tree_node *)
+        = is_N_left
+          ? rock_red_black_tree_node_set_left
+          : rock_red_black_tree_node_set_right;
+        struct rock_red_black_tree_node *node;
         seagrass_required_true(get_N(parent, &node));
         if (node) { /* replace existing node in parent */
             seagrass_required_true(rock_red_black_tree_node_get_color(
@@ -617,7 +606,8 @@ bool rock_red_black_tree_insert(struct rock_red_black_tree *object,
                 child, parent));
         seagrass_required_true(set_N(parent, child));
     }
-    object->count += 1;
+    seagrass_required_true(seagrass_uintmax_t_add(
+            1, object->count, &object->count));
     /* repair */
     while (true) {
         seagrass_required_true(rock_red_black_tree_node_get_color(
@@ -634,7 +624,7 @@ bool rock_red_black_tree_insert(struct rock_red_black_tree *object,
         if (ROCK_RED_BLACK_TREE_COLOR_BLACK == color) {
             return true;
         }
-        void *grandparent, *sibling;
+        struct rock_red_black_tree_node *grandparent, *sibling;
         seagrass_required_true(rock_red_black_tree_node_get_parent(
                 parent, &grandparent));
         seagrass_required_true(rock_red_black_tree_node_get_left(
@@ -739,8 +729,8 @@ bool rock_red_black_tree_insert(struct rock_red_black_tree *object,
     }
 }
 
-bool rock_red_black_tree_delete(struct rock_red_black_tree *object,
-                                void *node) {
+bool rock_red_black_tree_remove(struct rock_red_black_tree *const object,
+                                struct rock_red_black_tree_node *const node) {
     if (!object) {
         rock_error = ROCK_RED_BLACK_TREE_ERROR_OBJECT_IS_NULL;
         return false;
@@ -751,7 +741,7 @@ bool rock_red_black_tree_delete(struct rock_red_black_tree *object,
     }
     /* remove */
     bool color;
-    void *left, *right, *parent, *double_black = NULL;
+    struct rock_red_black_tree_node *left, *right, *parent, *double_black = NULL;
     while (!double_black) {
         seagrass_required_true(rock_red_black_tree_node_get_color(
                 node, &color));
@@ -764,14 +754,15 @@ bool rock_red_black_tree_delete(struct rock_red_black_tree *object,
         switch ((NULL == left) << 1 | (NULL == right)) {
             case 3: { /* leaf node */
                 if (parent) {
-                    bool (*const set_N)(void *, void *) =
-                    rock_red_black_tree_node_is_on_left(parent, node)
-                    ? rock_red_black_tree_node_set_left
-                    : rock_red_black_tree_node_set_right;
+                    bool (*const set_N)(struct rock_red_black_tree_node *,
+                                        struct rock_red_black_tree_node *)
+                    = rock_red_black_tree_node_is_on_left(parent, node)
+                      ? rock_red_black_tree_node_set_left
+                      : rock_red_black_tree_node_set_right;
                     seagrass_required_true(set_N(parent, NULL));
                 }
-                rock_red_black_tree_node_destroy(node);
-                object->count -= 1;
+                seagrass_required_true(seagrass_uintmax_t_subtract(
+                        object->count, 1, &object->count));
                 if (node == object->root) {
                     object->root = NULL;
                 } else if (ROCK_RED_BLACK_TREE_COLOR_BLACK == color) {
@@ -788,10 +779,11 @@ bool rock_red_black_tree_delete(struct rock_red_black_tree *object,
                 seagrass_required_true(rock_red_black_tree_node_get_color(
                         child, &color_));
                 if (parent) {
-                    bool (*const set_N)(void *, void *) =
-                    rock_red_black_tree_node_is_on_left(parent, node)
-                    ? rock_red_black_tree_node_set_left
-                    : rock_red_black_tree_node_set_right;
+                    bool (*const set_N)(struct rock_red_black_tree_node *,
+                                        struct rock_red_black_tree_node *)
+                    = rock_red_black_tree_node_is_on_left(parent, node)
+                      ? rock_red_black_tree_node_set_left
+                      : rock_red_black_tree_node_set_right;
                     seagrass_required_true(set_N(parent, child));
                 }
                 seagrass_required_true(rock_red_black_tree_node_set_parent(
@@ -801,8 +793,8 @@ bool rock_red_black_tree_delete(struct rock_red_black_tree *object,
                 if (node == object->root) {
                     object->root = child;
                 }
-                rock_red_black_tree_node_destroy(node);
-                object->count -= 1;
+                seagrass_required_true(seagrass_uintmax_t_subtract(
+                        object->count, 1, &object->count));
                 if (ROCK_RED_BLACK_TREE_COLOR_BLACK == color
                     && ROCK_RED_BLACK_TREE_COLOR_BLACK == color_) {
                     double_black = child;
@@ -811,14 +803,14 @@ bool rock_red_black_tree_delete(struct rock_red_black_tree *object,
                 return true;
             }
             case 0: { /* node with two children */
-                void *next;
+                struct rock_red_black_tree_node *next;
                 seagrass_required_true(rock_red_black_tree_next(
                         node, &next));
                 /* swap 'next' with 'node' */
                 bool color_;
                 seagrass_required_true(rock_red_black_tree_node_get_color(
                         next, &color_));
-                void *parent_, *left_, *right_;
+                struct rock_red_black_tree_node *parent_, *left_, *right_;
                 seagrass_required_true(rock_red_black_tree_node_get_parent(
                         next, &parent_));
                 seagrass_required_true(rock_red_black_tree_node_get_left(
@@ -844,17 +836,19 @@ bool rock_red_black_tree_delete(struct rock_red_black_tree *object,
                         next, color));
 
                 if (parent_ && node != parent_) {
-                    bool (*const set_N)(void *, void *) =
-                    rock_red_black_tree_node_is_on_left(parent_, next)
-                    ? rock_red_black_tree_node_set_left
-                    : rock_red_black_tree_node_set_right;
+                    bool (*const set_N)(struct rock_red_black_tree_node *,
+                                        struct rock_red_black_tree_node *)
+                    = rock_red_black_tree_node_is_on_left(parent_, next)
+                      ? rock_red_black_tree_node_set_left
+                      : rock_red_black_tree_node_set_right;
                     seagrass_required_true(set_N(parent_, node));
                 }
                 if (parent && next != parent) {
-                    bool (*const set_N)(void *, void *) =
-                    rock_red_black_tree_node_is_on_left(parent, node)
-                    ? rock_red_black_tree_node_set_left
-                    : rock_red_black_tree_node_set_right;
+                    bool (*const set_N)(struct rock_red_black_tree_node *,
+                                        struct rock_red_black_tree_node *)
+                    = rock_red_black_tree_node_is_on_left(parent, node)
+                      ? rock_red_black_tree_node_set_left
+                      : rock_red_black_tree_node_set_right;
                     seagrass_required_true(set_N(parent, next));
                 }
                 if (left_ && node != left_) {
@@ -897,10 +891,9 @@ bool rock_red_black_tree_delete(struct rock_red_black_tree *object,
         if (double_black == object->root) {
             break;
         }
-        struct rock_red_black_tree_node *parent_;
-        parent_ = rock_red_black_tree_node_from(parent);
+        struct rock_red_black_tree_node *parent_ = parent;
         bool is_left; /* double black on left or right */
-        void *sibling;
+        struct rock_red_black_tree_node *sibling;
         if (parent_->left == double_black || !parent_->left) {
             sibling = parent_->right;
             is_left = true;
@@ -1015,9 +1008,9 @@ bool rock_red_black_tree_delete(struct rock_red_black_tree *object,
             break;
         }
         /* closest C from N */
-        void *closest = is_left ? left : right;
+        struct rock_red_black_tree_node *closest = is_left ? left : right;
         /* farthest C from N */
-        void *farthest = is_left ? right : left;
+        struct rock_red_black_tree_node *farthest = is_left ? right : left;
         /* case 5: Sibling is BLACK and closest child is RED while farthest
          * child is BLACK.
          *           P(B)              |             P(B)
