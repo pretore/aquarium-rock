@@ -16,7 +16,7 @@ bool rock_array_init(struct rock_array *object, const size_t size,
         rock_error = ROCK_ARRAY_ERROR_SIZE_IS_ZERO;
         return false;
     }
-    (*object) = (struct rock_array) {0};
+    *object = (struct rock_array) {0};
     object->size = size;
     if (!rock_array_set_capacity(object, capacity)) {
         seagrass_required_true(ROCK_ARRAY_ERROR_MEMORY_ALLOCATION_FAILED
@@ -38,7 +38,7 @@ bool rock_array_invalidate(struct rock_array *object,
         }
     }
     free(object->data);
-    (*object) = (struct rock_array) {0};
+    *object = (struct rock_array) {0};
     return true;
 }
 

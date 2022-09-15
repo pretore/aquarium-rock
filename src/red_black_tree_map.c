@@ -113,6 +113,7 @@ rock_red_black_tree_map_invalidate(struct rock_red_black_tree_map *const object,
     on_destroy_callback = on_destroy;
     seagrass_required_true(rock_red_black_tree_invalidate(
             &object->tree, entry_on_destroy));
+    *object = (struct rock_red_black_tree_map) {0};
     return true;
 }
 

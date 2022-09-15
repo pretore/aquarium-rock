@@ -13,8 +13,6 @@ bool rock_red_black_tree_node_init(
     }
     *node = (struct rock_red_black_tree_node) {0};
     node->parent = (void *) ROCK_RED_BLACK_TREE_COLOR_RED;
-    node->left = NULL;
-    node->right = NULL;
     return true;
 }
 
