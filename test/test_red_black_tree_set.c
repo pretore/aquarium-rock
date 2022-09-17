@@ -127,10 +127,10 @@ static void check_add_error_on_object_is_null(void **state) {
     rock_error = ROCK_ERROR_NONE;
 }
 
-static void check_add_error_on_item_is_null(void **state) {
+static void check_add_error_on_value_is_null(void **state) {
     rock_error = ROCK_ERROR_NONE;
     assert_false(rock_red_black_tree_set_add((void *)1, NULL));
-    assert_int_equal(ROCK_RED_BLACK_TREE_SET_ERROR_ITEM_IS_NULL, rock_error);
+    assert_int_equal(ROCK_RED_BLACK_TREE_SET_ERROR_VALUE_IS_NULL, rock_error);
     rock_error = ROCK_ERROR_NONE;
 }
 
@@ -154,7 +154,7 @@ static void check_add(void **state) {
     rock_error = ROCK_ERROR_NONE;
 }
 
-static void check_add_error_on_item_already_exists(void **state) {
+static void check_add_error_on_value_already_exists(void **state) {
     srand(time(NULL));
     rock_error = ROCK_ERROR_NONE;
     struct rock_red_black_tree_set object;
@@ -168,7 +168,7 @@ static void check_add_error_on_item_already_exists(void **state) {
     assert_int_equal(1, object.tree.count);
     assert_non_null(object.tree.root);
     assert_false(rock_red_black_tree_set_add(&object, (void*)&value));
-    assert_int_equal(ROCK_RED_BLACK_TREE_SET_ERROR_ITEM_ALREADY_EXISTS,
+    assert_int_equal(ROCK_RED_BLACK_TREE_SET_ERROR_VALUE_ALREADY_EXISTS,
                      rock_error);
     assert_true(rock_red_black_tree_set_invalidate(&object, NULL));
     rock_error = ROCK_ERROR_NONE;
@@ -181,14 +181,14 @@ static void check_remove_error_on_object_is_null(void **state) {
     rock_error = ROCK_ERROR_NONE;
 }
 
-static void check_remove_error_on_item_is_null(void **state) {
+static void check_remove_error_on_value_is_null(void **state) {
     rock_error = ROCK_ERROR_NONE;
     assert_false(rock_red_black_tree_set_remove((void *)1, NULL));
-    assert_int_equal(ROCK_RED_BLACK_TREE_SET_ERROR_ITEM_IS_NULL, rock_error);
+    assert_int_equal(ROCK_RED_BLACK_TREE_SET_ERROR_VALUE_IS_NULL, rock_error);
     rock_error = ROCK_ERROR_NONE;
 }
 
-static void check_remove_error_on_item_not_found(void **state) {
+static void check_remove_error_on_value_not_found(void **state) {
     srand(time(NULL));
     rock_error = ROCK_ERROR_NONE;
     struct rock_red_black_tree_set object;
@@ -200,7 +200,7 @@ static void check_remove_error_on_item_not_found(void **state) {
         assert_true(rock_red_black_tree_set_add(&object, &value));
     }
     assert_false(rock_red_black_tree_set_remove(&object, &value));
-    assert_int_equal(ROCK_RED_BLACK_TREE_SET_ERROR_ITEM_NOT_FOUND, rock_error);
+    assert_int_equal(ROCK_RED_BLACK_TREE_SET_ERROR_VALUE_NOT_FOUND, rock_error);
     assert_true(rock_red_black_tree_set_invalidate(&object, NULL));
     rock_error = ROCK_ERROR_NONE;
 }
@@ -229,10 +229,10 @@ static void check_contains_error_on_object_is_null(void **state) {
     rock_error = ROCK_ERROR_NONE;
 }
 
-static void check_contains_error_on_item_is_null(void **state) {
+static void check_contains_error_on_value_is_null(void **state) {
     rock_error = ROCK_ERROR_NONE;
     assert_false(rock_red_black_tree_set_contains((void *)1, NULL, (void *)1));
-    assert_int_equal(ROCK_RED_BLACK_TREE_SET_ERROR_ITEM_IS_NULL, rock_error);
+    assert_int_equal(ROCK_RED_BLACK_TREE_SET_ERROR_VALUE_IS_NULL, rock_error);
     rock_error = ROCK_ERROR_NONE;
 }
 
@@ -268,10 +268,10 @@ static void check_get_error_on_object_is_null(void **state) {
     rock_error = ROCK_ERROR_NONE;
 }
 
-static void check_get_error_on_item_is_null(void **state) {
+static void check_get_error_on_value_is_null(void **state) {
     rock_error = ROCK_ERROR_NONE;
     assert_false(rock_red_black_tree_set_get((void *)1, NULL, (void *)1));
-    assert_int_equal(ROCK_RED_BLACK_TREE_SET_ERROR_ITEM_IS_NULL, rock_error);
+    assert_int_equal(ROCK_RED_BLACK_TREE_SET_ERROR_VALUE_IS_NULL, rock_error);
     rock_error = ROCK_ERROR_NONE;
 }
 
@@ -322,10 +322,10 @@ static void check_ceiling_error_on_object_is_null(void **state) {
     rock_error = ROCK_ERROR_NONE;
 }
 
-static void check_ceiling_error_on_item_is_null(void **state) {
+static void check_ceiling_error_on_value_is_null(void **state) {
     rock_error = ROCK_ERROR_NONE;
     assert_false(rock_red_black_tree_set_ceiling((void *)1, NULL, (void *)1));
-    assert_int_equal(ROCK_RED_BLACK_TREE_SET_ERROR_ITEM_IS_NULL, rock_error);
+    assert_int_equal(ROCK_RED_BLACK_TREE_SET_ERROR_VALUE_IS_NULL, rock_error);
     rock_error = ROCK_ERROR_NONE;
 }
 
@@ -385,10 +385,10 @@ static void check_floor_error_on_object_is_null(void **state) {
     rock_error = ROCK_ERROR_NONE;
 }
 
-static void check_floor_error_on_item_is_null(void **state) {
+static void check_floor_error_on_value_is_null(void **state) {
     rock_error = ROCK_ERROR_NONE;
     assert_false(rock_red_black_tree_set_floor((void *)1, NULL, (void *)1));
-    assert_int_equal(ROCK_RED_BLACK_TREE_SET_ERROR_ITEM_IS_NULL, rock_error);
+    assert_int_equal(ROCK_RED_BLACK_TREE_SET_ERROR_VALUE_IS_NULL, rock_error);
     rock_error = ROCK_ERROR_NONE;
 }
 
@@ -450,10 +450,10 @@ static void check_higher_error_on_object_is_null(void **state) {
     rock_error = ROCK_ERROR_NONE;
 }
 
-static void check_higher_error_on_item_is_null(void **state) {
+static void check_higher_error_on_value_is_null(void **state) {
     rock_error = ROCK_ERROR_NONE;
     assert_false(rock_red_black_tree_set_higher((void *)1, NULL, (void *)1));
-    assert_int_equal(ROCK_RED_BLACK_TREE_SET_ERROR_ITEM_IS_NULL, rock_error);
+    assert_int_equal(ROCK_RED_BLACK_TREE_SET_ERROR_VALUE_IS_NULL, rock_error);
     rock_error = ROCK_ERROR_NONE;
 }
 
@@ -519,10 +519,10 @@ static void check_lower_error_on_object_is_null(void **state) {
     rock_error = ROCK_ERROR_NONE;
 }
 
-static void check_lower_error_on_item_is_null(void **state) {
+static void check_lower_error_on_value_is_null(void **state) {
     rock_error = ROCK_ERROR_NONE;
     assert_false(rock_red_black_tree_set_lower((void *)1, NULL, (void *)1));
-    assert_int_equal(ROCK_RED_BLACK_TREE_SET_ERROR_ITEM_IS_NULL, rock_error);
+    assert_int_equal(ROCK_RED_BLACK_TREE_SET_ERROR_VALUE_IS_NULL, rock_error);
     rock_error = ROCK_ERROR_NONE;
 }
 
@@ -793,39 +793,39 @@ int main(int argc, char *argv[]) {
             cmocka_unit_test(check_count_error_on_out_is_null),
             cmocka_unit_test(check_count),
             cmocka_unit_test(check_add_error_on_object_is_null),
-            cmocka_unit_test(check_add_error_on_item_is_null),
+            cmocka_unit_test(check_add_error_on_value_is_null),
             cmocka_unit_test(check_add),
-            cmocka_unit_test(check_add_error_on_item_already_exists),
+            cmocka_unit_test(check_add_error_on_value_already_exists),
             cmocka_unit_test(check_remove_error_on_object_is_null),
-            cmocka_unit_test(check_remove_error_on_item_is_null),
-            cmocka_unit_test(check_remove_error_on_item_not_found),
+            cmocka_unit_test(check_remove_error_on_value_is_null),
+            cmocka_unit_test(check_remove_error_on_value_not_found),
             cmocka_unit_test(check_remove),
             cmocka_unit_test(check_contains_error_on_object_is_null),
-            cmocka_unit_test(check_contains_error_on_item_is_null),
+            cmocka_unit_test(check_contains_error_on_value_is_null),
             cmocka_unit_test(check_contains_error_on_out_is_null),
             cmocka_unit_test(check_contains),
             cmocka_unit_test(check_get_error_on_object_is_null),
-            cmocka_unit_test(check_get_error_on_item_is_null),
+            cmocka_unit_test(check_get_error_on_value_is_null),
             cmocka_unit_test(check_get_error_on_out_is_null),
             cmocka_unit_test(check_get_error_on_item_not_found),
             cmocka_unit_test(check_get),
             cmocka_unit_test(check_ceiling_error_on_object_is_null),
-            cmocka_unit_test(check_ceiling_error_on_item_is_null),
+            cmocka_unit_test(check_ceiling_error_on_value_is_null),
             cmocka_unit_test(check_ceiling_error_on_out_is_null),
             cmocka_unit_test(check_ceiling_error_on_item_not_found),
             cmocka_unit_test(check_ceiling),
             cmocka_unit_test(check_floor_error_on_object_is_null),
-            cmocka_unit_test(check_floor_error_on_item_is_null),
+            cmocka_unit_test(check_floor_error_on_value_is_null),
             cmocka_unit_test(check_floor_error_on_out_is_null),
             cmocka_unit_test(check_floor_error_on_item_not_found),
             cmocka_unit_test(check_floor),
             cmocka_unit_test(check_higher_error_on_object_is_null),
-            cmocka_unit_test(check_higher_error_on_item_is_null),
+            cmocka_unit_test(check_higher_error_on_value_is_null),
             cmocka_unit_test(check_higher_error_on_out_is_null),
             cmocka_unit_test(check_higher_error_on_item_not_found),
             cmocka_unit_test(check_higher),
             cmocka_unit_test(check_lower_error_on_object_is_null),
-            cmocka_unit_test(check_lower_error_on_item_is_null),
+            cmocka_unit_test(check_lower_error_on_value_is_null),
             cmocka_unit_test(check_lower_error_on_out_is_null),
             cmocka_unit_test(check_lower_error_on_item_not_found),
             cmocka_unit_test(check_lower),

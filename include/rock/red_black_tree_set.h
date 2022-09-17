@@ -12,12 +12,14 @@
 #define ROCK_RED_BLACK_TREE_SET_ERROR_SIZE_IS_ZERO              3
 #define ROCK_RED_BLACK_TREE_SET_ERROR_SIZE_IS_TOO_LARGE         4
 #define ROCK_RED_BLACK_TREE_SET_ERROR_OUT_IS_NULL               5
-#define ROCK_RED_BLACK_TREE_SET_ERROR_ITEM_IS_NULL              6
-#define ROCK_RED_BLACK_TREE_SET_ERROR_ITEM_ALREADY_EXISTS       7
-#define ROCK_RED_BLACK_TREE_SET_ERROR_ITEM_NOT_FOUND            8
-#define ROCK_RED_BLACK_TREE_SET_ERROR_MEMORY_ALLOCATION_FAILED  9
-#define ROCK_RED_BLACK_TREE_SET_ERROR_SET_IS_EMPTY              10
-#define ROCK_RED_BLACK_TREE_SET_ERROR_END_OF_SEQUENCE           11
+#define ROCK_RED_BLACK_TREE_SET_ERROR_VALUE_IS_NULL             6
+#define ROCK_RED_BLACK_TREE_SET_ERROR_VALUE_ALREADY_EXISTS      7
+#define ROCK_RED_BLACK_TREE_SET_ERROR_VALUE_NOT_FOUND           8
+#define ROCK_RED_BLACK_TREE_SET_ERROR_ITEM_IS_NULL              9
+#define ROCK_RED_BLACK_TREE_SET_ERROR_ITEM_NOT_FOUND            10
+#define ROCK_RED_BLACK_TREE_SET_ERROR_MEMORY_ALLOCATION_FAILED  11
+#define ROCK_RED_BLACK_TREE_SET_ERROR_SET_IS_EMPTY              12
+#define ROCK_RED_BLACK_TREE_SET_ERROR_END_OF_SEQUENCE           13
 
 struct rock_red_black_tree_set {
     struct rock_red_black_tree tree;
@@ -30,11 +32,11 @@ struct rock_red_black_tree_set {
 /**
  * @brief Initialize red black tree set.
  * @param [in] object instance to be initialized.
- * @param [in] size of items to be contained within the set.
+ * @param [in] size of value to be contained within the set.
  * @param [in] compare comparison which must return an integer less than,
- * equal to, or greater than zero if the <u>first item</u> is considered
+ * equal to, or greater than zero if the <u>first value</u> is considered
  * to be respectively less than, equal to, or greater than the <u>second
- * item</u>.
+ * value</u>.
  * @return On success true, otherwise false if an error has occurred.
  * @throws ROCK_RED_BLACK_TREE_SET_ERROR_OBJECT_IS_NULL if object is
  * <i>NULL</i>.
@@ -88,143 +90,142 @@ bool rock_red_black_tree_set_count(const struct rock_red_black_tree_set *object,
                                    uintmax_t *out);
 
 /**
- * @brief Add item to the tree set.
+ * @brief Add value to the tree set.
  * @param [in] object tree set instance.
- * @param [in] item to be added.
+ * @param [in] value to be added.
  * @return On success true, otherwise false if an error has occurred.
  * @throws ROCK_RED_BLACK_TREE_SET_ERROR_OBJECT_IS_NULL if object is
  * <i>NULL</i>.
- * @throws ROCK_RED_BLACK_TREE_SET_ERROR_ITEM_IS_NULL if item is <i>NULL</i>.
- * @throws ROCK_RED_BLACK_TREE_SET_ERROR_ITEM_ALREADY_EXISTS if item is already
- * present in the tree set.
+ * @throws ROCK_RED_BLACK_TREE_SET_ERROR_VALUE_IS_NULL if value is <i>NULL</i>.
+ * @throws ROCK_RED_BLACK_TREE_SET_ERROR_VALUE_ALREADY_EXISTS if value is
+ * already present in the tree set.
  * @throws ROCK_RED_BLACK_TREE_SET_ERROR_MEMORY_ALLOCATION_FAILED if there was
- * not enough memory to add item to the tree set.
+ * not enough memory to add value to the tree set.
  */
 bool rock_red_black_tree_set_add(struct rock_red_black_tree_set *object,
-                                 const void *item);
+                                 const void *value);
 
 /**
- * @brief Remove item from the tree set.
+ * @brief Remove value from the tree set.
  * @param [in] object tree set instance.
- * @param [in] item to be removed.
+ * @param [in] value to be removed.
  * @return On success true, otherwise false if an error has occurred.
  * @throws ROCK_RED_BLACK_TREE_SET_ERROR_OBJECT_IS_NULL if object is
  * <i>NULL</i>.
- * @throws ROCK_RED_BLACK_TREE_SET_ERROR_ITEM_IS_NULL if item is <i>NULL</i>.
- * @throws ROCK_RED_BLACK_TREE_SET_ERROR_ITEM_NOT_FOUND if item is not in the
+ * @throws ROCK_RED_BLACK_TREE_SET_ERROR_VALUE_IS_NULL if value is <i>NULL</i>.
+ * @throws ROCK_RED_BLACK_TREE_SET_ERROR_VALUE_NOT_FOUND if value is not in the
  * tree set instance.
  */
 bool rock_red_black_tree_set_remove(struct rock_red_black_tree_set *object,
-                                    const void *item);
+                                    const void *value);
 
 /**
- * @brief Check if tree set contains the given item.
+ * @brief Check if tree set contains the given value.
  * @param [in] object tree set instance.
- * @param [in] item to check if item is present.
- * @param [out] out receive true if item is present, otherwise false.
+ * @param [in] value to check if value is present.
+ * @param [out] out receive true if value is present, otherwise false.
  * @return On success true, otherwise false if an error has occurred.
  * @throws ROCK_RED_BLACK_TREE_SET_ERROR_OBJECT_IS_NULL if object is
  * <i>NULL</i>.
- * @throws ROCK_RED_BLACK_TREE_SET_ERROR_ITEM_IS_NULL if item is <i>NULL</i>.
+ * @throws ROCK_RED_BLACK_TREE_SET_ERROR_VALUE_IS_NULL if value is <i>NULL</i>.
  * @throws ROCK_RED_BLACK_TREE_SET_ERROR_OUT_IS_NULL if out is <i>NULL</i>.
  */
 bool
 rock_red_black_tree_set_contains(const struct rock_red_black_tree_set *object,
-                                 const void *item,
+                                 const void *value,
                                  bool *out);
 
 /**
- * @brief Retrieve item.
+ * @brief Retrieve item for value.
  * @param [in] object tree set instance.
- * @param [in] item to find.
+ * @param [in] value to find.
  * @param [out] out receive the <u>address of</u> item.
  * @return On success true, otherwise false if an error has occurred.
  * @throws ROCK_RED_BLACK_TREE_SET_ERROR_OBJECT_IS_NULL if object is
  * <i>NULL</i>.
- * @throws ROCK_RED_BLACK_TREE_SET_ERROR_ITEM_IS_NULL if item is <i>NULL</i>.
+ * @throws ROCK_RED_BLACK_TREE_SET_ERROR_VALUE_IS_NULL if value is <i>NULL</i>.
  * @throws ROCK_RED_BLACK_TREE_SET_ERROR_OUT_IS_NULL if out is <i>NULL</i>.
- * @throws ROCK_RED_BLACK_TREE_SET_ERROR_ITEM_NOT_FOUND if item is not in the
- * tree set instance.
+ * @throws ROCK_RED_BLACK_TREE_SET_ERROR_ITEM_NOT_FOUND if there is no
+ * item that matched value.
  */
 bool rock_red_black_tree_set_get(const struct rock_red_black_tree_set *object,
-                                 const void *item,
+                                 const void *value,
                                  const void **out);
 
 /**
- * @brief Retrieve item or the next higher value.
+ * @brief Retrieve item for value or the next higher value.
  * @param [in] object tree set instance.
- * @param [in] item to find or its next higher.
- * @param [out] out receive the <u>address of</u> item or the next higher value.
+ * @param [in] value to find or its next higher.
+ * @param [out] out receive the <u>address of</u> item.
  * @return On success true, otherwise false if an error has occurred.
  * @throws ROCK_RED_BLACK_TREE_SET_ERROR_OBJECT_IS_NULL if object is
  * <i>NULL</i>.
- * @throws ROCK_RED_BLACK_TREE_SET_ERROR_ITEM_IS_NULL if item is <i>NULL</i>.
+ * @throws ROCK_RED_BLACK_TREE_SET_ERROR_VALUE_IS_NULL if value is <i>NULL</i>.
  * @throws ROCK_RED_BLACK_TREE_SET_ERROR_OUT_IS_NULL if out is <i>NULL</i>.
- * @throws ROCK_RED_BLACK_TREE_SET_ERROR_ITEM_NOT_FOUND if item nor a
- * higher value is in the tree set instance.
+ * @throws ROCK_RED_BLACK_TREE_SET_ERROR_ITEM_NOT_FOUND if no item matched
+ * value or a higher value.
  */
 bool
 rock_red_black_tree_set_ceiling(const struct rock_red_black_tree_set *object,
-                                const void *item,
+                                const void *value,
                                 const void **out);
 
 /**
- * @brief Retrieve item or the next lower value.
+ * @brief Retrieve item for value or the next lower value.
  * @param [in] object tree set instance.
- * @param [in] item to find or its next lower.
- * @param [out] out receive the <u>address of</u> item or the next lower value.
+ * @param [in] value to find or its next lower.
+ * @param [out] out receive the <u>address of</u> item.
  * @return On success true, otherwise false if an error has occurred.
  * @throws ROCK_RED_BLACK_TREE_SET_ERROR_OBJECT_IS_NULL if object is
  * <i>NULL</i>.
- * @throws ROCK_RED_BLACK_TREE_SET_ERROR_ITEM_IS_NULL if item is <i>NULL</i>.
+ * @throws ROCK_RED_BLACK_TREE_SET_ERROR_VALUE_IS_NULL if value is <i>NULL</i>.
  * @throws ROCK_RED_BLACK_TREE_SET_ERROR_OUT_IS_NULL if out is <i>NULL</i>.
- * @throws ROCK_RED_BLACK_TREE_SET_ERROR_ITEM_NOT_FOUND if item nor a lower
- * value is in the tree set instance.
+ * @throws ROCK_LINKED_RED_BLACK_TREE_SET_ERROR_ITEM_NOT_FOUND if no item
+ * matched value or a lower value.
  */
 bool rock_red_black_tree_set_floor(const struct rock_red_black_tree_set *object,
-                                   const void *item,
+                                   const void *value,
                                    const void **out);
 
 /**
- * @brief Retrieve next higher value for item.
+ * @brief Retrieve item for next higher value.
  * @param [in] object tree set instance.
- * @param [in] item whose next higher value we are trying to find.
- * @param [out] out receive the <u>address of</u> the next higher value for
- * item.
+ * @param [in] value whose next higher value we are trying to find.
+ * @param [out] out receive the <u>address of</u> item.
  * @return On success true, otherwise false if an error has occurred.
  * @throws ROCK_RED_BLACK_TREE_SET_ERROR_OBJECT_IS_NULL if object is
  * <i>NULL</i>.
- * @throws ROCK_RED_BLACK_TREE_SET_ERROR_ITEM_IS_NULL if item is <i>NULL</i>.
+ * @throws ROCK_RED_BLACK_TREE_SET_ERROR_VALUE_IS_NULL if value is <i>NULL</i>.
  * @throws ROCK_RED_BLACK_TREE_SET_ERROR_OUT_IS_NULL if out is <i>NULL</i>.
- * @throws ROCK_RED_BLACK_TREE_SET_ERROR_ITEM_NOT_FOUND if no greater value
- * for item is in the tree set instance.
+ * @throws ROCK_RED_BLACK_TREE_SET_ERROR_ITEM_NOT_FOUND if there is no
+ * greater value.
  */
 bool
 rock_red_black_tree_set_higher(const struct rock_red_black_tree_set *object,
-                               const void *item,
+                               const void *value,
                                const void **out);
 
 /**
- * @brief Retrieve the next lower value for item.
+ * @brief Retrieve item for the next lower value.
  * @param [in] object tree set instance.
- * @param [in] item whose next lower value we are trying to find.
- * @param [out] out receive the <u>address of</u> the next lower value for item.
+ * @param [in] value whose next lower value we are trying to find.
+ * @param [out] out receive the <u>address of</u> item.
  * @return On success true, otherwise false if an error has occurred.
  * @throws ROCK_RED_BLACK_TREE_SET_ERROR_OBJECT_IS_NULL if object is
  * <i>NULL</i>.
- * @throws ROCK_RED_BLACK_TREE_SET_ERROR_ITEM_IS_NULL if item is <i>NULL</i>.
+ * @throws ROCK_RED_BLACK_TREE_SET_ERROR_VALUE_IS_NULL if value is <i>NULL</i>.
  * @throws ROCK_RED_BLACK_TREE_SET_ERROR_OUT_IS_NULL if out is <i>NULL</i>.
- * @throws ROCK_RED_BLACK_TREE_SET_ERROR_ITEM_NOT_FOUND if no lower value for
- * item is in the tree set instance.
+ * @throws ROCK_RED_BLACK_TREE_SET_ERROR_ITEM_NOT_FOUND if there is no lower
+ * value.
  */
 bool rock_red_black_tree_set_lower(const struct rock_red_black_tree_set *object,
-                                   const void *item,
+                                   const void *value,
                                    const void **out);
 
 /**
  * @brief First item of the tree set.
  * @param [in] object tree set instance.
- * @param [out] out receive the <u>address of</u> the first item.
+ * @param [out] out receive the <u>address of</u> item.
  * @return On success true, otherwise false if an error has occurred.
  * @throws ROCK_RED_BLACK_TREE_SET_ERROR_OBJECT_IS_NULL if object is
  * <i>NULL</i>.
@@ -237,7 +238,7 @@ bool rock_red_black_tree_set_first(const struct rock_red_black_tree_set *object,
 /**
  * @brief Last item of the tree set.
  * @param [in] object tree set instance.
- * @param [out] out receive the <u>address of</u> the last item.
+ * @param [out] out receive the <u>address of</u> item.
  * @return On success true, otherwise false if an error has occurred.
  * @throws ROCK_RED_BLACK_TREE_SET_ERROR_OBJECT_IS_NULL if object is
  * <i>NULL</i>.

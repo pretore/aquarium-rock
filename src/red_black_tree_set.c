@@ -114,23 +114,23 @@ bool rock_red_black_tree_set_count(
 }
 
 bool rock_red_black_tree_set_add(struct rock_red_black_tree_set *const object,
-                                 const void *const item) {
+                                 const void *const value) {
     if (!object) {
         rock_error = ROCK_RED_BLACK_TREE_SET_ERROR_OBJECT_IS_NULL;
         return false;
     }
-    if (!item) {
-        rock_error = ROCK_RED_BLACK_TREE_SET_ERROR_ITEM_IS_NULL;
+    if (!value) {
+        rock_error = ROCK_RED_BLACK_TREE_SET_ERROR_VALUE_IS_NULL;
         return false;
     }
     struct rock_red_black_tree_node *insertion_point;
     this = object;
-    ptr = item; /* delay copy until we know that item does not already exist */
+    ptr = value; /* delay copy */
     if (rock_red_black_tree_find(&object->tree,
                                  NULL,
                                  (void *) 1, /* dummy non-NULL value */
                                  &insertion_point)) {
-        rock_error = ROCK_RED_BLACK_TREE_SET_ERROR_ITEM_ALREADY_EXISTS;
+        rock_error = ROCK_RED_BLACK_TREE_SET_ERROR_VALUE_ALREADY_EXISTS;
         return false;
     }
     seagrass_required_true(ROCK_RED_BLACK_TREE_ERROR_NODE_NOT_FOUND
@@ -147,7 +147,7 @@ bool rock_red_black_tree_set_add(struct rock_red_black_tree_set *const object,
     }
     struct rock_red_black_tree_node *const node = &entry->node;
     seagrass_required_true(rock_red_black_tree_node_init(node));
-    memcpy(&entry->data, item, object->size);
+    memcpy(&entry->data, value, object->size);
     ptr = NULL; /* insert the entry into the container */
     seagrass_required_true(rock_red_black_tree_insert(
             &object->tree, insertion_point, node));
@@ -156,17 +156,17 @@ bool rock_red_black_tree_set_add(struct rock_red_black_tree_set *const object,
 
 bool rock_red_black_tree_set_remove(
         struct rock_red_black_tree_set *const object,
-        const void *const item) {
+        const void *const value) {
     if (!object) {
         rock_error = ROCK_RED_BLACK_TREE_SET_ERROR_OBJECT_IS_NULL;
         return false;
     }
-    if (!item) {
-        rock_error = ROCK_RED_BLACK_TREE_SET_ERROR_ITEM_IS_NULL;
+    if (!value) {
+        rock_error = ROCK_RED_BLACK_TREE_SET_ERROR_VALUE_IS_NULL;
         return false;
     }
     this = object;
-    ptr = item; /* avoid unnecessary copying of item for removal */
+    ptr = value; /* avoid unnecessary copying */
     struct rock_red_black_tree_node *node;
     if (!rock_red_black_tree_find(&object->tree,
                                   NULL,
@@ -174,7 +174,7 @@ bool rock_red_black_tree_set_remove(
                                   &node)) {
         seagrass_required_true(ROCK_RED_BLACK_TREE_ERROR_NODE_NOT_FOUND
                                == rock_error);
-        rock_error = ROCK_RED_BLACK_TREE_SET_ERROR_ITEM_NOT_FOUND;
+        rock_error = ROCK_RED_BLACK_TREE_SET_ERROR_VALUE_NOT_FOUND;
         return false;
     }
     seagrass_required_true(rock_red_black_tree_remove(
@@ -186,14 +186,14 @@ bool rock_red_black_tree_set_remove(
 
 bool rock_red_black_tree_set_contains(
         const struct rock_red_black_tree_set *const object,
-        const void *const item,
+        const void *const value,
         bool *const out) {
     if (!object) {
         rock_error = ROCK_RED_BLACK_TREE_SET_ERROR_OBJECT_IS_NULL;
         return false;
     }
-    if (!item) {
-        rock_error = ROCK_RED_BLACK_TREE_SET_ERROR_ITEM_IS_NULL;
+    if (!value) {
+        rock_error = ROCK_RED_BLACK_TREE_SET_ERROR_VALUE_IS_NULL;
         return false;
     }
     if (!out) {
@@ -201,7 +201,7 @@ bool rock_red_black_tree_set_contains(
         return false;
     }
     this = object;
-    ptr = item; /* avoid unnecessary copying of item */
+    ptr = value; /* avoid unnecessary copying */
     struct rock_red_black_tree_node *node;
     *out = rock_red_black_tree_find(&object->tree,
                                     NULL,
@@ -216,14 +216,14 @@ bool rock_red_black_tree_set_contains(
 
 bool rock_red_black_tree_set_get(
         const struct rock_red_black_tree_set *const object,
-        const void *const item,
+        const void *const value,
         const void **const out) {
     if (!object) {
         rock_error = ROCK_RED_BLACK_TREE_SET_ERROR_OBJECT_IS_NULL;
         return false;
     }
-    if (!item) {
-        rock_error = ROCK_RED_BLACK_TREE_SET_ERROR_ITEM_IS_NULL;
+    if (!value) {
+        rock_error = ROCK_RED_BLACK_TREE_SET_ERROR_VALUE_IS_NULL;
         return false;
     }
     if (!out) {
@@ -231,7 +231,7 @@ bool rock_red_black_tree_set_get(
         return false;
     }
     this = object;
-    ptr = item; /* avoid unnecessary copying of item */
+    ptr = value; /* avoid unnecessary copying */
     struct rock_red_black_tree_node *node;
     if (!rock_red_black_tree_find(&object->tree,
                                   NULL,
@@ -249,14 +249,14 @@ bool rock_red_black_tree_set_get(
 
 bool rock_red_black_tree_set_ceiling(
         const struct rock_red_black_tree_set *const object,
-        const void *const item,
+        const void *const value,
         const void **const out) {
     if (!object) {
         rock_error = ROCK_RED_BLACK_TREE_SET_ERROR_OBJECT_IS_NULL;
         return false;
     }
-    if (!item) {
-        rock_error = ROCK_RED_BLACK_TREE_SET_ERROR_ITEM_IS_NULL;
+    if (!value) {
+        rock_error = ROCK_RED_BLACK_TREE_SET_ERROR_VALUE_IS_NULL;
         return false;
     }
     if (!out) {
@@ -264,7 +264,7 @@ bool rock_red_black_tree_set_ceiling(
         return false;
     }
     this = object;
-    ptr = item; /* avoid unnecessary copying of item */
+    ptr = value; /* avoid unnecessary copying */
     struct rock_red_black_tree_node *node;
     if (!rock_red_black_tree_find(&object->tree,
                                   NULL,
@@ -277,7 +277,7 @@ bool rock_red_black_tree_set_ceiling(
             return false;
         }
         struct entry *const B = rock_container_of(node, struct entry, node);
-        if (object->compare(item, &B->data) > 0) {
+        if (object->compare(value, &B->data) > 0) {
             rock_error = ROCK_RED_BLACK_TREE_SET_ERROR_ITEM_NOT_FOUND;
             return false;
         }
@@ -289,14 +289,14 @@ bool rock_red_black_tree_set_ceiling(
 
 bool rock_red_black_tree_set_floor(
         const struct rock_red_black_tree_set *const object,
-        const void *const item,
+        const void *const value,
         const void **const out) {
     if (!object) {
         rock_error = ROCK_RED_BLACK_TREE_SET_ERROR_OBJECT_IS_NULL;
         return false;
     }
-    if (!item) {
-        rock_error = ROCK_RED_BLACK_TREE_SET_ERROR_ITEM_IS_NULL;
+    if (!value) {
+        rock_error = ROCK_RED_BLACK_TREE_SET_ERROR_VALUE_IS_NULL;
         return false;
     }
     if (!out) {
@@ -304,7 +304,7 @@ bool rock_red_black_tree_set_floor(
         return false;
     }
     this = object;
-    ptr = item; /* avoid unnecessary copying of item */
+    ptr = value; /* avoid unnecessary copying */
     struct rock_red_black_tree_node *node;
     if (!rock_red_black_tree_find(&object->tree,
                                   NULL,
@@ -317,7 +317,7 @@ bool rock_red_black_tree_set_floor(
             return false;
         }
         struct entry *const B = rock_container_of(node, struct entry, node);
-        if (object->compare(item, &B->data) < 0) {
+        if (object->compare(value, &B->data) < 0) {
             rock_error = ROCK_RED_BLACK_TREE_SET_ERROR_ITEM_NOT_FOUND;
             return false;
         }
@@ -329,14 +329,14 @@ bool rock_red_black_tree_set_floor(
 
 bool rock_red_black_tree_set_higher(
         const struct rock_red_black_tree_set *const object,
-        const void *const item,
+        const void *const value,
         const void **const out) {
     if (!object) {
         rock_error = ROCK_RED_BLACK_TREE_SET_ERROR_OBJECT_IS_NULL;
         return false;
     }
-    if (!item) {
-        rock_error = ROCK_RED_BLACK_TREE_SET_ERROR_ITEM_IS_NULL;
+    if (!value) {
+        rock_error = ROCK_RED_BLACK_TREE_SET_ERROR_VALUE_IS_NULL;
         return false;
     }
     if (!out) {
@@ -344,7 +344,7 @@ bool rock_red_black_tree_set_higher(
         return false;
     }
     this = object;
-    ptr = item; /* avoid unnecessary copying of item */
+    ptr = value; /* avoid unnecessary copying */
     struct rock_red_black_tree_node *node;
     if (!rock_red_black_tree_find(&object->tree,
                                   NULL,
@@ -357,7 +357,7 @@ bool rock_red_black_tree_set_higher(
             return false;
         }
         struct entry *const B = rock_container_of(node, struct entry, node);
-        if (object->compare(item, &B->data) > 0) {
+        if (object->compare(value, &B->data) > 0) {
             rock_error = ROCK_RED_BLACK_TREE_SET_ERROR_ITEM_NOT_FOUND;
             return false;
         }
@@ -374,14 +374,14 @@ bool rock_red_black_tree_set_higher(
 
 bool rock_red_black_tree_set_lower(
         const struct rock_red_black_tree_set *const object,
-        const void *const item,
+        const void *const value,
         const void **const out) {
     if (!object) {
         rock_error = ROCK_RED_BLACK_TREE_SET_ERROR_OBJECT_IS_NULL;
         return false;
     }
-    if (!item) {
-        rock_error = ROCK_RED_BLACK_TREE_SET_ERROR_ITEM_IS_NULL;
+    if (!value) {
+        rock_error = ROCK_RED_BLACK_TREE_SET_ERROR_VALUE_IS_NULL;
         return false;
     }
     if (!out) {
@@ -389,7 +389,7 @@ bool rock_red_black_tree_set_lower(
         return false;
     }
     this = object;
-    ptr = item; /* avoid unnecessary copying of item */
+    ptr = value; /* avoid unnecessary copying */
     struct rock_red_black_tree_node *node;
     if (!rock_red_black_tree_find(&object->tree,
                                   NULL,
@@ -402,7 +402,7 @@ bool rock_red_black_tree_set_lower(
             return false;
         }
         struct entry *const B = rock_container_of(node, struct entry, node);
-        if (object->compare(item, &B->data) < 0) {
+        if (object->compare(value, &B->data) < 0) {
             rock_error = ROCK_RED_BLACK_TREE_SET_ERROR_ITEM_NOT_FOUND;
             return false;
         }
