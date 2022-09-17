@@ -9,8 +9,8 @@ The flavour we have implemented is an intrusive circular doubly linked list.
 * Doubly - _successor and predecessor nodes are tracked._
 * Circular - _traversing in a single direction will eventually get you to the
   node you started with._
-* Intrusive - _to use the linked list you need to change your structures 
-  embedded linked list nodes._
+* Intrusive - _to use the linked list you need to change your structures by 
+  embedding linked list nodes._
 
 ### Use
 

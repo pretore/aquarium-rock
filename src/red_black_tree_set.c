@@ -15,7 +15,7 @@ static _Thread_local const struct rock_red_black_tree_set *this;
 static _Thread_local const void *ptr;
 
 static int entry_compare(const struct rock_red_black_tree_node *const a,
-                          const struct rock_red_black_tree_node *const b) {
+                         const struct rock_red_black_tree_node *const b) {
     if (!ptr) {
         const struct entry *const A = rock_container_of(a, struct entry, node);
         ptr = &A->data;
@@ -36,6 +36,10 @@ bool rock_red_black_tree_set_init(struct rock_red_black_tree_set *const object,
         rock_error = ROCK_RED_BLACK_TREE_SET_ERROR_SIZE_IS_ZERO;
         return false;
     }
+    if (!compare) {
+        rock_error = ROCK_RED_BLACK_TREE_SET_ERROR_COMPARE_IS_NULL;
+        return false;
+    }
     uintmax_t alloc;
     bool result = seagrass_uintmax_t_add(
             size, sizeof(struct entry), &alloc);
@@ -43,10 +47,6 @@ bool rock_red_black_tree_set_init(struct rock_red_black_tree_set *const object,
         seagrass_required_true(SEAGRASS_UINTMAX_T_ERROR_RESULT_IS_INCONSISTENT
                                == seagrass_error || result);
         rock_error = ROCK_RED_BLACK_TREE_SET_ERROR_SIZE_IS_TOO_LARGE;
-        return false;
-    }
-    if (!compare) {
-        rock_error = ROCK_RED_BLACK_TREE_SET_ERROR_COMPARE_IS_NULL;
         return false;
     }
     *object = (struct rock_red_black_tree_set) {0};
@@ -70,7 +70,7 @@ static void entry_on_destroy(struct rock_red_black_tree_node *const node) {
 
 bool rock_red_black_tree_set_invalidate(
         struct rock_red_black_tree_set *const object,
-        void (*const on_destroy)(void *item)) {
+        void (*const on_destroy)(void *)) {
     if (!object) {
         rock_error = ROCK_RED_BLACK_TREE_SET_ERROR_OBJECT_IS_NULL;
         return false;
@@ -145,16 +145,18 @@ bool rock_red_black_tree_set_add(struct rock_red_black_tree_set *const object,
             return false;
         }
     }
-    seagrass_required_true(rock_red_black_tree_node_init(&entry->node));
+    struct rock_red_black_tree_node *const node = &entry->node;
+    seagrass_required_true(rock_red_black_tree_node_init(node));
     memcpy(&entry->data, item, object->size);
     ptr = NULL; /* insert the entry into the container */
     seagrass_required_true(rock_red_black_tree_insert(
-            &object->tree, insertion_point, &entry->node));
+            &object->tree, insertion_point, node));
     return true;
 }
 
-bool rock_red_black_tree_set_remove(struct rock_red_black_tree_set *object,
-                                    const void *const item) {
+bool rock_red_black_tree_set_remove(
+        struct rock_red_black_tree_set *const object,
+        const void *const item) {
     if (!object) {
         rock_error = ROCK_RED_BLACK_TREE_SET_ERROR_OBJECT_IS_NULL;
         return false;
@@ -245,10 +247,10 @@ bool rock_red_black_tree_set_get(
     return true;
 }
 
-bool
-rock_red_black_tree_set_ceiling(const struct rock_red_black_tree_set *object,
-                                const void *const item,
-                                const void **const out) {
+bool rock_red_black_tree_set_ceiling(
+        const struct rock_red_black_tree_set *const object,
+        const void *const item,
+        const void **const out) {
     if (!object) {
         rock_error = ROCK_RED_BLACK_TREE_SET_ERROR_OBJECT_IS_NULL;
         return false;
@@ -285,9 +287,10 @@ rock_red_black_tree_set_ceiling(const struct rock_red_black_tree_set *object,
     return true;
 }
 
-bool rock_red_black_tree_set_floor(const struct rock_red_black_tree_set *object,
-                                   const void *const item,
-                                   const void **const out) {
+bool rock_red_black_tree_set_floor(
+        const struct rock_red_black_tree_set *const object,
+        const void *const item,
+        const void **const out) {
     if (!object) {
         rock_error = ROCK_RED_BLACK_TREE_SET_ERROR_OBJECT_IS_NULL;
         return false;
@@ -324,10 +327,10 @@ bool rock_red_black_tree_set_floor(const struct rock_red_black_tree_set *object,
     return true;
 }
 
-bool
-rock_red_black_tree_set_higher(const struct rock_red_black_tree_set *object,
-                               const void *const item,
-                               const void **const out) {
+bool rock_red_black_tree_set_higher(
+        const struct rock_red_black_tree_set *const object,
+        const void *const item,
+        const void **const out) {
     if (!object) {
         rock_error = ROCK_RED_BLACK_TREE_SET_ERROR_OBJECT_IS_NULL;
         return false;
@@ -369,9 +372,10 @@ rock_red_black_tree_set_higher(const struct rock_red_black_tree_set *object,
     return true;
 }
 
-bool rock_red_black_tree_set_lower(const struct rock_red_black_tree_set *object,
-                                   const void *const item,
-                                   const void **const out) {
+bool rock_red_black_tree_set_lower(
+        const struct rock_red_black_tree_set *const object,
+        const void *const item,
+        const void **const out) {
     if (!object) {
         rock_error = ROCK_RED_BLACK_TREE_SET_ERROR_OBJECT_IS_NULL;
         return false;

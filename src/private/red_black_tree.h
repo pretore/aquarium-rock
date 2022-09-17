@@ -16,6 +16,8 @@
 #define ROCK_RED_BLACK_TREE_ERROR_X_IS_NOT_LEFT_CHILD_OF_Z      (-6)
 #define ROCK_RED_BLACK_TREE_ERROR_X_IS_NOT_RIGHT_CHILD_OF_Z     (-7)
 
+struct rock_red_black_tree_node;
+
 /**
  * @brief Check if a node is on the left or right.
  * @param [in] node whose left and right will be checked.

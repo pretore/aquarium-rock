@@ -12,12 +12,7 @@
 static int compare_uintptr_t(const void *const a, const void *const b) {
     const uintptr_t A = *(uintptr_t *)a;
     const uintptr_t B = *(uintptr_t *)b;
-    if (A < B) {
-        return (-1);
-    } else if (A > B) {
-        return 1;
-    }
-    return 0;
+    return seagrass_uintmax_t_compare(A, B);
 }
 
 static void check_invalidate_error_on_object_is_null(void **state) {
@@ -260,7 +255,7 @@ static void check_contains(void **state) {
     assert_true(rock_red_black_tree_set_contains(&object, &value, &result));
     assert_false(result);
     assert_true(rock_red_black_tree_set_add(&object, &value));
-    assert_true(rock_red_black_tree_set_contains(&object, (void *)&value, &result));
+    assert_true(rock_red_black_tree_set_contains(&object, &value, &result));
     assert_true(result);
     assert_true(rock_red_black_tree_set_invalidate(&object, NULL));
     rock_error = ROCK_ERROR_NONE;
@@ -292,8 +287,8 @@ static void check_get_error_on_item_not_found(void **state) {
     rock_error = ROCK_ERROR_NONE;
     struct rock_red_black_tree_set object;
     assert_true(rock_red_black_tree_set_init(&object,
-                                   sizeof(uintptr_t),
-                                   compare_uintptr_t));
+                                             sizeof(uintptr_t),
+                                             compare_uintptr_t));
     const uintptr_t *item;
     const uintptr_t value = (rand() % UINTPTR_MAX);
     assert_false(rock_red_black_tree_set_get(&object, &value, (const void **)&item));
@@ -307,13 +302,14 @@ static void check_get(void **state) {
     rock_error = ROCK_ERROR_NONE;
     struct rock_red_black_tree_set object;
     assert_true(rock_red_black_tree_set_init(&object,
-                                   sizeof(uintptr_t),
-                                   compare_uintptr_t));
+                                             sizeof(uintptr_t),
+                                             compare_uintptr_t));
     const uintptr_t *item;
     const uintptr_t value = (rand() % UINTPTR_MAX);
     assert_true(rock_red_black_tree_set_add(&object, &value));
     assert_true(rock_red_black_tree_set_get(
             &object, &value, (const void **)&item));
+    assert_ptr_not_equal(item, &value);
     assert_int_equal(*item, value);
     assert_true(rock_red_black_tree_set_invalidate(&object, NULL));
     rock_error = ROCK_ERROR_NONE;
@@ -434,12 +430,14 @@ static void check_floor(void **state) {
     assert_true(rock_red_black_tree_set_add(&object, &value));
     assert_true(rock_red_black_tree_set_floor(
             &object, &value, (const void **)&item));
+    assert_ptr_not_equal(item, &value);
     assert_int_equal(*item, value);
     uintptr_t check = 87;
     assert_true(rock_red_black_tree_set_add(&object, &check));
     value = 99;
     assert_true(rock_red_black_tree_set_floor(
                 &object, &value, (const void **)&item));
+    assert_ptr_not_equal(item, &check);
     assert_int_equal(*item, check);
     assert_true(rock_red_black_tree_set_invalidate(&object, NULL));
     rock_error = ROCK_ERROR_NONE;
@@ -567,17 +565,20 @@ static void check_lower(void **state) {
     assert_true(rock_red_black_tree_set_add(&object, &check));
     assert_true(rock_red_black_tree_set_lower(
             &object, &value, (const void **)&item));
+    assert_ptr_not_equal(item, &check);
     assert_int_equal(*item, check);
     value = 234;
     check = 100;
     assert_true(rock_red_black_tree_set_add(&object, &check));
     assert_true(rock_red_black_tree_set_lower(
                 &object, &value, (const void **)&item));
+    assert_ptr_not_equal(item, &check);
     assert_int_equal(*item, check);
     value = 100;
     check = 20;
     assert_true(rock_red_black_tree_set_lower(
                 &object, &value, (const void **)&item));
+    assert_ptr_not_equal(item, &check);
     assert_int_equal(*item, check);
     assert_true(rock_red_black_tree_set_invalidate(&object, NULL));
     rock_error = ROCK_ERROR_NONE;
@@ -620,10 +621,12 @@ static void check_first(void **state) {
     assert_true(rock_red_black_tree_set_add(&object, &value));
     const uintptr_t* first;
     assert_true(rock_red_black_tree_set_first(&object, (const void **)&first));
+    assert_ptr_not_equal(first, &value);
     assert_int_equal(*first, value);
     value = 10;
     assert_true(rock_red_black_tree_set_add(&object, &value));
     assert_true(rock_red_black_tree_set_first(&object, (const void **)&first));
+    assert_ptr_not_equal(first, &value);
     assert_int_equal(*first, value);
     assert_true(rock_red_black_tree_set_invalidate(&object, NULL));
     rock_error = ROCK_ERROR_NONE;
@@ -663,13 +666,15 @@ static void check_last(void **state) {
                                              sizeof(uintptr_t),
                                              compare_uintptr_t));
     uintmax_t value = 10;
-    assert_true(rock_red_black_tree_set_add(&object, (void*)&value));
+    assert_true(rock_red_black_tree_set_add(&object, &value));
     const uintmax_t* last;
     assert_true(rock_red_black_tree_set_last(&object, (const void **)&last));
+    assert_ptr_not_equal(last, &value);
     assert_int_equal(*last, value);
     value = 100;
-    assert_true(rock_red_black_tree_set_add(&object, (void*)&value));
+    assert_true(rock_red_black_tree_set_add(&object, &value));
     assert_true(rock_red_black_tree_set_last(&object, (const void **)&last));
+    assert_ptr_not_equal(last, &value);
     assert_int_equal(*last, value);
     assert_true(rock_red_black_tree_set_invalidate(&object, NULL));
     rock_error = ROCK_ERROR_NONE;

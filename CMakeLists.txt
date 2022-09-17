@@ -17,6 +17,7 @@ set(EXPORTED_HEADER_FILES
         include/rock/error.h
         include/rock/hash_table.h
         include/rock/linked_list.h
+        include/rock/linked_red_black_tree_set.h
         include/rock/red_black_tree.h
         include/rock/red_black_tree_map.h
         include/rock/red_black_tree_set.h
@@ -30,6 +31,7 @@ set(SOURCES
         src/error.c
         src/hash_table.c
         src/linked_list.c
+        src/linked_red_black_tree_set.c
         src/red_black_tree.c
         src/red_black_tree_map.c
         src/red_black_tree_set.c
@@ -133,6 +135,17 @@ if(CMAKE_BUILD_TYPE STREQUAL "Debug")
                 ${PROJECT_NAME})
     add_test(${PROJECT_NAME}-linked-list-unit-test
             ${PROJECT_NAME}-linked-list-unit-test)
+    # aquarium-linked-red-black-tree-set-unit-test
+    add_executable(${PROJECT_NAME}-linked-red-black-tree-set-unit-test
+            test/test_linked_red_black_tree_set.c)
+    target_include_directories(${PROJECT_NAME}-linked-red-black-tree-set-unit-test
+            PRIVATE
+                "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/src>")
+    target_link_libraries(${PROJECT_NAME}-linked-red-black-tree-set-unit-test
+            PRIVATE
+                ${PROJECT_NAME})
+    add_test(${PROJECT_NAME}-linked-red-black-tree-set-unit-test
+            ${PROJECT_NAME}-linked-red-black-tree-set-unit-test)
 else()
     add_library(${PROJECT_NAME} "")
     target_sources(${PROJECT_NAME}

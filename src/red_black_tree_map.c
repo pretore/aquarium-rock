@@ -45,6 +45,10 @@ bool rock_red_black_tree_map_init(struct rock_red_black_tree_map *const object,
         rock_error = ROCK_RED_BLACK_TREE_MAP_ERROR_VALUE_SIZE_IS_ZERO;
         return false;
     }
+    if (!compare) {
+        rock_error = ROCK_RED_BLACK_TREE_MAP_ERROR_COMPARE_IS_NULL;
+        return false;
+    }
     uintmax_t entry;
     bool result = seagrass_uintmax_t_add(key, value, &entry);
     if (!result || entry > SIZE_MAX) {
@@ -72,10 +76,6 @@ bool rock_red_black_tree_map_init(struct rock_red_black_tree_map *const object,
         seagrass_required_true(SEAGRASS_UINTMAX_T_ERROR_RESULT_IS_INCONSISTENT
                                == seagrass_error || result);
         rock_error = ROCK_RED_BLACK_TREE_MAP_ERROR_ENTRY_SIZE_IS_TOO_LARGE;
-        return false;
-    }
-    if (!compare) {
-        rock_error = ROCK_RED_BLACK_TREE_MAP_ERROR_COMPARE_IS_NULL;
         return false;
     }
     *object = (struct rock_red_black_tree_map) {0};
