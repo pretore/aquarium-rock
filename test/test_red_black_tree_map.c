@@ -237,6 +237,25 @@ static void check_add_error_on_value_is_null(void **state) {
     rock_error = ROCK_ERROR_NONE;
 }
 
+static void check_add_error_on_memory_allocation_failed(void **state) {
+    srand(time(NULL));
+    rock_error = ROCK_ERROR_NONE;
+    struct rock_red_black_tree_map object;
+    assert_true(rock_red_black_tree_map_init(&object,
+                                             sizeof(uintmax_t),
+                                             sizeof(uintmax_t),
+                                             uintmax_t_ptr_compare));
+    const uintmax_t key = (rand() % UINTMAX_MAX);
+    const uintmax_t value = (rand() % UINTMAX_MAX);
+    posix_memalign_is_overridden = true;
+    assert_false(rock_red_black_tree_map_add(&object, &key, &value));
+    assert_int_equal(ROCK_RED_BLACK_TREE_MAP_ERROR_MEMORY_ALLOCATION_FAILED,
+                     rock_error);
+    posix_memalign_is_overridden = false;
+    assert_true(rock_red_black_tree_map_invalidate(&object, NULL));
+    rock_error = ROCK_ERROR_NONE;
+}
+
 static void check_add(void **state) {
     srand(time(NULL));
     rock_error = ROCK_ERROR_NONE;
@@ -1719,6 +1738,7 @@ int main(int argc, char *argv[]) {
             cmocka_unit_test(check_add_error_on_object_is_null),
             cmocka_unit_test(check_add_error_on_key_is_null),
             cmocka_unit_test(check_add_error_on_value_is_null),
+            cmocka_unit_test(check_add_error_on_memory_allocation_failed),
             cmocka_unit_test(check_add),
             cmocka_unit_test(check_add_error_on_key_already_exists),
             cmocka_unit_test(check_remove_error_on_object_is_null),

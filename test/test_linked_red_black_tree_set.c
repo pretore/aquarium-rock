@@ -146,6 +146,23 @@ static void check_add_error_on_value_is_null(void **state) {
     rock_error = ROCK_ERROR_NONE;
 }
 
+static void check_add_error_on_memory_allocation_failed(void **state) {
+    srand(time(NULL));
+    rock_error = ROCK_ERROR_NONE;
+    struct rock_linked_red_black_tree_set object;
+    assert_true(rock_linked_red_black_tree_set_init(&object,
+                                                    sizeof(uintptr_t),
+                                                    compare_uintptr_t));
+    const uintptr_t value = (rand() % UINTPTR_MAX);
+    posix_memalign_is_overridden = true;
+    assert_false(rock_linked_red_black_tree_set_add(&object, &value));
+    assert_int_equal(ROCK_LINKED_RED_BLACK_TREE_SET_ERROR_MEMORY_ALLOCATION_FAILED,
+                     rock_error);
+    posix_memalign_is_overridden = false;
+    assert_true(rock_linked_red_black_tree_set_invalidate(&object, NULL));
+    rock_error = ROCK_ERROR_NONE;
+}
+
 static void check_add(void **state) {
     srand(time(NULL));
     rock_error = ROCK_ERROR_NONE;
@@ -934,6 +951,29 @@ static void check_insert_after_error_on_value_is_null(void **state) {
     rock_error = ROCK_ERROR_NONE;
 }
 
+static void check_insert_after_error_on_memory_allocation_failed(void **state) {
+    srand(time(NULL));
+    rock_error = ROCK_ERROR_NONE;
+    struct rock_linked_red_black_tree_set object;
+    assert_true(rock_linked_red_black_tree_set_init(&object,
+                                                    sizeof(uintptr_t),
+                                                    compare_uintptr_t));
+    uintptr_t value = (rand() % UINTPTR_MAX);
+    assert_true(rock_linked_red_black_tree_set_add(&object, &value));
+    const uintmax_t* first;
+    assert_true(rock_linked_red_black_tree_set_first(
+            &object, (const void **)&first));
+    value += (rand() % UINTPTR_MAX);
+    posix_memalign_is_overridden = true;
+    assert_false(rock_linked_red_black_tree_set_insert_after(
+            &object, first, &value));
+    posix_memalign_is_overridden = false;
+    assert_int_equal(ROCK_LINKED_RED_BLACK_TREE_SET_ERROR_MEMORY_ALLOCATION_FAILED,
+                     rock_error);
+    assert_true(rock_linked_red_black_tree_set_invalidate(&object, NULL));
+    rock_error = ROCK_ERROR_NONE;
+}
+
 static void check_insert_after(void **state) {
     srand(time(NULL));
     rock_error = ROCK_ERROR_NONE;
@@ -1005,6 +1045,29 @@ static void check_insert_before_error_on_value_is_null(void **state) {
     rock_error = ROCK_ERROR_NONE;
 }
 
+static void check_insert_before_error_on_memory_allocation_failed(void **state) {
+    srand(time(NULL));
+    rock_error = ROCK_ERROR_NONE;
+    struct rock_linked_red_black_tree_set object;
+    assert_true(rock_linked_red_black_tree_set_init(&object,
+                                                    sizeof(uintptr_t),
+                                                    compare_uintptr_t));
+    uintptr_t value = (rand() % UINTPTR_MAX);
+    assert_true(rock_linked_red_black_tree_set_add(&object, &value));
+    const uintmax_t* first;
+    assert_true(rock_linked_red_black_tree_set_first(
+            &object, (const void **)&first));
+    value += (rand() % UINTPTR_MAX);
+    posix_memalign_is_overridden = true;
+    assert_false(rock_linked_red_black_tree_set_insert_before(
+            &object, first, &value));
+    posix_memalign_is_overridden = false;
+    assert_int_equal(ROCK_LINKED_RED_BLACK_TREE_SET_ERROR_MEMORY_ALLOCATION_FAILED,
+                     rock_error);
+    assert_true(rock_linked_red_black_tree_set_invalidate(&object, NULL));
+    rock_error = ROCK_ERROR_NONE;
+}
+
 static void check_insert_before(void **state) {
     srand(time(NULL));
     rock_error = ROCK_ERROR_NONE;
@@ -1065,6 +1128,23 @@ static void check_append_error_on_value_is_null(void **state) {
     rock_error = ROCK_ERROR_NONE;
 }
 
+static void check_append_error_on_memory_allocation_failed(void **state) {
+    srand(time(NULL));
+    rock_error = ROCK_ERROR_NONE;
+    struct rock_linked_red_black_tree_set object;
+    assert_true(rock_linked_red_black_tree_set_init(&object,
+                                                    sizeof(uintptr_t),
+                                                    compare_uintptr_t));
+    uintptr_t value = (rand() % UINTPTR_MAX);
+    posix_memalign_is_overridden = true;
+    assert_false(rock_linked_red_black_tree_set_append(&object, &value));
+    assert_int_equal(ROCK_LINKED_RED_BLACK_TREE_SET_ERROR_MEMORY_ALLOCATION_FAILED,
+                     rock_error);
+    posix_memalign_is_overridden = false;
+    assert_true(rock_linked_red_black_tree_set_invalidate(&object, NULL));
+    rock_error = ROCK_ERROR_NONE;
+}
+
 static void check_append(void **state) {
     srand(time(NULL));
     rock_error = ROCK_ERROR_NONE;
@@ -1118,6 +1198,23 @@ static void check_prepend_error_on_value_is_null(void **state) {
     assert_false(rock_linked_red_black_tree_set_prepend((void *)1, NULL));
     assert_int_equal(ROCK_LINKED_RED_BLACK_TREE_SET_ERROR_VALUE_IS_NULL,
                      rock_error);
+    rock_error = ROCK_ERROR_NONE;
+}
+
+static void check_prepend_error_on_memory_allocation_failed(void **state) {
+    srand(time(NULL));
+    rock_error = ROCK_ERROR_NONE;
+    struct rock_linked_red_black_tree_set object;
+    assert_true(rock_linked_red_black_tree_set_init(&object,
+                                                    sizeof(uintptr_t),
+                                                    compare_uintptr_t));
+    uintptr_t value = (rand() % UINTPTR_MAX);
+    posix_memalign_is_overridden = true;
+    assert_false(rock_linked_red_black_tree_set_prepend(&object, &value));
+    assert_int_equal(ROCK_LINKED_RED_BLACK_TREE_SET_ERROR_MEMORY_ALLOCATION_FAILED,
+                     rock_error);
+    posix_memalign_is_overridden = false;
+    assert_true(rock_linked_red_black_tree_set_invalidate(&object, NULL));
     rock_error = ROCK_ERROR_NONE;
 }
 
@@ -1178,6 +1275,7 @@ int main(int argc, char *argv[]) {
             cmocka_unit_test(check_count),
             cmocka_unit_test(check_add_error_on_object_is_null),
             cmocka_unit_test(check_add_error_on_value_is_null),
+            cmocka_unit_test(check_add_error_on_memory_allocation_failed),
             cmocka_unit_test(check_add),
             cmocka_unit_test(check_add_error_on_item_already_exists),
             cmocka_unit_test(check_remove_error_on_object_is_null),
@@ -1234,19 +1332,23 @@ int main(int argc, char *argv[]) {
             cmocka_unit_test(check_insert_after_error_on_object_is_null),
             cmocka_unit_test(check_insert_after_error_on_item_is_null),
             cmocka_unit_test(check_insert_after_error_on_value_is_null),
+            cmocka_unit_test(check_insert_after_error_on_memory_allocation_failed),
             cmocka_unit_test(check_insert_after),
             cmocka_unit_test(check_insert_after_error_on_value_already_exists),
             cmocka_unit_test(check_insert_before_error_on_object_is_null),
             cmocka_unit_test(check_insert_before_error_on_item_is_null),
             cmocka_unit_test(check_insert_before_error_on_value_is_null),
+            cmocka_unit_test(check_insert_before_error_on_memory_allocation_failed),
             cmocka_unit_test(check_insert_before),
             cmocka_unit_test(check_insert_before_error_on_value_already_exists),
             cmocka_unit_test(check_append_error_on_object_is_null),
             cmocka_unit_test(check_append_error_on_value_is_null),
+            cmocka_unit_test(check_append_error_on_memory_allocation_failed),
             cmocka_unit_test(check_append),
             cmocka_unit_test(check_append_error_on_value_already_exists),
             cmocka_unit_test(check_prepend_error_on_object_is_null),
             cmocka_unit_test(check_prepend_error_on_value_is_null),
+            cmocka_unit_test(check_prepend_error_on_memory_allocation_failed),
             cmocka_unit_test(check_prepend),
             cmocka_unit_test(check_prepend_error_on_value_already_exists),
     };

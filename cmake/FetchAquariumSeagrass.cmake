@@ -3,7 +3,7 @@ include(FetchContent)
 FetchContent_Declare(
         aquarium-seagrass
         GIT_REPOSITORY https://github.com/pretore/aquarium-seagrass.git
-        GIT_TAG v2.0.0
+        GIT_TAG v2.0.1
         GIT_SHALLOW 1
 )
 

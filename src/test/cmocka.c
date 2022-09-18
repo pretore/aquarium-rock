@@ -1,10 +1,15 @@
-#include <stdlib.h>
+#include <stdarg.h>
+#include <stddef.h>
+#include <setjmp.h>
+#include <cmocka.h>
 #include <errno.h>
+
 #include "cmocka.h"
 
-int _test_posix_memalign(void **const out, const size_t alignment,
-                         const size_t size,
-                         const char *const file, const int line) {
+bool posix_memalign_is_overridden = false;
+int cmocka_test_posix_memalign(void **const out, const size_t alignment,
+                               const size_t size,
+                               const char *const file, const int line) {
     if (alignment % sizeof(void *)) {
         return EINVAL;
     }
@@ -16,6 +21,9 @@ int _test_posix_memalign(void **const out, const size_t alignment,
             }
             i >>= 1;
         } while (i);
+    }
+    if (posix_memalign_is_overridden) {
+        return ENOMEM;
     }
     void *const ptr = _test_malloc(size, file, line);
     if (!ptr) {

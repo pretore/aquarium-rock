@@ -301,7 +301,7 @@ bool rock_linked_red_black_tree_set_next(
         const void **out);
 
 /**
- * @brief Retrieve the previous item.
+ * @brief Retrieve previous item.
  * @param [in] object tree set instance.
  * @param [in] item current <u>address of</u> item.
  * @param [out] out receive the <u>address of</u> the previous item.
