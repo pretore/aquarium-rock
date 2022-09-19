@@ -25,6 +25,10 @@ extern bool realloc_is_overridden;
 extern void cmocka_test_free(void *ptr, const char *file, int line);
 #define free(ptr) cmocka_test_free(ptr, __FILE__, __LINE__)
 
+extern void cmocka_test_abort(const char *file, int line);
+#define abort() cmocka_test_abort(__FILE__, __LINE__)
+extern bool abort_is_overridden;
+
 /* aquarium-rock */
 int cmocka_test_posix_memalign(void **out, size_t alignment, size_t size,
                                const char *file, int line);

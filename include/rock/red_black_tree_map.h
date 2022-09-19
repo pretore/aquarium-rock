@@ -251,15 +251,15 @@ rock_red_black_tree_map_higher(const struct rock_red_black_tree_map *object,
 /**
  * @brief Retrieve the value for the next lower key.
  * @param [in] object tree map instance.
- * @param [in] item whose next lower key we are trying to find.
+ * @param [in] key whose next lower key we are trying to find.
  * @param [out] out receive the <u>address of</u> value.
  * @return On success true, otherwise false if an error has occurred.
- * @throws ROCK_RED_BLACK_TREE_SET_ERROR_OBJECT_IS_NULL if object is
+ * @throws ROCK_RED_BLACK_TREE_MAP_ERROR_OBJECT_IS_NULL if object is
  * <i>NULL</i>.
- * @throws ROCK_RED_BLACK_TREE_SET_ERROR_ITEM_IS_NULL if item is <i>NULL</i>.
- * @throws ROCK_RED_BLACK_TREE_SET_ERROR_OUT_IS_NULL if out is <i>NULL</i>.
- * @throws ROCK_RED_BLACK_TREE_SET_ERROR_ITEM_NOT_FOUND if no lower value for
- * item is in the tree map instance.
+ * @throws ROCK_RED_BLACK_TREE_MAP_ERROR_KEY_IS_NULL if key is <i>NULL</i>.
+ * @throws ROCK_RED_BLACK_TREE_MAP_ERROR_OUT_IS_NULL if out is <i>NULL</i>.
+ * @throws ROCK_RED_BLACK_TREE_MAP_ERROR_KEY_NOT_FOUND if no lower value for
+ * key is in the tree map instance.
  */
 bool rock_red_black_tree_map_lower(const struct rock_red_black_tree_map *object,
                                    const void *key,
@@ -366,15 +366,15 @@ bool rock_red_black_tree_map_higher_entry(
 /**
  * @brief Retrieve the entry for the next lower key.
  * @param [in] object tree map instance.
- * @param [in] item whose next lower key we are trying to find.
+ * @param [in] key whose next lower key we are trying to find.
  * @param [out] out receive the <u>address of</u> entry.
  * @return On success true, otherwise false if an error has occurred.
- * @throws ROCK_RED_BLACK_TREE_SET_ERROR_OBJECT_IS_NULL if object is
+ * @throws ROCK_RED_BLACK_TREE_MAP_ERROR_OBJECT_IS_NULL if object is
  * <i>NULL</i>.
- * @throws ROCK_RED_BLACK_TREE_SET_ERROR_ITEM_IS_NULL if item is <i>NULL</i>.
- * @throws ROCK_RED_BLACK_TREE_SET_ERROR_OUT_IS_NULL if out is <i>NULL</i>.
- * @throws ROCK_RED_BLACK_TREE_SET_ERROR_ITEM_NOT_FOUND if no lower value for
- * item is in the tree map instance.
+ * @throws ROCK_RED_BLACK_TREE_MAP_ERROR_KEY_IS_NULL if key is <i>NULL</i>.
+ * @throws ROCK_RED_BLACK_TREE_MAP_ERROR_OUT_IS_NULL if out is <i>NULL</i>.
+ * @throws ROCK_RED_BLACK_TREE_MAP_ERROR_ITEM_NOT_FOUND if no lower value for
+ * key is in the tree map instance.
  */
 bool rock_red_black_tree_map_lower_entry(
         const struct rock_red_black_tree_map *object,
@@ -416,7 +416,7 @@ bool rock_red_black_tree_map_last_entry(
  * @return On success true, otherwise false if an error has occurred.
  * @throws ROCK_RED_BLACK_TREE_MAP_ERROR_ENTRY_IS_NULL if entry is <i>NULL</i>.
  * @throws ROCK_RED_BLACK_TREE_MAP_ERROR_OUT_IS_NULL if out is <i>NULL</i>.
- * @throws ROCK_RED_BLACK_TREE_SET_ERROR_END_OF_SEQUENCE if there is no next
+ * @throws ROCK_RED_BLACK_TREE_MAP_ERROR_END_OF_SEQUENCE if there is no next
  * entry.
  */
 bool rock_red_black_tree_map_next_entry(
@@ -430,7 +430,7 @@ bool rock_red_black_tree_map_next_entry(
  * @return On success true, otherwise false if an error has occurred.
  * @throws ROCK_RED_BLACK_TREE_MAP_ERROR_ENTRY_IS_NULL if entry is <i>NULL</i>.
  * @throws ROCK_RED_BLACK_TREE_MAP_ERROR_OUT_IS_NULL if out is <i>NULL</i>.
- * @throws ROCK_RED_BLACK_TREE_SET_ERROR_END_OF_SEQUENCE if there is no next
+ * @throws ROCK_RED_BLACK_TREE_MAP_ERROR_END_OF_SEQUENCE if there is no next
  * previous.
  */
 bool rock_red_black_tree_map_prev_entry(
