@@ -687,8 +687,8 @@ bool rock_red_black_tree_map_lower_entry(
 }
 
 bool rock_red_black_tree_map_first_entry(
-        const struct rock_red_black_tree_map *object,
-        const struct rock_red_black_tree_map_entry **out) {
+        const struct rock_red_black_tree_map *const object,
+        const struct rock_red_black_tree_map_entry **const out) {
     if (!object) {
         rock_error = ROCK_RED_BLACK_TREE_MAP_ERROR_OBJECT_IS_NULL;
         return false;
@@ -710,8 +710,8 @@ bool rock_red_black_tree_map_first_entry(
 }
 
 bool rock_red_black_tree_map_last_entry(
-        const struct rock_red_black_tree_map *object,
-        const struct rock_red_black_tree_map_entry **out) {
+        const struct rock_red_black_tree_map *const object,
+        const struct rock_red_black_tree_map_entry **const out) {
     if (!object) {
         rock_error = ROCK_RED_BLACK_TREE_MAP_ERROR_OBJECT_IS_NULL;
         return false;
@@ -732,9 +732,27 @@ bool rock_red_black_tree_map_last_entry(
     return true;
 }
 
+bool rock_red_black_tree_map_remove_entry(
+        struct rock_red_black_tree_map *const object,
+        const struct rock_red_black_tree_map_entry *const entry) {
+    if (!object) {
+        rock_error = ROCK_RED_BLACK_TREE_MAP_ERROR_OBJECT_IS_NULL;
+        return false;
+    }
+    if (!entry) {
+        rock_error = ROCK_RED_BLACK_TREE_MAP_ERROR_ENTRY_IS_NULL;
+        return false;
+    }
+    struct entry *const A = rock_container_of(entry, struct entry, data);
+    seagrass_required_true(rock_red_black_tree_remove(
+            &object->tree, &A->node));
+    free(A);
+    return true;
+}
+
 bool rock_red_black_tree_map_next_entry(
-        const struct rock_red_black_tree_map_entry *entry,
-        const struct rock_red_black_tree_map_entry **out) {
+        const struct rock_red_black_tree_map_entry *const entry,
+        const struct rock_red_black_tree_map_entry **const out) {
     if (!entry) {
         rock_error = ROCK_RED_BLACK_TREE_MAP_ERROR_ENTRY_IS_NULL;
         return false;
@@ -757,8 +775,8 @@ bool rock_red_black_tree_map_next_entry(
 }
 
 bool rock_red_black_tree_map_prev_entry(
-        const struct rock_red_black_tree_map_entry *entry,
-        const struct rock_red_black_tree_map_entry **out) {
+        const struct rock_red_black_tree_map_entry *const entry,
+        const struct rock_red_black_tree_map_entry **const out) {
     if (!entry) {
         rock_error = ROCK_RED_BLACK_TREE_MAP_ERROR_ENTRY_IS_NULL;
         return false;

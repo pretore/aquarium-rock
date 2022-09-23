@@ -1447,6 +1447,46 @@ static void check_last_entry(void **state) {
     rock_error = ROCK_ERROR_NONE;
 }
 
+static void check_remove_entry_error_on_object_is_null(void **state) {
+    rock_error = ROCK_ERROR_NONE;
+    assert_false(rock_red_black_tree_map_remove_entry(NULL, (void *)1));
+    assert_int_equal(ROCK_RED_BLACK_TREE_MAP_ERROR_OBJECT_IS_NULL, rock_error);
+    rock_error = ROCK_ERROR_NONE;
+}
+
+static void check_remove_entry_error_on_entry_is_null(void **state) {
+    rock_error = ROCK_ERROR_NONE;
+    assert_false(rock_red_black_tree_map_remove_entry((void *)1, NULL));
+    assert_int_equal(ROCK_RED_BLACK_TREE_MAP_ERROR_ENTRY_IS_NULL, rock_error);
+    rock_error = ROCK_ERROR_NONE;
+}
+
+static void check_remove_entry(void **state) {
+    srand(time(NULL));
+    rock_error = ROCK_ERROR_NONE;
+    struct rock_red_black_tree_map object;
+    assert_true(rock_red_black_tree_map_init(&object,
+                                             sizeof(uintmax_t),
+                                             sizeof(uintmax_t),
+                                             uintmax_t_ptr_compare));
+    for (uintmax_t i = 0; i < 3; i++) {
+        uintmax_t value = (rand() % UINTMAX_MAX);
+        assert_true(rock_red_black_tree_map_add(
+                &object, &i, &value));
+    }
+    const struct rock_red_black_tree_map_entry *entry;
+    uintmax_t key = 1;
+    assert_true(rock_red_black_tree_map_get_entry(&object, &key, &entry));
+    uintmax_t count;
+    assert_true(rock_red_black_tree_map_count(&object, &count));
+    assert_int_equal(count, 3);
+    assert_true(rock_red_black_tree_map_remove_entry(&object, entry));
+    assert_true(rock_red_black_tree_map_count(&object, &count));
+    assert_int_equal(count, 2);
+    assert_true(rock_red_black_tree_map_invalidate(&object, NULL));
+    rock_error = ROCK_ERROR_NONE;
+}
+
 static void check_next_entry_error_on_entry_is_null(void **state) {
     rock_error = ROCK_ERROR_NONE;
     assert_false(rock_red_black_tree_map_next_entry(NULL, (void *)1));
@@ -1819,6 +1859,9 @@ int main(int argc, char *argv[]) {
             cmocka_unit_test(check_last_entry_error_on_out_is_null),
             cmocka_unit_test(check_last_entry_error_on_map_is_empty),
             cmocka_unit_test(check_last_entry),
+            cmocka_unit_test(check_remove_entry_error_on_object_is_null),
+            cmocka_unit_test(check_remove_entry_error_on_entry_is_null),
+            cmocka_unit_test(check_remove_entry),
             cmocka_unit_test(check_next_entry_error_on_entry_is_null),
             cmocka_unit_test(check_next_entry_error_on_out_is_null),
             cmocka_unit_test(check_next_entry_error_end_of_sequence),

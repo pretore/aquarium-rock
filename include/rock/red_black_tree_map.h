@@ -410,6 +410,19 @@ bool rock_red_black_tree_map_last_entry(
         const struct rock_red_black_tree_map_entry **out);
 
 /**
+ * @brief Remove entry.
+ * @param [in] object tree map instance.
+ * @param [in] entry <u>address of</u> entry to be removed.
+ * @return On success true, otherwise false if an error has occurred.
+ * @throws ROCK_RED_BLACK_TREE_MAP_ERROR_OBJECT_IS_NULL if object is
+ * <i>NULL</i>.
+ * @throws ROCK_RED_BLACK_TREE_MAP_ERROR_ENTRY_IS_NULL if entry is <i>NULL</i>.
+ */
+bool rock_red_black_tree_map_remove_entry(
+        struct rock_red_black_tree_map *object,
+        const struct rock_red_black_tree_map_entry *entry);
+
+/**
  * @brief Retrieve the next entry.
  * @param [in] entry <u>address of</u> current entry.
  * @param [out] out receive the <u>address of</u> the next entry.
@@ -430,8 +443,8 @@ bool rock_red_black_tree_map_next_entry(
  * @return On success true, otherwise false if an error has occurred.
  * @throws ROCK_RED_BLACK_TREE_MAP_ERROR_ENTRY_IS_NULL if entry is <i>NULL</i>.
  * @throws ROCK_RED_BLACK_TREE_MAP_ERROR_OUT_IS_NULL if out is <i>NULL</i>.
- * @throws ROCK_RED_BLACK_TREE_MAP_ERROR_END_OF_SEQUENCE if there is no next
- * previous.
+ * @throws ROCK_RED_BLACK_TREE_MAP_ERROR_END_OF_SEQUENCE if there is no
+ * previous entry.
  */
 bool rock_red_black_tree_map_prev_entry(
         const struct rock_red_black_tree_map_entry *entry,
@@ -481,7 +494,7 @@ bool rock_red_black_tree_map_entry_get_value(
  * @throws ROCK_RED_BLACK_TREE_MAP_ERROR_OBJECT_IS_NULL if object is
  * <i>NULL</i>.
  * @throws ROCK_RED_BLACK_TREE_MAP_ERROR_ENTRY_IS_NULL if entry is <i>NULL</i>.
- * @throws ROCK_RED_BLACK_TREE_MAP_ERROR_VALUE_IS_NULL if out is <i>NULL</i>.
+ * @throws ROCK_RED_BLACK_TREE_MAP_ERROR_VALUE_IS_NULL if value is <i>NULL</i>.
  */
 bool rock_red_black_tree_map_entry_set_value(
         const struct rock_red_black_tree_map *object,
