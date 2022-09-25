@@ -7,7 +7,7 @@
 
 struct rock_array;
 
-void *rock_array_address(struct rock_array *object, uintmax_t at);
+void *rock_array_address(const struct rock_array *object, uintmax_t at);
 
 /**
  * @brief Set the capacity.

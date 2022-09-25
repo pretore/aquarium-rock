@@ -284,7 +284,7 @@ static void check_add(void **state) {
 
 static void check_add_all_error_on_object_is_null(void **state) {
     rock_error = ROCK_ERROR_NONE;
-    void *items[] = {0};
+    const void *items[] = {0};
     assert_false(rock_array_add_all(NULL, 1, items));
     assert_int_equal(ROCK_ARRAY_ERROR_OBJECT_IS_NULL, rock_error);
     rock_error = ROCK_ERROR_NONE;
@@ -292,7 +292,7 @@ static void check_add_all_error_on_object_is_null(void **state) {
 
 static void check_add_all_error_on_count_is_zero(void **state) {
     rock_error = ROCK_ERROR_NONE;
-    void *items[] = {0};
+    const void *items[] = {0};
     assert_false(rock_array_add_all((void *)1, 0, items));
     assert_int_equal(ROCK_ARRAY_ERROR_COUNT_IS_ZERO, rock_error);
     rock_error = ROCK_ERROR_NONE;
@@ -310,7 +310,7 @@ static void check_add_all_error_on_memory_allocation_failed(void **state) {
     struct rock_array object = {};
     assert_true(rock_array_init(&object, sizeof(void *), 0));
     object.capacity = SIZE_MAX;
-    void *items[] = {
+    const void *items[] = {
             &check_add_all_error_on_object_is_null,
             &check_add_all_error_on_items_is_null,
             &check_add
@@ -329,7 +329,7 @@ static void check_add_all(void **state) {
     assert_non_null(object.data);
     assert_int_equal(1, object.capacity);
     assert_int_equal(0, object.length);
-    void *items[] = {
+    const void *items[] = {
             &check_add_all_error_on_object_is_null,
             &check_add_all_error_on_items_is_null,
             &check_add
@@ -429,7 +429,7 @@ static void check_insert(void **state) {
 
 static void check_insert_all_error_on_object_is_null(void **state) {
     rock_error = ROCK_ERROR_NONE;
-    void *items[] = {0};
+    const void *items[] = {0};
     assert_false(rock_array_insert_all(NULL, 0, 1, items));
     assert_int_equal(ROCK_ARRAY_ERROR_OBJECT_IS_NULL, rock_error);
     rock_error = ROCK_ERROR_NONE;
@@ -438,7 +438,7 @@ static void check_insert_all_error_on_object_is_null(void **state) {
 static void check_insert_all_error_on_index_is_out_of_bounds(void **state) {
     rock_error = ROCK_ERROR_NONE;
     struct rock_array object = {};
-    void *items[] = {0};
+    const void *items[] = {0};
     assert_false(rock_array_insert_all(&object, 0, 1, items));
     assert_int_equal(ROCK_ARRAY_ERROR_INDEX_IS_OUT_OF_BOUNDS, rock_error);
     rock_error = ROCK_ERROR_NONE;
@@ -449,7 +449,7 @@ static void check_insert_all_error_on_count_is_zero(void **state) {
     struct rock_array object = {
             .length = 1
     };
-    void *items[] = {0};
+    const void *items[] = {0};
     assert_false(rock_array_insert_all(&object, 0, 0, items));
     assert_int_equal(ROCK_ARRAY_ERROR_COUNT_IS_ZERO, rock_error);
     rock_error = ROCK_ERROR_NONE;
@@ -471,7 +471,7 @@ static void check_insert_all_error_on_memory_allocation_failed(void **state) {
     assert_true(rock_array_init(&object, sizeof(void *), 0));
     object.capacity = SIZE_MAX;
     object.length = 1;
-    void *items[] = {
+    const void *items[] = {
             check_insert_all_error_on_memory_allocation_failed,
             check_insert_all_error_on_items_is_null,
             check_insert_all_error_on_count_is_zero
@@ -488,7 +488,7 @@ static void check_insert_all(void **state) {
     struct rock_array object = {};
     assert_true(rock_array_init(&object, sizeof(void *), 0));
     assert_true(rock_array_add(&object, &check_insert_all));
-    void *items[] = {
+    const void *items[] = {
             &check_insert_all_error_on_memory_allocation_failed,
             &check_insert_all_error_on_items_is_null,
             &check_insert_all_error_on_count_is_zero
@@ -527,7 +527,7 @@ static void check_remove(void **state) {
     struct rock_array object = {};
     assert_true(rock_array_init(&object, sizeof(void *), 0));
     assert_true(rock_array_add(&object, &check_remove));
-    void *items[] = {
+    const void *items[] = {
             &check_remove_error_on_index_is_out_of_bounds,
             &check_remove_error_on_object_is_null
     };
@@ -580,7 +580,7 @@ static void check_remove_all(void **state) {
     rock_error = ROCK_ERROR_NONE;
     struct rock_array object = {};
     assert_true(rock_array_init(&object, sizeof(void *), 0));
-    void *items[] = {
+    const void *items[] = {
             &check_remove_all,
             &check_remove_all_error_on_index_is_out_of_bounds,
             &check_remove_all_error_on_count_is_zero,
@@ -636,7 +636,7 @@ static void check_get(void **state) {
     rock_error = ROCK_ERROR_NONE;
     struct rock_array object = {};
     assert_true(rock_array_init(&object, sizeof(void *), 0));
-    void *items[] = {
+    const void *items[] = {
             &check_get,
             &check_get_error_on_index_is_out_of_bounds,
             &check_get_error_on_out_is_null,
@@ -674,7 +674,7 @@ static void check_set(void **state) {
     rock_error = ROCK_ERROR_NONE;
     struct rock_array object = {};
     assert_true(rock_array_init(&object, sizeof(void *), 0));
-    void *items[] = {
+    const void *items[] = {
             &check_set,
             &check_set_error_on_index_is_out_of_bounds,
             &check_set_error_on_object_is_null
@@ -818,7 +818,7 @@ static void check_next(void **state) {
     rock_error = ROCK_ERROR_NONE;
     struct rock_array object = {};
     assert_true(rock_array_init(&object, sizeof(void *), 0));
-    void *items[] = {
+    const void *items[] = {
             check_next,
             check_next_error_on_end_of_sequence
     };
@@ -883,7 +883,7 @@ static void check_prev(void **state) {
     rock_error = ROCK_ERROR_NONE;
     struct rock_array object = {};
     assert_true(rock_array_init(&object, sizeof(void *), 0));
-    void *items[] = {
+    const void *items[] = {
             check_prev,
             check_prev_error_on_end_of_sequence
     };

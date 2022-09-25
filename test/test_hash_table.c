@@ -95,7 +95,7 @@ static void check_invalidate(void **state) {
             &entries[2]
     };
     uintmax_t count = sizeof(items) / sizeof(void *);
-    assert_true(rock_array_add_all(&object.array, count, items));
+    assert_true(rock_array_add_all(&object.array, count, (const void **) items));
     object.count = 3; // there is one NULL item which is an empty slot
     expect_function_calls(hash_code_on_destroy, object.count);
     assert_true(rock_hash_table_invalidate(&object, hash_code_on_destroy));
