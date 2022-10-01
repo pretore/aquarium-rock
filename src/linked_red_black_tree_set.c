@@ -510,6 +510,26 @@ bool rock_linked_red_black_tree_set_last(
     return true;
 }
 
+bool rock_linked_red_black_tree_set_remove_item(
+        struct rock_linked_red_black_tree_set *const object,
+        const void *const item) {
+    if (!object) {
+        rock_error = ROCK_RED_BLACK_TREE_SET_ERROR_OBJECT_IS_NULL;
+        return false;
+    }
+    if (!item) {
+        rock_error = ROCK_RED_BLACK_TREE_SET_ERROR_ITEM_IS_NULL;
+        return false;
+    }
+    struct entry *const A = rock_container_of(item, struct entry, data);
+    seagrass_required_true(rock_red_black_tree_remove(
+            &object->tree, &A->rbt_node));
+    seagrass_required_true(rock_linked_list_remove(
+            &A->ll_node));
+    free(A);
+    return true;
+}
+
 bool rock_linked_red_black_tree_set_next(
         const struct rock_linked_red_black_tree_set *const object,
         const void *const item,

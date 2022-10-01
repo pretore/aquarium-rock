@@ -283,6 +283,20 @@ bool rock_linked_red_black_tree_set_last(
         const void **out);
 
 /**
+ * @brief Remove item.
+ * @param [in] object tree set instance.
+ * @param [out] item <u>address of</u> item to be removed.
+ * @return On success true, otherwise false if an error has occurred.
+ * @throws ROCK_LINKED_RED_BLACK_TREE_SET_ERROR_OBJECT_IS_NULL if object is
+ * <i>NULL</i>.
+ * @throws ROCK_LINKED_RED_BLACK_TREE_SET_ERROR_ITEM_IS_NULL if item is
+ * <i>NULL</i>.
+ */
+bool rock_linked_red_black_tree_set_remove_item(
+        struct rock_linked_red_black_tree_set *object,
+        const void *item);
+
+/**
  * @brief Retrieve next item.
  * @param [in] object tree set instance.
  * @param [in] item current <u>address of</u> item.

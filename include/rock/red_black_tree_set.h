@@ -180,8 +180,8 @@ rock_red_black_tree_set_ceiling(const struct rock_red_black_tree_set *object,
  * <i>NULL</i>.
  * @throws ROCK_RED_BLACK_TREE_SET_ERROR_VALUE_IS_NULL if value is <i>NULL</i>.
  * @throws ROCK_RED_BLACK_TREE_SET_ERROR_OUT_IS_NULL if out is <i>NULL</i>.
- * @throws ROCK_LINKED_RED_BLACK_TREE_SET_ERROR_ITEM_NOT_FOUND if no item
- * matched value or a lower value.
+ * @throws ROCK_RED_BLACK_TREE_SET_ERROR_ITEM_NOT_FOUND if no item matched
+ * value or a lower value.
  */
 bool rock_red_black_tree_set_floor(const struct rock_red_black_tree_set *object,
                                    const void *value,
@@ -249,11 +249,23 @@ bool rock_red_black_tree_set_last(const struct rock_red_black_tree_set *object,
                                   const void **out);
 
 /**
+ * @brief Remove item.
+ * @param [in] object tree set instance.
+ * @param [out] item <u>address of</u> item to be removed.
+ * @return On success true, otherwise false if an error has occurred.
+ * @throws ROCK_RED_BLACK_TREE_SET_ERROR_OBJECT_IS_NULL if object is
+ * <i>NULL</i>.
+ * @throws ROCK_RED_BLACK_TREE_SET_ERROR_ITEM_IS_NULL if item is <i>NULL</i>.
+ */
+bool rock_red_black_tree_set_remove_item(struct rock_red_black_tree_set *object,
+                                         const void *item);
+
+/**
  * @brief Retrieve next item.
  * @param [in] item current <u>address of</u> item.
  * @param [out] out receive the <u>address of</u> the next item.
  * @return On success true, otherwise false if an error has occurred.
- * @throws ROCK_RED_BLACK_TREE_SET_ERROR_OBJECT_IS_NULL if item is <i>NULL</i>.
+ * @throws ROCK_RED_BLACK_TREE_SET_ERROR_ITEM_IS_NULL if item is <i>NULL</i>.
  * @throws ROCK_RED_BLACK_TREE_SET_ERROR_OUT_IS_NULL if out is <i>NULL</i>.
  * @throws ROCK_RED_BLACK_TREE_SET_ERROR_END_OF_SEQUENCE if there is no next
  * item.
@@ -265,7 +277,7 @@ bool rock_red_black_tree_set_next(const void *item, const void **out);
  * @param [in] item current <u>address of</u> item.
  * @param [out] out receive the <u>address of</u> the previous item.
  * @return On success true, otherwise false if an error has occurred.
- * @throws ROCK_RED_BLACK_TREE_SET_ERROR_OBJECT_IS_NULL if item is <i>NULL</i>.
+ * @throws ROCK_RED_BLACK_TREE_SET_ERROR_ITEM_IS_NULL if item is <i>NULL</i>.
  * @throws ROCK_RED_BLACK_TREE_SET_ERROR_OUT_IS_NULL if out is <i>NULL</i>.
  * @throws ROCK_RED_BLACK_TREE_SET_ERROR_END_OF_SEQUENCE if there is no
  * previous item.

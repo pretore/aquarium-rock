@@ -1,4 +1,5 @@
 #include <stdlib.h>
+#include <assert.h>
 #include <errno.h>
 #include <memory.h>
 #include <seagrass.h>
@@ -417,9 +418,12 @@ bool rock_red_black_tree_set_lower(
     return true;
 }
 
-bool rock_red_black_tree_set_first(
+static bool retrieve_fl(
         const struct rock_red_black_tree_set *const object,
-        const void **const out) {
+        const void **const out,
+        bool (*const func)(const struct rock_red_black_tree *,
+                           struct rock_red_black_tree_node **out)) {
+    assert(func);
     if (!object) {
         rock_error = ROCK_RED_BLACK_TREE_SET_ERROR_OBJECT_IS_NULL;
         return false;
@@ -429,7 +433,7 @@ bool rock_red_black_tree_set_first(
         return false;
     }
     struct rock_red_black_tree_node *node;
-    if (!rock_red_black_tree_first(&object->tree, &node)) {
+    if (!func(&object->tree, &node)) {
         seagrass_required_true(ROCK_RED_BLACK_TREE_ERROR_TREE_IS_EMPTY
                                == rock_error);
         rock_error = ROCK_RED_BLACK_TREE_SET_ERROR_SET_IS_EMPTY;
@@ -440,26 +444,33 @@ bool rock_red_black_tree_set_first(
     return true;
 }
 
+bool rock_red_black_tree_set_first(
+        const struct rock_red_black_tree_set *const object,
+        const void **const out) {
+    return retrieve_fl(object, out, rock_red_black_tree_first);
+}
+
 bool rock_red_black_tree_set_last(
         const struct rock_red_black_tree_set *const object,
         const void **const out) {
+    return retrieve_fl(object, out, rock_red_black_tree_last);
+}
+
+bool rock_red_black_tree_set_remove_item(
+        struct rock_red_black_tree_set *const object,
+        const void *const item) {
     if (!object) {
-        rock_error = ROCK_RED_BLACK_TREE_SET_ERROR_OBJECT_IS_NULL;
+        rock_error = ROCK_LINKED_RED_BLACK_TREE_SET_ERROR_OBJECT_IS_NULL;
         return false;
     }
-    if (!out) {
-        rock_error = ROCK_RED_BLACK_TREE_SET_ERROR_OUT_IS_NULL;
+    if (!item) {
+        rock_error = ROCK_LINKED_RED_BLACK_TREE_SET_ERROR_ITEM_IS_NULL;
         return false;
     }
-    struct rock_red_black_tree_node *node;
-    if (!rock_red_black_tree_last(&object->tree, &node)) {
-        seagrass_required_true(ROCK_RED_BLACK_TREE_ERROR_TREE_IS_EMPTY
-                               == rock_error);
-        rock_error = ROCK_RED_BLACK_TREE_SET_ERROR_SET_IS_EMPTY;
-        return false;
-    }
-    struct entry *const A = rock_container_of(node, struct entry, node);
-    *out = &A->data;
+    struct entry *const A = rock_container_of(item, struct entry, data);
+    seagrass_required_true(rock_red_black_tree_remove(
+            &object->tree, &A->node));
+    free(A);
     return true;
 }
 
