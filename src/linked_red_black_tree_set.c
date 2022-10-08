@@ -1,4 +1,5 @@
 #include <stdlib.h>
+#include <assert.h>
 #include <errno.h>
 #include <seagrass.h>
 #include <rock.h>
@@ -116,7 +117,7 @@ bool rock_linked_red_black_tree_set_count(
     return true;
 }
 
-static bool rock_linked_red_black_tree_set__add(
+static bool tree_add(
         struct rock_linked_red_black_tree_set *const object,
         const void *const value,
         struct entry **out) {
@@ -170,8 +171,7 @@ bool rock_linked_red_black_tree_set_add(
         return false;
     }
     struct entry *entry;
-    const bool result = rock_linked_red_black_tree_set__add(
-            object, value, &entry);
+    const bool result = tree_add(object, value, &entry);
     if (!result) {
         switch (rock_error) {
             case ROCK_LINKED_RED_BLACK_TREE_SET_ERROR_VALUE_ALREADY_EXISTS:
@@ -464,6 +464,44 @@ bool rock_linked_red_black_tree_set_lower(
     return true;
 }
 
+static bool retrieve_tree_fl(
+        const struct rock_linked_red_black_tree_set *const object,
+        const void **const out,
+        bool (*const func)(const struct rock_red_black_tree *,
+                           struct rock_red_black_tree_node **out)) {
+    assert(func);
+    if (!object) {
+        rock_error = ROCK_LINKED_RED_BLACK_TREE_SET_ERROR_OBJECT_IS_NULL;
+        return false;
+    }
+    if (!out) {
+        rock_error = ROCK_LINKED_RED_BLACK_TREE_SET_ERROR_OUT_IS_NULL;
+        return false;
+    }
+    struct rock_red_black_tree_node *node;
+    if (!func(&object->tree, &node)) {
+        seagrass_required_true(ROCK_RED_BLACK_TREE_ERROR_TREE_IS_EMPTY
+                               == rock_error);
+        rock_error = ROCK_LINKED_RED_BLACK_TREE_SET_ERROR_SET_IS_EMPTY;
+        return false;
+    }
+    struct entry *const A = rock_container_of(node, struct entry, rbt_node);
+    *out = &A->data;
+    return true;
+}
+
+bool rock_linked_red_black_tree_set_lowest(
+        const struct rock_linked_red_black_tree_set *const object,
+        const void **const out) {
+    return retrieve_tree_fl(object, out, rock_red_black_tree_first);
+}
+
+bool rock_linked_red_black_tree_set_highest(
+        const struct rock_linked_red_black_tree_set *const object,
+        const void **const out) {
+    return retrieve_tree_fl(object, out, rock_red_black_tree_last);
+}
+
 bool rock_linked_red_black_tree_set_first(
         const struct rock_linked_red_black_tree_set *const object,
         const void **const out) {
@@ -607,8 +645,7 @@ bool rock_linked_red_black_tree_set_insert_after(
         return false;
     }
     struct entry *entry;
-    const bool result = rock_linked_red_black_tree_set__add(
-            object, value, &entry);
+    const bool result = tree_add(object, value, &entry);
     if (!result) {
         switch (rock_error) {
             case ROCK_LINKED_RED_BLACK_TREE_SET_ERROR_VALUE_ALREADY_EXISTS:
@@ -645,8 +682,7 @@ bool rock_linked_red_black_tree_set_insert_before(
         return false;
     }
     struct entry *entry;
-    const bool result = rock_linked_red_black_tree_set__add(
-            object, value, &entry);
+    const bool result = tree_add(object, value, &entry);
     if (!result) {
         switch (rock_error) {
             case ROCK_LINKED_RED_BLACK_TREE_SET_ERROR_VALUE_ALREADY_EXISTS:

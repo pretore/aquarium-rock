@@ -251,6 +251,38 @@ bool rock_linked_red_black_tree_set_lower(
         const void **out);
 
 /**
+ * @brief Retrieve item with the lowest value.
+ * @param [in] object tree set instance.
+ * @param [out] out receive the <u>address of</u> item.
+ * @return On success true, otherwise false if an error has occurred.
+ * @throws ROCK_LINKED_RED_BLACK_TREE_SET_ERROR_OBJECT_IS_NULL if object is
+ * <i>NULL</i>.
+ * @throws ROCK_LINKED_RED_BLACK_TREE_SET_ERROR_OUT_IS_NULL if out is
+ * <i>NULL</i>.
+ * @throws ROCK_LINKED_RED_BLACK_TREE_SET_ERROR_SET_IS_EMPTY if tree set is
+ * empty.
+ */
+bool rock_linked_red_black_tree_set_lowest(
+        const struct rock_linked_red_black_tree_set *object,
+        const void **out);
+
+/**
+ * @brief Retrieve item with the highest value.
+ * @param [in] object tree set instance.
+ * @param [out] out receive the <u>address of</u> item.
+ * @return On success true, otherwise false if an error has occurred.
+ * @throws ROCK_LINKED_RED_BLACK_TREE_SET_ERROR_OBJECT_IS_NULL if object is
+ * <i>NULL</i>.
+ * @throws ROCK_LINKED_RED_BLACK_TREE_SET_ERROR_OUT_IS_NULL if out is
+ * <i>NULL</i>.
+ * @throws ROCK_LINKED_RED_BLACK_TREE_SET_ERROR_SET_IS_EMPTY if tree set is
+ * empty.
+ */
+bool rock_linked_red_black_tree_set_highest(
+        const struct rock_linked_red_black_tree_set *object,
+        const void **out);
+
+/**
  * @brief First item of the tree set.
  * @param [in] object tree set instance.
  * @param [out] out receive the <u>address of</u> item.
@@ -304,6 +336,8 @@ bool rock_linked_red_black_tree_set_remove_item(
  * @return On success true, otherwise false if an error has occurred.
  * @throws ROCK_LINKED_RED_BLACK_TREE_SET_ERROR_OBJECT_IS_NULL if item is
  * <i>NULL</i>.
+ * @throws ROCK_LINKED_RED_BLACK_TREE_SET_ERROR_ITEM_IS_NULL if item is
+ * <i>NULL</i>.
  * @throws ROCK_LINKED_RED_BLACK_TREE_SET_ERROR_OUT_IS_NULL if out is
  * <i>NULL</i>.
  * @throws ROCK_LINKED_RED_BLACK_TREE_SET_ERROR_END_OF_SEQUENCE if there is no
@@ -321,6 +355,8 @@ bool rock_linked_red_black_tree_set_next(
  * @param [out] out receive the <u>address of</u> the previous item.
  * @return On success true, otherwise false if an error has occurred.
  * @throws ROCK_LINKED_RED_BLACK_TREE_SET_ERROR_OBJECT_IS_NULL if item is
+ * <i>NULL</i>.
+ * @throws ROCK_LINKED_RED_BLACK_TREE_SET_ERROR_ITEM_IS_NULL if item is
  * <i>NULL</i>.
  * @throws ROCK_LINKED_RED_BLACK_TREE_SET_ERROR_OUT_IS_NULL if out is
  * <i>NULL</i>.

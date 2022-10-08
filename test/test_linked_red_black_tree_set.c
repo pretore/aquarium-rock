@@ -676,6 +676,110 @@ static void check_lower(void **state) {
     rock_error = ROCK_ERROR_NONE;
 }
 
+static void check_lowest_error_object_is_null(void **state) {
+    rock_error = ROCK_ERROR_NONE;
+    assert_false(rock_linked_red_black_tree_set_lowest(NULL, (void *)1));
+    assert_int_equal(ROCK_LINKED_RED_BLACK_TREE_SET_ERROR_OBJECT_IS_NULL,
+                     rock_error);
+    rock_error = ROCK_ERROR_NONE;
+}
+
+static void check_lowest_error_out_is_null(void **state) {
+    rock_error = ROCK_ERROR_NONE;
+    assert_false(rock_linked_red_black_tree_set_lowest((void *)1, NULL));
+    assert_int_equal(ROCK_LINKED_RED_BLACK_TREE_SET_ERROR_OUT_IS_NULL,
+                     rock_error);
+    rock_error = ROCK_ERROR_NONE;
+}
+
+static void check_lowest_error_on_empty_set(void **state) {
+    rock_error = ROCK_ERROR_NONE;
+    struct rock_linked_red_black_tree_set object;
+    assert_true(rock_linked_red_black_tree_set_init(&object,
+                                                    sizeof(uintptr_t),
+                                                    compare_uintptr_t));
+    const uintptr_t lowest;
+    assert_false(rock_linked_red_black_tree_set_lowest(
+            &object, (const void**)&lowest));
+    assert_int_equal(ROCK_LINKED_RED_BLACK_TREE_SET_ERROR_SET_IS_EMPTY,
+                     rock_error);
+    assert_true(rock_linked_red_black_tree_set_invalidate(&object, NULL));
+    rock_error = ROCK_ERROR_NONE;
+}
+
+static void check_lowest(void **state) {
+    rock_error = ROCK_ERROR_NONE;
+    struct rock_linked_red_black_tree_set object;
+    assert_true(rock_linked_red_black_tree_set_init(&object,
+                                                    sizeof(uintptr_t),
+                                                    compare_uintptr_t));
+    uintptr_t check = 100;
+    assert_true(rock_linked_red_black_tree_set_add(&object, &check));
+    const uintmax_t *lowest;
+    assert_true(rock_linked_red_black_tree_set_lowest(
+            &object, (const void **)&lowest));
+    assert_int_equal(check, *lowest);
+    check = 0;
+    assert_true(rock_linked_red_black_tree_set_add(&object, &check));
+    assert_true(rock_linked_red_black_tree_set_lowest(
+                &object, (const void **)&lowest));
+    assert_ptr_equal(check, *lowest);
+    assert_true(rock_linked_red_black_tree_set_invalidate(&object, NULL));
+    rock_error = ROCK_ERROR_NONE;
+}
+
+static void check_highest_error_object_is_null(void **state) {
+    rock_error = ROCK_ERROR_NONE;
+    assert_false(rock_linked_red_black_tree_set_highest(NULL, (void *)1));
+    assert_int_equal(ROCK_LINKED_RED_BLACK_TREE_SET_ERROR_OBJECT_IS_NULL,
+                     rock_error);
+    rock_error = ROCK_ERROR_NONE;
+}
+
+static void check_highest_error_out_is_null(void **state) {
+    rock_error = ROCK_ERROR_NONE;
+    assert_false(rock_linked_red_black_tree_set_highest((void *)1, NULL));
+    assert_int_equal(ROCK_LINKED_RED_BLACK_TREE_SET_ERROR_OUT_IS_NULL,
+                     rock_error);
+    rock_error = ROCK_ERROR_NONE;
+}
+
+static void check_highest_error_on_empty_set(void **state) {
+    rock_error = ROCK_ERROR_NONE;
+    struct rock_linked_red_black_tree_set object;
+    assert_true(rock_linked_red_black_tree_set_init(&object,
+                                                    sizeof(uintptr_t),
+                                                    compare_uintptr_t));
+    const uintptr_t highest;
+    assert_false(rock_linked_red_black_tree_set_highest(
+            &object, (const void**)&highest));
+    assert_int_equal(ROCK_LINKED_RED_BLACK_TREE_SET_ERROR_SET_IS_EMPTY,
+                     rock_error);
+    assert_true(rock_linked_red_black_tree_set_invalidate(&object, NULL));
+    rock_error = ROCK_ERROR_NONE;
+}
+
+static void check_highest(void **state) {
+    rock_error = ROCK_ERROR_NONE;
+    struct rock_linked_red_black_tree_set object;
+    assert_true(rock_linked_red_black_tree_set_init(&object,
+                                                    sizeof(uintptr_t),
+                                                    compare_uintptr_t));
+    uintptr_t check = 10;
+    assert_true(rock_linked_red_black_tree_set_add(&object, &check));
+    const uintmax_t *highest;
+    assert_true(rock_linked_red_black_tree_set_highest(
+            &object, (const void **)&highest));
+    assert_int_equal(check, *highest);
+    check = 23;
+    assert_true(rock_linked_red_black_tree_set_add(&object, &check));
+    assert_true(rock_linked_red_black_tree_set_highest(
+                &object, (const void **)&highest));
+    assert_ptr_equal(check, *highest);
+    assert_true(rock_linked_red_black_tree_set_invalidate(&object, NULL));
+    rock_error = ROCK_ERROR_NONE;
+}
+
 static void check_first_error_on_object_is_null(void **state) {
     rock_error = ROCK_ERROR_NONE;
     assert_false(rock_linked_red_black_tree_set_first(NULL, (void *)1));
@@ -1348,6 +1452,14 @@ int main(int argc, char *argv[]) {
             cmocka_unit_test(check_lower_error_on_out_is_null),
             cmocka_unit_test(check_lower_error_on_item_not_found),
             cmocka_unit_test(check_lower),
+            cmocka_unit_test(check_lowest_error_object_is_null),
+            cmocka_unit_test(check_lowest_error_out_is_null),
+            cmocka_unit_test(check_lowest_error_on_empty_set),
+            cmocka_unit_test(check_lowest),
+            cmocka_unit_test(check_highest_error_object_is_null),
+            cmocka_unit_test(check_highest_error_out_is_null),
+            cmocka_unit_test(check_highest_error_on_empty_set),
+            cmocka_unit_test(check_highest),
             cmocka_unit_test(check_first_error_on_object_is_null),
             cmocka_unit_test(check_first_error_on_out_is_null),
             cmocka_unit_test(check_first_error_on_empty_set),

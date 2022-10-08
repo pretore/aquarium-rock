@@ -7,9 +7,11 @@
 #include "cmocka.h"
 
 bool posix_memalign_is_overridden = false;
-int cmocka_test_posix_memalign(void **const out, const size_t alignment,
+int cmocka_test_posix_memalign(void **const out,
+                               const size_t alignment,
                                const size_t size,
-                               const char *const file, const int line) {
+                               const char *const file,
+                               const int line) {
     if (alignment % sizeof(void *)) {
         return EINVAL;
     }
