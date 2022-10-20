@@ -750,7 +750,7 @@ bool rock_red_black_tree_remove(struct rock_red_black_tree *const object,
         seagrass_required_true(rock_red_black_tree_node_get_parent(
                 node, &parent));
         switch ((NULL == left) << 1 | (NULL == right)) {
-            case 3: { /* leaf node */
+            case 3: { /* node with no children */
                 if (parent) {
                     bool (*const set_N)(struct rock_red_black_tree_node *,
                                         struct rock_red_black_tree_node *)
@@ -889,58 +889,53 @@ bool rock_red_black_tree_remove(struct rock_red_black_tree *const object,
         if (double_black == object->root) {
             break;
         }
-        struct rock_red_black_tree_node *parent_ = parent;
-        bool is_left; /* double black on left or right */
         struct rock_red_black_tree_node *sibling;
-        if (parent_->left == double_black || !parent_->left) {
-            sibling = parent_->right;
-            is_left = true;
+        /* is 'double black' on left or right */
+        bool is_left = parent->left == double_black || !parent->left;
+        if (is_left) {
+            sibling = parent->right;
         } else {
-            sibling = parent_->left;
-            is_left = false;
+            sibling = parent->left;
         }
         seagrass_required_true(rock_red_black_tree_node_get_left(
                 sibling, &left));
         seagrass_required_true(rock_red_black_tree_node_get_right(
                 sibling, &right));
         /* case 2: if sibling is RED
-         *           P(B)              |             P(B)
+         *           P(?)              |             P(?)
          *          /    \             |            /    \
-         *      N((B))   S(R)          |          S(R)   N((B))
-         *        / \     / \          |          / \      / \
-         *      ... ... C(B) C(B)      |       C(B) C(B) ... ...
-         *              / \  / \       |       / \  / \
-         *            ... .... ...     |     ... .... ...
+         *      N((B))   S(R)          |          S(R)  N((B))
+         *        / \     / \          |          / \     / \
+         *      ... ... ... ...        |        ... ... ... ...
          *                    rotate S through P
          *                  switch P and S colors
-         *           S(B)              |            S(B)
-         *          /    \             |           /    \
-         *        P(R)   C(B)          |         C(B)   P(R)
-         *       /   \   /  \          |        /   \   /  \
-         *   N((B)) C(B)... ...        |       ... ...C(B)  N((B))
-         *   /  \   /  \               |              /  \   /  \
-         * ... ......  ...             |            ... ......  ...
+         *             S(?)            |            S(?)
+         *            /    \           |           /    \
+         *          P(R)   ...         |         ...    P(R)
+         *         /   \               |                /  \
+         *     N((B))  ...             |              ...  N((B))
+         *     /  \                    |                    /  \
+         *   ... ...                   |                  ...  ...
          */
-        if (rock_red_black_tree_node_get_color(parent, &color)
-            && ROCK_RED_BLACK_TREE_COLOR_BLACK == color
-            && rock_red_black_tree_node_get_color(sibling, &color)
-            && ROCK_RED_BLACK_TREE_COLOR_RED == color
-            && rock_red_black_tree_node_get_color(left, &color)
-            && ROCK_RED_BLACK_TREE_COLOR_BLACK == color
-            && rock_red_black_tree_node_get_color(right, &color)
-            && ROCK_RED_BLACK_TREE_COLOR_BLACK == color) {
+        if (rock_red_black_tree_node_get_color(sibling, &color)
+            && ROCK_RED_BLACK_TREE_COLOR_RED == color) {
             seagrass_required_true(rock_red_black_tree_rotate_N(
                     sibling, is_left));
+            bool colors[2];
+            seagrass_required_true(rock_red_black_tree_node_get_color(
+                    parent, &colors[0]));
+            seagrass_required_true(rock_red_black_tree_node_get_color(
+                    sibling, &colors[1]));
             seagrass_required_true(rock_red_black_tree_node_set_color(
-                    parent, ROCK_RED_BLACK_TREE_COLOR_RED));
+                    parent, colors[1]));
             seagrass_required_true(rock_red_black_tree_node_set_color(
-                    sibling, ROCK_RED_BLACK_TREE_COLOR_BLACK));
+                    sibling, colors[0]));
             if (parent == object->root) {
                 object->root = sibling;
             }
-            continue; /* sibling has changed */
+            continue;
         }
-        /* case 3: if sibling is BLACK
+        /* case 3: if parent, sibling and children are BLACK
          *           P(B)              |             P(B)
          *          /    \             |            /    \
          *      N((B))   S(B)          |          S(B)   N((B))
@@ -973,7 +968,7 @@ bool rock_red_black_tree_remove(struct rock_red_black_tree *const object,
                     parent, &parent));
             continue; /* go to case 1 as parent is now double black */
         }
-        /* case 4: If parent is RED sibling and children are BLACK
+        /* case 4: if parent is RED while sibling and children are BLACK
          *           P(R)              |             P(R)
          *          /    \             |            /    \
          *      N((B))   S(B)          |          S(B)   N((B))
@@ -1009,9 +1004,9 @@ bool rock_red_black_tree_remove(struct rock_red_black_tree *const object,
         struct rock_red_black_tree_node *closest = is_left ? left : right;
         /* farthest C from N */
         struct rock_red_black_tree_node *farthest = is_left ? right : left;
-        /* case 5: Sibling is BLACK and closest child is RED while farthest
+        /* case 5: sibling is BLACK and closest child is RED while farthest
          * child is BLACK.
-         *           P(B)              |             P(B)
+         *           P(?)              |             P(?)
          *          /    \             |            /    \
          *      N((B))   S(B)          |          S(B)   N((B))
          *        / \     / \          |          / \      / \
@@ -1020,7 +1015,7 @@ bool rock_red_black_tree_remove(struct rock_red_black_tree *const object,
          *            ... .... ...     |     ... .... ...
          *                   rotate C(R) through S
          *              change S to RED and C(R) to BLACK
-         *           P(B)              |             P(B)
+         *           P(?)              |             P(?)
          *          /    \             |            /    \
          *      N((B))   C(B)          |          C(B)   N((B))
          *        / \     / \          |          / \      / \
@@ -1030,9 +1025,7 @@ bool rock_red_black_tree_remove(struct rock_red_black_tree *const object,
          *                     / \     |    / \
          *                   ... ...   |  ... ...
          */
-        if (rock_red_black_tree_node_get_color(parent, &color)
-            && ROCK_RED_BLACK_TREE_COLOR_BLACK == color
-            && rock_red_black_tree_node_get_color(sibling, &color)
+        if (rock_red_black_tree_node_get_color(sibling, &color)
             && ROCK_RED_BLACK_TREE_COLOR_BLACK == color
             && rock_red_black_tree_node_get_color(closest, &color)
             && ROCK_RED_BLACK_TREE_COLOR_RED == color
@@ -1044,9 +1037,9 @@ bool rock_red_black_tree_remove(struct rock_red_black_tree *const object,
                     sibling, ROCK_RED_BLACK_TREE_COLOR_RED));
             seagrass_required_true(rock_red_black_tree_node_set_color(
                     closest, ROCK_RED_BLACK_TREE_COLOR_BLACK));
-            continue; /* sibling has changed */
+            continue;
         }
-        /* case 6: Sibling is BLACK and farthest child is RED.
+        /* case 6: sibling is BLACK and farthest child is RED.
          *           P(?)              |             P(?)
          *          /    \             |            /    \
          *      N((B))   S(B)          |          S(B)   N((B))
@@ -1085,6 +1078,7 @@ bool rock_red_black_tree_remove(struct rock_red_black_tree *const object,
             }
             break;
         }
+        seagrass_required_true(false);
     }
     return true;
 }

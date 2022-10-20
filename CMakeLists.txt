@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.22)
-project(aquarium-rock VERSION 3.5.0
+project(aquarium-rock VERSION 3.5.1
         LANGUAGES C
         DESCRIPTION "Data structures in C")
 
@@ -54,7 +54,9 @@ if(CMAKE_BUILD_TYPE STREQUAL "Debug")
             PRIVATE
                 ${SOURCES}
                 src/test/cmocka.h
-                src/test/cmocka.c)
+                src/test/cmocka.c
+                src/test/red_black_tree.h
+                src/test/red_black_tree.c)
     target_link_libraries(${PROJECT_NAME}
             PUBLIC
                 ${CMAKE_THREAD_LIBS_INIT}

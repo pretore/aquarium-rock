@@ -6,9 +6,11 @@
 #include <time.h>
 #include <seagrass.h>
 #include <rock.h>
+#include <stdio.h>
 
 #include "private/red_black_tree.h"
 #include "test/cmocka.h"
+#include "test/red_black_tree.h"
 
 static void check_node_init_error_on_node_is_null(void **state) {
     rock_error = ROCK_ERROR_NONE;
@@ -166,9 +168,9 @@ static void check_node_get_left(void **state) {
     assert_true(rock_red_black_tree_node_get_left(&node, &out));
     assert_null(out);
     uintptr_t left = (rand() % UINTPTR_MAX);
-    node.left = (struct rock_red_black_tree_node *)left;
+    node.left = (struct rock_red_black_tree_node *) left;
     assert_true(rock_red_black_tree_node_get_left(&node, &out));
-    assert_ptr_equal(out, (void*)left);
+    assert_ptr_equal(out, (void *) left);
     rock_error = ROCK_ERROR_NONE;
 }
 
@@ -216,9 +218,9 @@ static void check_node_get_right(void **state) {
     assert_true(rock_red_black_tree_node_get_right(&node, &out));
     assert_null(out);
     uintptr_t right = (rand() % UINTPTR_MAX);
-    node.right = (struct rock_red_black_tree_node *)right;
+    node.right = (struct rock_red_black_tree_node *) right;
     assert_true(rock_red_black_tree_node_get_right(&node, &out));
-    assert_ptr_equal(out, (void*)right);
+    assert_ptr_equal(out, (void *) right);
     rock_error = ROCK_ERROR_NONE;
 }
 
@@ -1434,15 +1436,15 @@ static void check_init_error_on_compare_is_null(void **state) {
 static void check_init(void **state) {
     rock_error = ROCK_ERROR_NONE;
     struct rock_red_black_tree object = {
-            .root = (void *)UINTPTR_MAX,
+            .root = (void *) UINTPTR_MAX,
             .count = (-1),
-            .compare = (void *)UINTPTR_MAX,
+            .compare = (void *) UINTPTR_MAX,
     };
     assert_true(rock_red_black_tree_init(
             &object,
             (int (*)(const struct rock_red_black_tree_node *,
-                             const struct rock_red_black_tree_node *))
-                           seagrass_void_ptr_compare));
+                     const struct rock_red_black_tree_node *))
+                    seagrass_void_ptr_compare));
     assert_null(object.root);
     assert_ptr_equal(seagrass_void_ptr_compare, object.compare);
     assert_int_equal(0, object.count);
@@ -1501,14 +1503,14 @@ static void check_invalidate(void **state) {
 
 static void check_count_error_on_object_is_null(void **state) {
     rock_error = ROCK_ERROR_NONE;
-    assert_false(rock_red_black_tree_count(NULL, (void *)1));
+    assert_false(rock_red_black_tree_count(NULL, (void *) 1));
     assert_int_equal(ROCK_RED_BLACK_TREE_ERROR_OBJECT_IS_NULL, rock_error);
     rock_error = ROCK_ERROR_NONE;
 }
 
 static void check_count_error_on_out_is_null(void **state) {
     rock_error = ROCK_ERROR_NONE;
-    assert_false(rock_red_black_tree_count((void *)1, NULL));
+    assert_false(rock_red_black_tree_count((void *) 1, NULL));
     assert_int_equal(ROCK_RED_BLACK_TREE_ERROR_OUT_IS_NULL, rock_error);
     rock_error = ROCK_ERROR_NONE;
 }
@@ -1521,7 +1523,7 @@ static void check_count(void **state) {
             &object,
             (int (*)(const struct rock_red_black_tree_node *,
                      const struct rock_red_black_tree_node *))
-                             seagrass_void_ptr_compare));
+                    seagrass_void_ptr_compare));
     assert_int_equal(0, object.count);
     object.count = (rand() % UINTMAX_MAX);
     uintmax_t count;
@@ -1563,50 +1565,9 @@ struct entry {
 
 static int compare_entry(const struct rock_red_black_tree_node *a,
                          const struct rock_red_black_tree_node *b) {
-    struct entry* A = rock_container_of(a, struct entry, node);
-    struct entry* B = rock_container_of(b, struct entry, node);
+    struct entry *A = rock_container_of(a, struct entry, node);
+    struct entry *B = rock_container_of(b, struct entry, node);
     return seagrass_uintmax_t_compare(A->value, B->value);
-}
-
-static void assert_node(const struct rock_red_black_tree_node *object,
-        const struct rock_red_black_tree_node *parent,
-        const bool is_left_on_parent,
-        const struct rock_red_black_tree_node *left,
-        const struct rock_red_black_tree_node *right,
-        const bool color) {
-    bool color_;
-    assert_true(rock_red_black_tree_node_get_color(object, &color_));
-    assert_int_equal(color_, color);
-    struct rock_red_black_tree_node *out;
-
-    assert_true(rock_red_black_tree_node_get_parent(object, &out));
-    if (!parent) {
-        assert_null(out);
-    } else {
-        assert_ptr_equal(out, parent);
-        assert_true(is_left_on_parent
-            ? rock_red_black_tree_node_get_left(parent, &out)
-            : rock_red_black_tree_node_get_right(parent, &out));
-        assert_ptr_equal(out, object);
-    }
-
-    assert_true(rock_red_black_tree_node_get_left(object, &out));
-    if (!left) {
-        assert_null(out);
-    } else {
-        assert_ptr_equal(out, left);
-        assert_true(rock_red_black_tree_node_get_parent(left, &out));
-        assert_ptr_equal(out, object);
-    }
-
-    assert_true(rock_red_black_tree_node_get_right(object, &out));
-    if (!right) {
-        assert_null(out);
-    } else {
-        assert_ptr_equal(out, right);
-        assert_true(rock_red_black_tree_node_get_parent(right, &out));
-        assert_ptr_equal(out, object);
-    }
 }
 
 static void check_find_error_on_node_not_found(void **state) {
@@ -1650,7 +1611,7 @@ static void check_find_error_on_node_not_found(void **state) {
             .compare = compare_entry
     };
     struct rock_red_black_tree_node *out = NULL;
-    struct entry needle = { .value = 10 };
+    struct entry needle = {.value = 10};
     assert_true(rock_red_black_tree_node_init(&needle.node));
     assert_false(rock_red_black_tree_find(&tree, NULL, &needle.node, &out));
     assert_int_equal(ROCK_RED_BLACK_TREE_ERROR_NODE_NOT_FOUND, rock_error);
@@ -1662,7 +1623,7 @@ static void check_find_error_on_node_not_found(void **state) {
 
 static void check_find_empty_tree(void **state) {
     rock_error = ROCK_ERROR_NONE;
-    struct entry needle = { .value = 12 };
+    struct entry needle = {.value = 12};
     assert_true(rock_red_black_tree_node_init(&needle.node));
     struct rock_red_black_tree tree = {};
     struct rock_red_black_tree_node *out;
@@ -1713,7 +1674,7 @@ static void check_find(void **state) {
             .compare = compare_entry
     };
     struct rock_red_black_tree_node *out = NULL;
-    struct entry needle = { .value = 2 };
+    struct entry needle = {.value = 2};
     assert_true(rock_red_black_tree_node_init(&needle.node));
     assert_true(rock_red_black_tree_find(&tree, NULL, &needle.node, &out));
     assert_ptr_equal(&c.node, out); /* exact match found in tree */
@@ -1786,8 +1747,9 @@ static void check_insert_case_0(void **state) {
     assert_null(object.root);
     /* insert 'a' into an empty tree */
     assert_true(rock_red_black_tree_insert(&object, out, &a.node));
-    assert_node(&a.node, NULL, false, NULL, NULL,
-                ROCK_RED_BLACK_TREE_COLOR_BLACK);
+    assert_red_black_tree(&object);
+    assert_red_black_tree_node(&a.node, NULL, false, NULL, NULL,
+                               ROCK_RED_BLACK_TREE_COLOR_BLACK);
     assert_true(rock_red_black_tree_invalidate(&object, NULL));
     rock_error = ROCK_ERROR_NONE;
 }
@@ -1811,23 +1773,25 @@ static void check_insert_case_1(void **state) {
      *     a(50R)
      */
     assert_ptr_equal(object.root, &root.node);
-    assert_node(&root.node, NULL, false, &a.node, NULL,
-                ROCK_RED_BLACK_TREE_COLOR_BLACK);
-    assert_node(&a.node, &root.node, true, NULL, NULL,
-                ROCK_RED_BLACK_TREE_COLOR_RED);
+    assert_red_black_tree_node(&root.node, NULL, false, &a.node, NULL,
+                               ROCK_RED_BLACK_TREE_COLOR_BLACK);
+    assert_red_black_tree_node(&a.node, &root.node, true, NULL, NULL,
+                               ROCK_RED_BLACK_TREE_COLOR_RED);
+    assert_red_black_tree(&object);
     assert_true(rock_red_black_tree_insert(&object, &root.node, &b.node));
+    assert_red_black_tree(&object);
     /*
      *      root(199B)
      *        /    \
      *     a(50R)  b(263R)
      */
     assert_ptr_equal(object.root, &root.node);
-    assert_node(&root.node, NULL, false, &a.node, &b.node,
-                ROCK_RED_BLACK_TREE_COLOR_BLACK);
-    assert_node(&a.node, &root.node, true, NULL, NULL,
-                ROCK_RED_BLACK_TREE_COLOR_RED);
-    assert_node(&b.node, &root.node, false, NULL, NULL,
-                ROCK_RED_BLACK_TREE_COLOR_RED);
+    assert_red_black_tree_node(&root.node, NULL, false, &a.node, &b.node,
+                               ROCK_RED_BLACK_TREE_COLOR_BLACK);
+    assert_red_black_tree_node(&a.node, &root.node, true, NULL, NULL,
+                               ROCK_RED_BLACK_TREE_COLOR_RED);
+    assert_red_black_tree_node(&b.node, &root.node, false, NULL, NULL,
+                               ROCK_RED_BLACK_TREE_COLOR_RED);
     assert_true(rock_red_black_tree_invalidate(&object, NULL));
     rock_error = ROCK_ERROR_NONE;
 }
@@ -1851,23 +1815,25 @@ static void check_insert_case_2b_configuration_3(void **state) {
      *     b(2R)
      */
     assert_ptr_equal(object.root, &a.node);
-    assert_node(&a.node, NULL, false, &b.node, NULL,
-                ROCK_RED_BLACK_TREE_COLOR_BLACK);
-    assert_node(&b.node, &a.node, true, NULL, NULL,
-                ROCK_RED_BLACK_TREE_COLOR_RED);
+    assert_red_black_tree_node(&a.node, NULL, false, &b.node, NULL,
+                               ROCK_RED_BLACK_TREE_COLOR_BLACK);
+    assert_red_black_tree_node(&b.node, &a.node, true, NULL, NULL,
+                               ROCK_RED_BLACK_TREE_COLOR_RED);
+    assert_red_black_tree(&object);
     assert_true(rock_red_black_tree_insert(&object, &b.node, &c.node));
+    assert_red_black_tree(&object);
     /*
      *         b(2B)
      *         /  \
      *     c(1R)  a(4R)
      */
     assert_ptr_equal(object.root, &b.node);
-    assert_node(&b.node, NULL, false, &c.node, &a.node,
-                ROCK_RED_BLACK_TREE_COLOR_BLACK);
-    assert_node(&c.node, &b.node, true, NULL, NULL,
-                ROCK_RED_BLACK_TREE_COLOR_RED);
-    assert_node(&a.node, &b.node, false, NULL, NULL,
-                ROCK_RED_BLACK_TREE_COLOR_RED);
+    assert_red_black_tree_node(&b.node, NULL, false, &c.node, &a.node,
+                               ROCK_RED_BLACK_TREE_COLOR_BLACK);
+    assert_red_black_tree_node(&c.node, &b.node, true, NULL, NULL,
+                               ROCK_RED_BLACK_TREE_COLOR_RED);
+    assert_red_black_tree_node(&a.node, &b.node, false, NULL, NULL,
+                               ROCK_RED_BLACK_TREE_COLOR_RED);
     assert_true(rock_red_black_tree_invalidate(&object, NULL));
     rock_error = ROCK_ERROR_NONE;
 }
@@ -1891,23 +1857,25 @@ static void check_insert_case_2b_configuration_2(void **state) {
      *     c(1R)
      */
     assert_ptr_equal(object.root, &a.node);
-    assert_node(&a.node, NULL, false, &c.node, NULL,
-                ROCK_RED_BLACK_TREE_COLOR_BLACK);
-    assert_node(&c.node, &a.node, true, NULL, NULL,
-                ROCK_RED_BLACK_TREE_COLOR_RED);
+    assert_red_black_tree_node(&a.node, NULL, false, &c.node, NULL,
+                               ROCK_RED_BLACK_TREE_COLOR_BLACK);
+    assert_red_black_tree_node(&c.node, &a.node, true, NULL, NULL,
+                               ROCK_RED_BLACK_TREE_COLOR_RED);
+    assert_red_black_tree(&object);
     assert_true(rock_red_black_tree_insert(&object, &c.node, &b.node));
+    assert_red_black_tree(&object);
     /*
      *         b(2B)
      *         /  \
      *     c(1R)  a(4R)
      */
     assert_ptr_equal(object.root, &b.node);
-    assert_node(&b.node, NULL, false, &c.node, &a.node,
-                ROCK_RED_BLACK_TREE_COLOR_BLACK);
-    assert_node(&c.node, &b.node, true, NULL, NULL,
-                ROCK_RED_BLACK_TREE_COLOR_RED);
-    assert_node(&a.node, &b.node, false, NULL, NULL,
-                ROCK_RED_BLACK_TREE_COLOR_RED);
+    assert_red_black_tree_node(&b.node, NULL, false, &c.node, &a.node,
+                               ROCK_RED_BLACK_TREE_COLOR_BLACK);
+    assert_red_black_tree_node(&c.node, &b.node, true, NULL, NULL,
+                               ROCK_RED_BLACK_TREE_COLOR_RED);
+    assert_red_black_tree_node(&a.node, &b.node, false, NULL, NULL,
+                               ROCK_RED_BLACK_TREE_COLOR_RED);
     assert_true(rock_red_black_tree_invalidate(&object, NULL));
     rock_error = ROCK_ERROR_NONE;
 }
@@ -1931,23 +1899,25 @@ static void check_insert_case_2b_configuration_1(void **state) {
      *             a(4R)
      */
     assert_ptr_equal(object.root, &c.node);
-    assert_node(&c.node, NULL, false, NULL, &a.node,
-                ROCK_RED_BLACK_TREE_COLOR_BLACK);
-    assert_node(&a.node, &c.node, false, NULL, NULL,
-                ROCK_RED_BLACK_TREE_COLOR_RED);
+    assert_red_black_tree_node(&c.node, NULL, false, NULL, &a.node,
+                               ROCK_RED_BLACK_TREE_COLOR_BLACK);
+    assert_red_black_tree_node(&a.node, &c.node, false, NULL, NULL,
+                               ROCK_RED_BLACK_TREE_COLOR_RED);
+    assert_red_black_tree(&object);
     assert_true(rock_red_black_tree_insert(&object, &a.node, &b.node));
+    assert_red_black_tree(&object);
     /*
      *         b(2B)
      *         /  \
      *     c(1R)  a(4R)
      */
     assert_ptr_equal(object.root, &b.node);
-    assert_node(&b.node, NULL, false, &c.node, &a.node,
-                ROCK_RED_BLACK_TREE_COLOR_BLACK);
-    assert_node(&c.node, &b.node, true, NULL, NULL,
-                ROCK_RED_BLACK_TREE_COLOR_RED);
-    assert_node(&a.node, &b.node, false, NULL, NULL,
-                ROCK_RED_BLACK_TREE_COLOR_RED);
+    assert_red_black_tree_node(&b.node, NULL, false, &c.node, &a.node,
+                               ROCK_RED_BLACK_TREE_COLOR_BLACK);
+    assert_red_black_tree_node(&c.node, &b.node, true, NULL, NULL,
+                               ROCK_RED_BLACK_TREE_COLOR_RED);
+    assert_red_black_tree_node(&a.node, &b.node, false, NULL, NULL,
+                               ROCK_RED_BLACK_TREE_COLOR_RED);
     assert_true(rock_red_black_tree_invalidate(&object, NULL));
     rock_error = ROCK_ERROR_NONE;
 }
@@ -1971,23 +1941,25 @@ static void check_insert_case_2b_configuration_0(void **state) {
      *             b(2R)
      */
     assert_ptr_equal(object.root, &c.node);
-    assert_node(&c.node, NULL, false, NULL, &b.node,
-                ROCK_RED_BLACK_TREE_COLOR_BLACK);
-    assert_node(&b.node, &c.node, false, NULL, NULL,
-                ROCK_RED_BLACK_TREE_COLOR_RED);
+    assert_red_black_tree_node(&c.node, NULL, false, NULL, &b.node,
+                               ROCK_RED_BLACK_TREE_COLOR_BLACK);
+    assert_red_black_tree_node(&b.node, &c.node, false, NULL, NULL,
+                               ROCK_RED_BLACK_TREE_COLOR_RED);
+    assert_red_black_tree(&object);
     assert_true(rock_red_black_tree_insert(&object, &b.node, &a.node));
+    assert_red_black_tree(&object);
     /*
      *         b(2B)
      *         /  \
      *     c(1R)  a(4R)
      */
     assert_ptr_equal(object.root, &b.node);
-    assert_node(&b.node, NULL, false, &c.node, &a.node,
-                ROCK_RED_BLACK_TREE_COLOR_BLACK);
-    assert_node(&c.node, &b.node, true, NULL, NULL,
-                ROCK_RED_BLACK_TREE_COLOR_RED);
-    assert_node(&a.node, &b.node, false, NULL, NULL,
-                ROCK_RED_BLACK_TREE_COLOR_RED);
+    assert_red_black_tree_node(&b.node, NULL, false, &c.node, &a.node,
+                               ROCK_RED_BLACK_TREE_COLOR_BLACK);
+    assert_red_black_tree_node(&c.node, &b.node, true, NULL, NULL,
+                               ROCK_RED_BLACK_TREE_COLOR_RED);
+    assert_red_black_tree_node(&a.node, &b.node, false, NULL, NULL,
+                               ROCK_RED_BLACK_TREE_COLOR_RED);
     assert_true(rock_red_black_tree_invalidate(&object, NULL));
     rock_error = ROCK_ERROR_NONE;
 }
@@ -2014,13 +1986,15 @@ static void check_insert_case_2a(void **state) {
      *     c(2R)  a(5R)
      */
     assert_ptr_equal(object.root, &b.node);
-    assert_node(&b.node, NULL, false, &c.node, &a.node,
-                ROCK_RED_BLACK_TREE_COLOR_BLACK);
-    assert_node(&c.node, &b.node, true, NULL, NULL,
-                ROCK_RED_BLACK_TREE_COLOR_RED);
-    assert_node(&a.node, &b.node, false, NULL, NULL,
-                ROCK_RED_BLACK_TREE_COLOR_RED);
+    assert_red_black_tree_node(&b.node, NULL, false, &c.node, &a.node,
+                               ROCK_RED_BLACK_TREE_COLOR_BLACK);
+    assert_red_black_tree_node(&c.node, &b.node, true, NULL, NULL,
+                               ROCK_RED_BLACK_TREE_COLOR_RED);
+    assert_red_black_tree_node(&a.node, &b.node, false, NULL, NULL,
+                               ROCK_RED_BLACK_TREE_COLOR_RED);
+    assert_red_black_tree(&object);
     assert_true(rock_red_black_tree_insert(&object, &c.node, &d.node));
+    assert_red_black_tree(&object);
     /*
      *         b(4B)
      *         /  \
@@ -2029,14 +2003,14 @@ static void check_insert_case_2a(void **state) {
      *   d(1R)
      */
     assert_ptr_equal(object.root, &b.node);
-    assert_node(&b.node, NULL, false, &c.node, &a.node,
-                ROCK_RED_BLACK_TREE_COLOR_BLACK);
-    assert_node(&c.node, &b.node, true, &d.node, NULL,
-                ROCK_RED_BLACK_TREE_COLOR_BLACK);
-    assert_node(&a.node, &b.node, false, NULL, NULL,
-                ROCK_RED_BLACK_TREE_COLOR_BLACK);
-    assert_node(&d.node, &c.node, true, NULL, NULL,
-                ROCK_RED_BLACK_TREE_COLOR_RED);
+    assert_red_black_tree_node(&b.node, NULL, false, &c.node, &a.node,
+                               ROCK_RED_BLACK_TREE_COLOR_BLACK);
+    assert_red_black_tree_node(&c.node, &b.node, true, &d.node, NULL,
+                               ROCK_RED_BLACK_TREE_COLOR_BLACK);
+    assert_red_black_tree_node(&a.node, &b.node, false, NULL, NULL,
+                               ROCK_RED_BLACK_TREE_COLOR_BLACK);
+    assert_red_black_tree_node(&d.node, &c.node, true, NULL, NULL,
+                               ROCK_RED_BLACK_TREE_COLOR_RED);
     assert_true(rock_red_black_tree_invalidate(&object, NULL));
     rock_error = ROCK_ERROR_NONE;
 }
@@ -2065,13 +2039,15 @@ static void check_insert(void **state) {
      *     c(2R)  a(9R)
      */
     assert_ptr_equal(object.root, &b.node);
-    assert_node(&b.node, NULL, false, &c.node, &a.node,
-                ROCK_RED_BLACK_TREE_COLOR_BLACK);
-    assert_node(&c.node, &b.node, true, NULL, NULL,
-                ROCK_RED_BLACK_TREE_COLOR_RED);
-    assert_node(&a.node, &b.node, false, NULL, NULL,
-                ROCK_RED_BLACK_TREE_COLOR_RED);
+    assert_red_black_tree_node(&b.node, NULL, false, &c.node, &a.node,
+                               ROCK_RED_BLACK_TREE_COLOR_BLACK);
+    assert_red_black_tree_node(&c.node, &b.node, true, NULL, NULL,
+                               ROCK_RED_BLACK_TREE_COLOR_RED);
+    assert_red_black_tree_node(&a.node, &b.node, false, NULL, NULL,
+                               ROCK_RED_BLACK_TREE_COLOR_RED);
+    assert_red_black_tree(&object);
     assert_true(rock_red_black_tree_insert(&object, &b.node, &d.node));
+    assert_red_black_tree(&object);
     /*
      *         b(5B)
      *         /  \
@@ -2080,15 +2056,16 @@ static void check_insert(void **state) {
      *   c(2R)
      */
     assert_ptr_equal(object.root, &b.node);
-    assert_node(&b.node, NULL, false, &d.node, &a.node,
-                ROCK_RED_BLACK_TREE_COLOR_BLACK);
-    assert_node(&d.node, &b.node, true, &c.node, NULL,
-                ROCK_RED_BLACK_TREE_COLOR_BLACK);
-    assert_node(&a.node, &b.node, false, NULL, NULL,
-                ROCK_RED_BLACK_TREE_COLOR_BLACK);
-    assert_node(&c.node, &d.node, true, NULL, NULL,
-                ROCK_RED_BLACK_TREE_COLOR_RED);
+    assert_red_black_tree_node(&b.node, NULL, false, &d.node, &a.node,
+                               ROCK_RED_BLACK_TREE_COLOR_BLACK);
+    assert_red_black_tree_node(&d.node, &b.node, true, &c.node, NULL,
+                               ROCK_RED_BLACK_TREE_COLOR_BLACK);
+    assert_red_black_tree_node(&a.node, &b.node, false, NULL, NULL,
+                               ROCK_RED_BLACK_TREE_COLOR_BLACK);
+    assert_red_black_tree_node(&c.node, &d.node, true, NULL, NULL,
+                               ROCK_RED_BLACK_TREE_COLOR_RED);
     assert_true(rock_red_black_tree_insert(&object, &c.node, &e.node));
+    assert_red_black_tree(&object);
     /*
      *         b(5B)
      *         /  \
@@ -2097,16 +2074,16 @@ static void check_insert(void **state) {
      *   e(1R) d(4R)
      */
     assert_ptr_equal(object.root, &b.node);
-    assert_node(&b.node, NULL, false, &c.node, &a.node,
-                ROCK_RED_BLACK_TREE_COLOR_BLACK);
-    assert_node(&c.node, &b.node, true, &e.node, &d.node,
-                ROCK_RED_BLACK_TREE_COLOR_BLACK);
-    assert_node(&a.node, &b.node, false, NULL, NULL,
-                ROCK_RED_BLACK_TREE_COLOR_BLACK);
-    assert_node(&e.node, &c.node, true, NULL, NULL,
-                ROCK_RED_BLACK_TREE_COLOR_RED);
-    assert_node(&d.node, &c.node, false, NULL, NULL,
-                ROCK_RED_BLACK_TREE_COLOR_RED);
+    assert_red_black_tree_node(&b.node, NULL, false, &c.node, &a.node,
+                               ROCK_RED_BLACK_TREE_COLOR_BLACK);
+    assert_red_black_tree_node(&c.node, &b.node, true, &e.node, &d.node,
+                               ROCK_RED_BLACK_TREE_COLOR_BLACK);
+    assert_red_black_tree_node(&a.node, &b.node, false, NULL, NULL,
+                               ROCK_RED_BLACK_TREE_COLOR_BLACK);
+    assert_red_black_tree_node(&e.node, &c.node, true, NULL, NULL,
+                               ROCK_RED_BLACK_TREE_COLOR_RED);
+    assert_red_black_tree_node(&d.node, &c.node, false, NULL, NULL,
+                               ROCK_RED_BLACK_TREE_COLOR_RED);
     assert_true(rock_red_black_tree_invalidate(&object, NULL));
     rock_error = ROCK_ERROR_NONE;
 }
@@ -2320,7 +2297,7 @@ static void check_prev_error_on_node_is_null(void **state) {
     rock_error = ROCK_ERROR_NONE;
 }
 
-static void check_get_prev_error_on_out_is_null(void **state) {
+static void check_prev_error_on_out_is_null(void **state) {
     rock_error = ROCK_ERROR_NONE;
     assert_false(rock_red_black_tree_prev((void *) 1, NULL));
     assert_int_equal(ROCK_RED_BLACK_TREE_ERROR_OUT_IS_NULL, rock_error);
@@ -2376,14 +2353,14 @@ static void check_prev(void **state) {
 
 static void check_remove_error_on_object_is_null(void **state) {
     rock_error = ROCK_ERROR_NONE;
-    assert_false(rock_red_black_tree_remove(NULL, (void *)1));
+    assert_false(rock_red_black_tree_remove(NULL, (void *) 1));
     assert_int_equal(ROCK_RED_BLACK_TREE_ERROR_OBJECT_IS_NULL, rock_error);
     rock_error = ROCK_ERROR_NONE;
 }
 
 static void check_remove_error_on_node_is_null(void **state) {
     rock_error = ROCK_ERROR_NONE;
-    assert_false(rock_red_black_tree_remove((void*)1, NULL));
+    assert_false(rock_red_black_tree_remove((void *) 1, NULL));
     assert_int_equal(ROCK_RED_BLACK_TREE_ERROR_NODE_IS_NULL, rock_error);
     rock_error = ROCK_ERROR_NONE;
 }
@@ -2405,18 +2382,18 @@ static void check_remove_leaf_nodes(void **state) {
      *     b(4R)
      */
     assert_ptr_equal(object.root, &a.node);
-    assert_node(&a.node, NULL, false, &b.node, NULL,
-                ROCK_RED_BLACK_TREE_COLOR_BLACK);
-    assert_node(&b.node, &a.node, true, NULL, NULL,
-                ROCK_RED_BLACK_TREE_COLOR_RED);
+    assert_red_black_tree_node(&a.node, NULL, false, &b.node, NULL,
+                               ROCK_RED_BLACK_TREE_COLOR_BLACK);
+    assert_red_black_tree_node(&b.node, &a.node, true, NULL, NULL,
+                               ROCK_RED_BLACK_TREE_COLOR_RED);
     /* remove leaf */
     assert_true(rock_red_black_tree_remove(&object, &b.node));
     /*
      *         a(9B)
      */
     assert_ptr_equal(object.root, &a.node);
-    assert_node(&a.node, NULL, false, NULL, NULL,
-                ROCK_RED_BLACK_TREE_COLOR_BLACK);
+    assert_red_black_tree_node(&a.node, NULL, false, NULL, NULL,
+                               ROCK_RED_BLACK_TREE_COLOR_BLACK);
     /* remove root */
     assert_true(rock_red_black_tree_remove(&object, &a.node));
     assert_null(object.root);
@@ -2452,17 +2429,19 @@ static void check_remove_node_with_single_child(void **state) {
      *    a(1R)      e(9R)
      */
     assert_ptr_equal(object.root, &c.node);
-    assert_node(&c.node, NULL, false, &d.node, &b.node,
-                ROCK_RED_BLACK_TREE_COLOR_BLACK);
-    assert_node(&d.node, &c.node, true, &a.node, NULL,
-                ROCK_RED_BLACK_TREE_COLOR_BLACK);
-    assert_node(&b.node, &c.node, false, NULL, &e.node,
-                ROCK_RED_BLACK_TREE_COLOR_BLACK);
-    assert_node(&a.node, &d.node, true, NULL, NULL,
-                ROCK_RED_BLACK_TREE_COLOR_RED);
-    assert_node(&e.node, &b.node, false, NULL, NULL,
-                ROCK_RED_BLACK_TREE_COLOR_RED);
+    assert_red_black_tree_node(&c.node, NULL, false, &d.node, &b.node,
+                               ROCK_RED_BLACK_TREE_COLOR_BLACK);
+    assert_red_black_tree_node(&d.node, &c.node, true, &a.node, NULL,
+                               ROCK_RED_BLACK_TREE_COLOR_BLACK);
+    assert_red_black_tree_node(&b.node, &c.node, false, NULL, &e.node,
+                               ROCK_RED_BLACK_TREE_COLOR_BLACK);
+    assert_red_black_tree_node(&a.node, &d.node, true, NULL, NULL,
+                               ROCK_RED_BLACK_TREE_COLOR_RED);
+    assert_red_black_tree_node(&e.node, &b.node, false, NULL, NULL,
+                               ROCK_RED_BLACK_TREE_COLOR_RED);
+    assert_red_black_tree(&object);
     assert_true(rock_red_black_tree_remove(&object, &d.node));
+    assert_red_black_tree(&object);
     /*
      *         c(4B)
      *         /  \
@@ -2471,27 +2450,28 @@ static void check_remove_node_with_single_child(void **state) {
      *               e(9R)
      */
     assert_ptr_equal(object.root, &c.node);
-    assert_node(&c.node, NULL, false, &a.node, &b.node,
-                ROCK_RED_BLACK_TREE_COLOR_BLACK);
-    assert_node(&a.node, &c.node, true, NULL, NULL,
-                ROCK_RED_BLACK_TREE_COLOR_BLACK);
-    assert_node(&b.node, &c.node, false, NULL, &e.node,
-                ROCK_RED_BLACK_TREE_COLOR_BLACK);
-    assert_node(&e.node, &b.node, false, NULL, NULL,
-                ROCK_RED_BLACK_TREE_COLOR_RED);
+    assert_red_black_tree_node(&c.node, NULL, false, &a.node, &b.node,
+                               ROCK_RED_BLACK_TREE_COLOR_BLACK);
+    assert_red_black_tree_node(&a.node, &c.node, true, NULL, NULL,
+                               ROCK_RED_BLACK_TREE_COLOR_BLACK);
+    assert_red_black_tree_node(&b.node, &c.node, false, NULL, &e.node,
+                               ROCK_RED_BLACK_TREE_COLOR_BLACK);
+    assert_red_black_tree_node(&e.node, &b.node, false, NULL, NULL,
+                               ROCK_RED_BLACK_TREE_COLOR_RED);
     assert_true(rock_red_black_tree_remove(&object, &b.node));
+    assert_red_black_tree(&object);
     /*
      *         c(4B)
      *         /  \
      *     a(1B)  e(9B)
      */
     assert_ptr_equal(object.root, &c.node);
-    assert_node(&c.node, NULL, false, &a.node, &e.node,
-                    ROCK_RED_BLACK_TREE_COLOR_BLACK);
-    assert_node(&a.node, &c.node, true, NULL, NULL,
-                    ROCK_RED_BLACK_TREE_COLOR_BLACK);
-    assert_node(&e.node, &c.node, false, NULL, NULL,
-                    ROCK_RED_BLACK_TREE_COLOR_BLACK);
+    assert_red_black_tree_node(&c.node, NULL, false, &a.node, &e.node,
+                               ROCK_RED_BLACK_TREE_COLOR_BLACK);
+    assert_red_black_tree_node(&a.node, &c.node, true, NULL, NULL,
+                               ROCK_RED_BLACK_TREE_COLOR_BLACK);
+    assert_red_black_tree_node(&e.node, &c.node, false, NULL, NULL,
+                               ROCK_RED_BLACK_TREE_COLOR_BLACK);
     assert_true(rock_red_black_tree_invalidate(&object, NULL));
     rock_error = ROCK_ERROR_NONE;
 }
@@ -2524,16 +2504,16 @@ static void check_remove_node_with_two_children(void **state) {
      *    a(1R)      e(9R)
      */
     assert_ptr_equal(object.root, &c.node);
-    assert_node(&c.node, NULL, false, &d.node, &b.node,
-                ROCK_RED_BLACK_TREE_COLOR_BLACK);
-    assert_node(&d.node, &c.node, true, &a.node, NULL,
-                ROCK_RED_BLACK_TREE_COLOR_BLACK);
-    assert_node(&b.node, &c.node, false, NULL, &e.node,
-                ROCK_RED_BLACK_TREE_COLOR_BLACK);
-    assert_node(&a.node, &d.node, true, NULL, NULL,
-                ROCK_RED_BLACK_TREE_COLOR_RED);
-    assert_node(&e.node, &b.node, false, NULL, NULL,
-                ROCK_RED_BLACK_TREE_COLOR_RED);
+    assert_red_black_tree_node(&c.node, NULL, false, &d.node, &b.node,
+                               ROCK_RED_BLACK_TREE_COLOR_BLACK);
+    assert_red_black_tree_node(&d.node, &c.node, true, &a.node, NULL,
+                               ROCK_RED_BLACK_TREE_COLOR_BLACK);
+    assert_red_black_tree_node(&b.node, &c.node, false, NULL, &e.node,
+                               ROCK_RED_BLACK_TREE_COLOR_BLACK);
+    assert_red_black_tree_node(&a.node, &d.node, true, NULL, NULL,
+                               ROCK_RED_BLACK_TREE_COLOR_RED);
+    assert_red_black_tree_node(&e.node, &b.node, false, NULL, NULL,
+                               ROCK_RED_BLACK_TREE_COLOR_RED);
     assert_true(rock_red_black_tree_remove(&object, &c.node));
     /*
      *         b(7B)
@@ -2543,21 +2523,605 @@ static void check_remove_node_with_two_children(void **state) {
      *    a(1R)
      */
     assert_ptr_equal(object.root, &b.node);
-    assert_node(&b.node, NULL, false, &d.node, &e.node,
-                ROCK_RED_BLACK_TREE_COLOR_BLACK);
-    assert_node(&d.node, &b.node, true, &a.node, NULL,
-                ROCK_RED_BLACK_TREE_COLOR_BLACK);
-    assert_node(&e.node, &b.node, false, NULL, NULL,
-                ROCK_RED_BLACK_TREE_COLOR_BLACK);
-    assert_node(&a.node, &d.node, true, NULL, NULL,
-                ROCK_RED_BLACK_TREE_COLOR_RED);
+    assert_red_black_tree_node(&b.node, NULL, false, &d.node, &e.node,
+                               ROCK_RED_BLACK_TREE_COLOR_BLACK);
+    assert_red_black_tree_node(&d.node, &b.node, true, &a.node, NULL,
+                               ROCK_RED_BLACK_TREE_COLOR_BLACK);
+    assert_red_black_tree_node(&e.node, &b.node, false, NULL, NULL,
+                               ROCK_RED_BLACK_TREE_COLOR_BLACK);
+    assert_red_black_tree_node(&a.node, &d.node, true, NULL, NULL,
+                               ROCK_RED_BLACK_TREE_COLOR_RED);
+    assert_true(rock_red_black_tree_invalidate(&object, NULL));
+    rock_error = ROCK_ERROR_NONE;
+}
+
+static void check_remove_node_case_red_leaf(void **state) {
+    // https://medium.com/analytics-vidhya/deletion-in-red-black-rb-tree-92301e1474ea
+    // Example 1: Delete 30 from RB tree in fig.3
+    rock_error = ROCK_ERROR_NONE;
+    struct rock_red_black_tree object;
+    assert_true(rock_red_black_tree_init(&object, compare_entry));
+    struct entry a, b, c, d, e, f, g, h;
+    assert_true(rock_red_black_tree_node_init(&a.node));
+    assert_true(rock_red_black_tree_node_init(&b.node));
+    assert_true(rock_red_black_tree_node_init(&c.node));
+    assert_true(rock_red_black_tree_node_init(&d.node));
+    assert_true(rock_red_black_tree_node_init(&e.node));
+    assert_true(rock_red_black_tree_node_init(&f.node));
+    assert_true(rock_red_black_tree_node_init(&g.node));
+    assert_true(rock_red_black_tree_node_init(&h.node));
+    a.value = 10;
+    b.value = 5;
+    c.value = 30;
+    d.value = 2;
+    e.value = 9;
+    f.value = 25;
+    g.value = 40;
+    h.value = 38;
+    assert_true(rock_red_black_tree_insert(&object, NULL, &a.node));
+    assert_true(rock_red_black_tree_insert(&object, &a.node, &b.node));
+    assert_true(rock_red_black_tree_insert(&object, &a.node, &c.node));
+    assert_true(rock_red_black_tree_insert(&object, &b.node, &d.node));
+    assert_true(rock_red_black_tree_insert(&object, &b.node, &e.node));
+    assert_true(rock_red_black_tree_insert(&object, &c.node, &f.node));
+    assert_true(rock_red_black_tree_insert(&object, &c.node, &g.node));
+    assert_true(rock_red_black_tree_insert(&object, &g.node, &h.node));
+    /*
+     *        a(10B)
+     *         /   \
+     *     b(5B)    c(30R)
+     *     /  \       /  \
+     * d(2R) e(9R) f(25B) g(40B)
+     *                      /
+     *                  h(38R)
+     */
+    assert_ptr_equal(object.root, &a.node);
+    assert_red_black_tree_node(&a.node, NULL, false, &b.node, &c.node,
+                               ROCK_RED_BLACK_TREE_COLOR_BLACK);
+    assert_red_black_tree_node(&b.node, &a.node, true, &d.node, &e.node,
+                               ROCK_RED_BLACK_TREE_COLOR_BLACK);
+    assert_red_black_tree_node(&c.node, &a.node, false, &f.node, &g.node,
+                               ROCK_RED_BLACK_TREE_COLOR_RED);
+    assert_red_black_tree_node(&d.node, &b.node, true, NULL, NULL,
+                               ROCK_RED_BLACK_TREE_COLOR_RED);
+    assert_red_black_tree_node(&e.node, &b.node, false, NULL, NULL,
+                               ROCK_RED_BLACK_TREE_COLOR_RED);
+    assert_red_black_tree_node(&f.node, &c.node, true, NULL, NULL,
+                               ROCK_RED_BLACK_TREE_COLOR_BLACK);
+    assert_red_black_tree_node(&g.node, &c.node, false, &h.node, NULL,
+                               ROCK_RED_BLACK_TREE_COLOR_BLACK);
+    assert_red_black_tree_node(&h.node, &g.node, true, NULL, NULL,
+                               ROCK_RED_BLACK_TREE_COLOR_RED);
+    assert_red_black_tree(&object);
+    assert_true(rock_red_black_tree_remove(&object, &c.node));
+    assert_red_black_tree(&object);
+    /*
+     *        a(10B)
+     *         /   \
+     *     b(5B)    h(38R)
+     *     /  \       /  \
+     * d(2R) e(9R) f(25B) g(40B)
+     *
+     */
+    assert_ptr_equal(object.root, &a.node);
+    assert_red_black_tree_node(&a.node, NULL, false, &b.node, &h.node,
+                               ROCK_RED_BLACK_TREE_COLOR_BLACK);
+    assert_red_black_tree_node(&b.node, &a.node, true, &d.node, &e.node,
+                               ROCK_RED_BLACK_TREE_COLOR_BLACK);
+    assert_red_black_tree_node(&h.node, &a.node, false, &f.node, &g.node,
+                               ROCK_RED_BLACK_TREE_COLOR_RED);
+    assert_red_black_tree_node(&d.node, &b.node, true, NULL, NULL,
+                               ROCK_RED_BLACK_TREE_COLOR_RED);
+    assert_red_black_tree_node(&e.node, &b.node, false, NULL, NULL,
+                               ROCK_RED_BLACK_TREE_COLOR_RED);
+    assert_red_black_tree_node(&f.node, &h.node, true, NULL, NULL,
+                               ROCK_RED_BLACK_TREE_COLOR_BLACK);
+    assert_red_black_tree_node(&g.node, &h.node, false, NULL, NULL,
+                               ROCK_RED_BLACK_TREE_COLOR_BLACK);
+    assert_true(rock_red_black_tree_invalidate(&object, NULL));
+    rock_error = ROCK_ERROR_NONE;
+}
+
+static void check_remove_node_case_4(void **state) {
+    // https://medium.com/analytics-vidhya/deletion-in-red-black-rb-tree-92301e1474ea
+    // Example 2: Delete 15 from RB tree in fig. 6
+    rock_error = ROCK_ERROR_NONE;
+    struct rock_red_black_tree object;
+    assert_true(rock_red_black_tree_init(&object, compare_entry));
+    struct entry a, b, c, d, e;
+    assert_true(rock_red_black_tree_node_init(&a.node));
+    assert_true(rock_red_black_tree_node_init(&b.node));
+    assert_true(rock_red_black_tree_node_init(&c.node));
+    assert_true(rock_red_black_tree_node_init(&d.node));
+    assert_true(rock_red_black_tree_node_init(&e.node));
+    a.value = 10;
+    b.value = 5;
+    c.value = 20;
+    d.value = 15;
+    e.value = 30;
+    assert_true(rock_red_black_tree_insert(&object, NULL, &a.node));
+    assert_true(rock_red_black_tree_insert(&object, &a.node, &b.node));
+    assert_true(rock_red_black_tree_insert(&object, &a.node, &c.node));
+    assert_true(rock_red_black_tree_insert(&object, &c.node, &d.node));
+    assert_true(rock_red_black_tree_insert(&object, &c.node, &e.node));
+    assert_true(rock_red_black_tree_node_set_color(
+            &a.node, ROCK_RED_BLACK_TREE_COLOR_BLACK));
+    assert_true(rock_red_black_tree_node_set_color(
+            &b.node, ROCK_RED_BLACK_TREE_COLOR_BLACK));
+    assert_true(rock_red_black_tree_node_set_color(
+            &c.node, ROCK_RED_BLACK_TREE_COLOR_RED));
+    assert_true(rock_red_black_tree_node_set_color(
+            &d.node, ROCK_RED_BLACK_TREE_COLOR_BLACK));
+    assert_true(rock_red_black_tree_node_set_color(
+            &e.node, ROCK_RED_BLACK_TREE_COLOR_BLACK));
+    /*
+     *        a(10B)
+     *         /   \
+     *     b(5B)    c(20R)
+     *               /  \
+     *           d(15B) e(30B)
+     */
+    assert_ptr_equal(object.root, &a.node);
+    assert_red_black_tree_node(&a.node, NULL, false, &b.node, &c.node,
+                               ROCK_RED_BLACK_TREE_COLOR_BLACK);
+    assert_red_black_tree_node(&b.node, &a.node, true, NULL, NULL,
+                               ROCK_RED_BLACK_TREE_COLOR_BLACK);
+    assert_red_black_tree_node(&c.node, &a.node, false, &d.node, &e.node,
+                               ROCK_RED_BLACK_TREE_COLOR_RED);
+    assert_red_black_tree_node(&d.node, &c.node, true, NULL, NULL,
+                               ROCK_RED_BLACK_TREE_COLOR_BLACK);
+    assert_red_black_tree_node(&e.node, &c.node, false, NULL, NULL,
+                               ROCK_RED_BLACK_TREE_COLOR_BLACK);
+    assert_red_black_tree(&object);
+    assert_true(rock_red_black_tree_remove(&object, &d.node));
+    assert_red_black_tree(&object);
+    /*
+     *        a(10B)
+     *         /   \
+     *     b(5B)    c(20B)
+     *                  \
+     *                e(30R)
+     */
+    assert_ptr_equal(object.root, &a.node);
+    assert_red_black_tree_node(&a.node, NULL, false, &b.node, &c.node,
+                               ROCK_RED_BLACK_TREE_COLOR_BLACK);
+    assert_red_black_tree_node(&b.node, &a.node, true, NULL, NULL,
+                               ROCK_RED_BLACK_TREE_COLOR_BLACK);
+    assert_red_black_tree_node(&c.node, &a.node, false, NULL, &e.node,
+                               ROCK_RED_BLACK_TREE_COLOR_BLACK);
+    assert_red_black_tree_node(&e.node, &c.node, false, NULL, NULL,
+                               ROCK_RED_BLACK_TREE_COLOR_RED);
+    assert_true(rock_red_black_tree_invalidate(&object, NULL));
+    rock_error = ROCK_ERROR_NONE;
+}
+
+static void check_remove_node_case_3_1(void **state) {
+    // https://medium.com/analytics-vidhya/deletion-in-red-black-rb-tree-92301e1474ea
+    // Example 3: Delete '15' from fig. 9(A).
+    rock_error = ROCK_ERROR_NONE;
+    struct rock_red_black_tree object;
+    assert_true(rock_red_black_tree_init(&object, compare_entry));
+    struct entry a, b, c, d, e, f, g;
+    assert_true(rock_red_black_tree_node_init(&a.node));
+    assert_true(rock_red_black_tree_node_init(&b.node));
+    assert_true(rock_red_black_tree_node_init(&c.node));
+    assert_true(rock_red_black_tree_node_init(&d.node));
+    assert_true(rock_red_black_tree_node_init(&e.node));
+    assert_true(rock_red_black_tree_node_init(&f.node));
+    assert_true(rock_red_black_tree_node_init(&g.node));
+    a.value = 10;
+    b.value = 5;
+    c.value = 20;
+    d.value = 1;
+    e.value = 7;
+    f.value = 15;
+    g.value = 30;
+    assert_true(rock_red_black_tree_insert(&object, NULL, &a.node));
+    assert_true(rock_red_black_tree_insert(&object, &a.node, &b.node));
+    assert_true(rock_red_black_tree_insert(&object, &a.node, &c.node));
+    assert_true(rock_red_black_tree_insert(&object, &b.node, &d.node));
+    assert_true(rock_red_black_tree_insert(&object, &b.node, &e.node));
+    assert_true(rock_red_black_tree_insert(&object, &c.node, &f.node));
+    assert_true(rock_red_black_tree_insert(&object, &c.node, &g.node));
+    assert_true(rock_red_black_tree_node_set_color(
+            &a.node, ROCK_RED_BLACK_TREE_COLOR_BLACK));
+    assert_true(rock_red_black_tree_node_set_color(
+            &b.node, ROCK_RED_BLACK_TREE_COLOR_BLACK));
+    assert_true(rock_red_black_tree_node_set_color(
+            &c.node, ROCK_RED_BLACK_TREE_COLOR_BLACK));
+    assert_true(rock_red_black_tree_node_set_color(
+            &d.node, ROCK_RED_BLACK_TREE_COLOR_BLACK));
+    assert_true(rock_red_black_tree_node_set_color(
+            &e.node, ROCK_RED_BLACK_TREE_COLOR_BLACK));
+    assert_true(rock_red_black_tree_node_set_color(
+            &f.node, ROCK_RED_BLACK_TREE_COLOR_BLACK));
+    assert_true(rock_red_black_tree_node_set_color(
+            &g.node, ROCK_RED_BLACK_TREE_COLOR_BLACK));
+    /*
+     *        a(10B)
+     *         /   \
+     *     b(5B)    c(20B)
+     *     /  \       /  \
+     * d(1B) e(7B) f(15B) g(30B)
+     */
+    assert_ptr_equal(object.root, &a.node);
+    assert_red_black_tree_node(&a.node, NULL, false, &b.node, &c.node,
+                               ROCK_RED_BLACK_TREE_COLOR_BLACK);
+    assert_red_black_tree_node(&b.node, &a.node, true, &d.node, &e.node,
+                               ROCK_RED_BLACK_TREE_COLOR_BLACK);
+    assert_red_black_tree_node(&c.node, &a.node, false, &f.node, &g.node,
+                               ROCK_RED_BLACK_TREE_COLOR_BLACK);
+    assert_red_black_tree_node(&d.node, &b.node, true, NULL, NULL,
+                               ROCK_RED_BLACK_TREE_COLOR_BLACK);
+    assert_red_black_tree_node(&e.node, &b.node, false, NULL, NULL,
+                               ROCK_RED_BLACK_TREE_COLOR_BLACK);
+    assert_red_black_tree_node(&f.node, &c.node, true, NULL, NULL,
+                               ROCK_RED_BLACK_TREE_COLOR_BLACK);
+    assert_red_black_tree_node(&g.node, &c.node, false, NULL, NULL,
+                               ROCK_RED_BLACK_TREE_COLOR_BLACK);
+    assert_red_black_tree(&object);
+    assert_true(rock_red_black_tree_remove(&object, &f.node));
+    assert_red_black_tree(&object);
+    /*
+     *        a(10B)
+     *         /   \
+     *     b(5R)    c(20B)
+     *     /  \          \
+     * d(1B) e(7B)       g(30R)
+     */
+    assert_red_black_tree_node(&a.node, NULL, false, &b.node, &c.node,
+                               ROCK_RED_BLACK_TREE_COLOR_BLACK);
+    assert_red_black_tree_node(&b.node, &a.node, true, &d.node, &e.node,
+                               ROCK_RED_BLACK_TREE_COLOR_RED);
+    assert_red_black_tree_node(&c.node, &a.node, false, NULL, &g.node,
+                               ROCK_RED_BLACK_TREE_COLOR_BLACK);
+    assert_red_black_tree_node(&d.node, &b.node, true, NULL, NULL,
+                               ROCK_RED_BLACK_TREE_COLOR_BLACK);
+    assert_red_black_tree_node(&e.node, &b.node, false, NULL, NULL,
+                               ROCK_RED_BLACK_TREE_COLOR_BLACK);
+    assert_red_black_tree_node(&g.node, &c.node, false, NULL, NULL,
+                               ROCK_RED_BLACK_TREE_COLOR_RED);
+    assert_true(rock_red_black_tree_invalidate(&object, NULL));
+    rock_error = ROCK_ERROR_NONE;
+}
+
+static void check_remove_node_case_2(void **state) {
+    // https://medium.com/analytics-vidhya/deletion-in-red-black-rb-tree-92301e1474ea
+    // Example 4: Delete '15' from fig. 13
+    rock_error = ROCK_ERROR_NONE;
+    struct rock_red_black_tree object;
+    assert_true(rock_red_black_tree_init(&object, compare_entry));
+    struct entry a, b, c, d, e, f, g, h, i;
+    assert_true(rock_red_black_tree_node_init(&a.node));
+    assert_true(rock_red_black_tree_node_init(&b.node));
+    assert_true(rock_red_black_tree_node_init(&c.node));
+    assert_true(rock_red_black_tree_node_init(&d.node));
+    assert_true(rock_red_black_tree_node_init(&e.node));
+    assert_true(rock_red_black_tree_node_init(&f.node));
+    assert_true(rock_red_black_tree_node_init(&g.node));
+    assert_true(rock_red_black_tree_node_init(&h.node));
+    assert_true(rock_red_black_tree_node_init(&i.node));
+    a.value = 10;
+    b.value = 5;
+    c.value = 20;
+    d.value = 1;
+    e.value = 7;
+    f.value = 15;
+    g.value = 30;
+    h.value = 25;
+    i.value = 40;
+    assert_true(rock_red_black_tree_insert(&object, NULL, &a.node));
+    assert_true(rock_red_black_tree_insert(&object, &a.node, &b.node));
+    assert_true(rock_red_black_tree_insert(&object, &a.node, &c.node));
+    assert_true(rock_red_black_tree_insert(&object, &b.node, &d.node));
+    assert_true(rock_red_black_tree_insert(&object, &b.node, &e.node));
+    assert_true(rock_red_black_tree_insert(&object, &c.node, &f.node));
+    assert_true(rock_red_black_tree_insert(&object, &c.node, &g.node));
+    assert_true(rock_red_black_tree_insert(&object, &g.node, &h.node));
+    assert_true(rock_red_black_tree_insert(&object, &g.node, &i.node));
+    assert_true(rock_red_black_tree_node_set_color(
+            &a.node, ROCK_RED_BLACK_TREE_COLOR_BLACK));
+    assert_true(rock_red_black_tree_node_set_color(
+            &b.node, ROCK_RED_BLACK_TREE_COLOR_BLACK));
+    assert_true(rock_red_black_tree_node_set_color(
+            &c.node, ROCK_RED_BLACK_TREE_COLOR_BLACK));
+    assert_true(rock_red_black_tree_node_set_color(
+            &d.node, ROCK_RED_BLACK_TREE_COLOR_BLACK));
+    assert_true(rock_red_black_tree_node_set_color(
+            &e.node, ROCK_RED_BLACK_TREE_COLOR_BLACK));
+    assert_true(rock_red_black_tree_node_set_color(
+            &f.node, ROCK_RED_BLACK_TREE_COLOR_BLACK));
+    assert_true(rock_red_black_tree_node_set_color(
+            &g.node, ROCK_RED_BLACK_TREE_COLOR_RED));
+    assert_true(rock_red_black_tree_node_set_color(
+            &h.node, ROCK_RED_BLACK_TREE_COLOR_BLACK));
+    assert_true(rock_red_black_tree_node_set_color(
+            &i.node, ROCK_RED_BLACK_TREE_COLOR_BLACK));
+    /*
+     *        a(10B)
+     *         /   \
+     *     b(5B)    c(20B)
+     *     /  \       /  \
+     * d(1B) e(7B) f(15B) g(30R)
+     *                     /  \
+     *                 h(25B) i(40B)
+     */
+    assert_ptr_equal(object.root, &a.node);
+    assert_red_black_tree_node(&a.node, NULL, false, &b.node, &c.node,
+                               ROCK_RED_BLACK_TREE_COLOR_BLACK);
+    assert_red_black_tree_node(&b.node, &a.node, true, &d.node, &e.node,
+                               ROCK_RED_BLACK_TREE_COLOR_BLACK);
+    assert_red_black_tree_node(&c.node, &a.node, false, &f.node, &g.node,
+                               ROCK_RED_BLACK_TREE_COLOR_BLACK);
+    assert_red_black_tree_node(&d.node, &b.node, true, NULL, NULL,
+                               ROCK_RED_BLACK_TREE_COLOR_BLACK);
+    assert_red_black_tree_node(&e.node, &b.node, false, NULL, NULL,
+                               ROCK_RED_BLACK_TREE_COLOR_BLACK);
+    assert_red_black_tree_node(&f.node, &c.node, true, NULL, NULL,
+                               ROCK_RED_BLACK_TREE_COLOR_BLACK);
+    assert_red_black_tree_node(&g.node, &c.node, false, &h.node, &i.node,
+                               ROCK_RED_BLACK_TREE_COLOR_RED);
+    assert_red_black_tree_node(&h.node, &g.node, true, NULL, NULL,
+                               ROCK_RED_BLACK_TREE_COLOR_BLACK);
+    assert_red_black_tree_node(&i.node, &g.node, false, NULL, NULL,
+                               ROCK_RED_BLACK_TREE_COLOR_BLACK);
+    assert_red_black_tree(&object);
+    assert_true(rock_red_black_tree_remove(&object, &f.node));
+    assert_red_black_tree(&object);
+    /*
+     *        a(10B)
+     *         /   \
+     *     b(5B)    g(30B)
+     *     /  \       /  \
+     * d(1B) e(7B) c(20B) i(40B)
+     *                 \
+     *                 h(25R)
+     */
+    assert_ptr_equal(object.root, &a.node);
+    assert_red_black_tree_node(&a.node, NULL, false, &b.node, &g.node,
+                               ROCK_RED_BLACK_TREE_COLOR_BLACK);
+    assert_red_black_tree_node(&b.node, &a.node, true, &d.node, &e.node,
+                               ROCK_RED_BLACK_TREE_COLOR_BLACK);
+    assert_red_black_tree_node(&g.node, &a.node, false, &c.node, &i.node,
+                               ROCK_RED_BLACK_TREE_COLOR_BLACK);
+    assert_red_black_tree_node(&d.node, &b.node, true, NULL, NULL,
+                               ROCK_RED_BLACK_TREE_COLOR_BLACK);
+    assert_red_black_tree_node(&e.node, &b.node, false, NULL, NULL,
+                               ROCK_RED_BLACK_TREE_COLOR_BLACK);
+    assert_red_black_tree_node(&c.node, &g.node, true, NULL, &h.node,
+                               ROCK_RED_BLACK_TREE_COLOR_BLACK);
+    assert_red_black_tree_node(&i.node, &g.node, false, NULL, NULL,
+                               ROCK_RED_BLACK_TREE_COLOR_BLACK);
+    assert_red_black_tree_node(&h.node, &c.node, false, NULL, NULL,
+                               ROCK_RED_BLACK_TREE_COLOR_RED);
+    assert_true(rock_red_black_tree_invalidate(&object, NULL));
+    rock_error = ROCK_ERROR_NONE;
+}
+
+static void check_remove_node_case_3_5_6(void **state) {
+    // https://medium.com/analytics-vidhya/deletion-in-red-black-rb-tree-92301e1474ea
+    // Example 5: Delete '1' from fig. 17
+    rock_error = ROCK_ERROR_NONE;
+    struct rock_red_black_tree object;
+    assert_true(rock_red_black_tree_init(&object, compare_entry));
+    struct entry a, b, c, d, e, f, g, h, i;
+    assert_true(rock_red_black_tree_node_init(&a.node));
+    assert_true(rock_red_black_tree_node_init(&b.node));
+    assert_true(rock_red_black_tree_node_init(&c.node));
+    assert_true(rock_red_black_tree_node_init(&d.node));
+    assert_true(rock_red_black_tree_node_init(&e.node));
+    assert_true(rock_red_black_tree_node_init(&f.node));
+    assert_true(rock_red_black_tree_node_init(&g.node));
+    assert_true(rock_red_black_tree_node_init(&h.node));
+    assert_true(rock_red_black_tree_node_init(&i.node));
+    a.value = 10;
+    b.value = 5;
+    c.value = 30;
+    d.value = 1;
+    e.value = 7;
+    f.value = 25;
+    g.value = 20;
+    h.value = 28;
+    i.value = 40;
+    assert_true(rock_red_black_tree_insert(&object, NULL, &a.node));
+    assert_true(rock_red_black_tree_insert(&object, &a.node, &b.node));
+    assert_true(rock_red_black_tree_insert(&object, &a.node, &c.node));
+    assert_true(rock_red_black_tree_insert(&object, &b.node, &d.node));
+    assert_true(rock_red_black_tree_insert(&object, &b.node, &e.node));
+    assert_true(rock_red_black_tree_insert(&object, &c.node, &f.node));
+    assert_true(rock_red_black_tree_insert(&object, &c.node, &i.node));
+    assert_true(rock_red_black_tree_insert(&object, &f.node, &g.node));
+    assert_true(rock_red_black_tree_insert(&object, &f.node, &h.node));
+    assert_true(rock_red_black_tree_node_set_color(
+            &a.node, ROCK_RED_BLACK_TREE_COLOR_BLACK));
+    assert_true(rock_red_black_tree_node_set_color(
+            &b.node, ROCK_RED_BLACK_TREE_COLOR_BLACK));
+    assert_true(rock_red_black_tree_node_set_color(
+            &c.node, ROCK_RED_BLACK_TREE_COLOR_BLACK));
+    assert_true(rock_red_black_tree_node_set_color(
+            &d.node, ROCK_RED_BLACK_TREE_COLOR_BLACK));
+    assert_true(rock_red_black_tree_node_set_color(
+            &e.node, ROCK_RED_BLACK_TREE_COLOR_BLACK));
+    assert_true(rock_red_black_tree_node_set_color(
+            &f.node, ROCK_RED_BLACK_TREE_COLOR_RED));
+    assert_true(rock_red_black_tree_node_set_color(
+            &g.node, ROCK_RED_BLACK_TREE_COLOR_BLACK));
+    assert_true(rock_red_black_tree_node_set_color(
+            &h.node, ROCK_RED_BLACK_TREE_COLOR_BLACK));
+    assert_true(rock_red_black_tree_node_set_color(
+            &i.node, ROCK_RED_BLACK_TREE_COLOR_BLACK));
+    /*
+     *        a(10B)
+     *         /   \
+     *     b(5B)    c(30B)
+     *     /  \       /  \
+     * d(1B) e(7B) f(25R) i(40B)
+     *              /  \
+     *          g(20B) h(28B)
+     */
+    assert_ptr_equal(object.root, &a.node);
+    assert_red_black_tree_node(&a.node, NULL, false, &b.node, &c.node,
+                               ROCK_RED_BLACK_TREE_COLOR_BLACK);
+    assert_red_black_tree_node(&b.node, &a.node, true, &d.node, &e.node,
+                               ROCK_RED_BLACK_TREE_COLOR_BLACK);
+    assert_red_black_tree_node(&c.node, &a.node, false, &f.node, &i.node,
+                               ROCK_RED_BLACK_TREE_COLOR_BLACK);
+    assert_red_black_tree_node(&d.node, &b.node, true, NULL, NULL,
+                               ROCK_RED_BLACK_TREE_COLOR_BLACK);
+    assert_red_black_tree_node(&e.node, &b.node, false, NULL, NULL,
+                               ROCK_RED_BLACK_TREE_COLOR_BLACK);
+    assert_red_black_tree_node(&f.node, &c.node, true, &g.node, &h.node,
+                               ROCK_RED_BLACK_TREE_COLOR_RED);
+    assert_red_black_tree_node(&i.node, &c.node, false, NULL, NULL,
+                               ROCK_RED_BLACK_TREE_COLOR_BLACK);
+    assert_red_black_tree_node(&g.node, &f.node, true, NULL, NULL,
+                               ROCK_RED_BLACK_TREE_COLOR_BLACK);
+    assert_red_black_tree_node(&h.node, &f.node, false, NULL, NULL,
+                               ROCK_RED_BLACK_TREE_COLOR_BLACK);
+    assert_red_black_tree(&object);
+    assert_true(rock_red_black_tree_remove(&object, &d.node));
+    assert_red_black_tree(&object);
+    /*
+     *        f(25B)
+     *         /   \
+     *    a(10B)    c(30B)
+     *     /  \       /  \
+     * b(5B) g(20B)h(28B) i(40B)
+     *     \
+     *    e(7R)
+     */
+    assert_ptr_equal(object.root, &f.node);
+    assert_red_black_tree_node(&f.node, NULL, false, &a.node, &c.node,
+                               ROCK_RED_BLACK_TREE_COLOR_BLACK);
+    assert_red_black_tree_node(&a.node, &f.node, true, &b.node, &g.node,
+                               ROCK_RED_BLACK_TREE_COLOR_BLACK);
+    assert_red_black_tree_node(&c.node, &f.node, false, &h.node, &i.node,
+                               ROCK_RED_BLACK_TREE_COLOR_BLACK);
+    assert_red_black_tree_node(&b.node, &a.node, true, NULL, &e.node,
+                               ROCK_RED_BLACK_TREE_COLOR_BLACK);
+    assert_red_black_tree_node(&g.node, &a.node, false, NULL, NULL,
+                               ROCK_RED_BLACK_TREE_COLOR_BLACK);
+    assert_red_black_tree_node(&h.node, &c.node, true, NULL, NULL,
+                               ROCK_RED_BLACK_TREE_COLOR_BLACK);
+    assert_red_black_tree_node(&i.node, &c.node, false, NULL, NULL,
+                               ROCK_RED_BLACK_TREE_COLOR_BLACK);
+    assert_red_black_tree_node(&e.node, &b.node, false, NULL, NULL,
+                               ROCK_RED_BLACK_TREE_COLOR_RED);
+    assert_true(rock_red_black_tree_invalidate(&object, NULL));
+    rock_error = ROCK_ERROR_NONE;
+}
+
+static void check_remove_node_regression_1(void **state) {
+    rock_error = ROCK_ERROR_NONE;
+    struct rock_red_black_tree object;
+    assert_true(rock_red_black_tree_init(&object, compare_entry));
+    const uintmax_t LIMIT = 32;
+    struct entry values[LIMIT];
+    struct rock_red_black_tree_node *p = NULL;
+    for (uintmax_t i = 0; i < LIMIT; i++) {
+        struct entry *e = &values[i];
+        assert_true(rock_red_black_tree_node_init(&e->node));
+        e->value = i;
+        assert_true(rock_red_black_tree_insert(&object, p, &e->node));
+        assert_red_black_tree(&object);
+        p = &e->node;
+    }
+    /*
+     *                   7B
+     *                /       \
+     *             3B           15R
+     *           /  \          /     \
+     *         1B   5B     11B          19B
+     *        / \   / \   /   \         /   \
+     *       0B 2B 4B 6B 9B   13B      17B    23R
+     *                  / \   /  \    /  \    /   \
+     *                8B 10B 12B 14B 16B 18B 21B    27B
+     *                                      / \    /   \
+     *                                    20B 22B 25B   29R
+     *                                           / \    /  \
+     *                                         24B 26B 28B 30B
+     *                                                       \
+     *                                                       31R
+     */
+    // remove 19 ...
+    struct entry needle;
+    needle.value = 19;
+    assert_true(rock_red_black_tree_node_init(&needle.node));
+    assert_true(rock_red_black_tree_find(&object, NULL, &needle.node, &p));
+    assert_true(rock_red_black_tree_remove(&object, p));
+    assert_red_black_tree(&object);
+    /*
+     *                   7B
+     *                /       \
+     *             3B           15R
+     *           /  \          /     \
+     *         1B   5B     11B          20B
+     *        / \   / \   /   \         /    \
+     *       0B 2B 4B 6B 9B   13B      17B      27R
+     *                  / \   /  \    /  \     /    \
+     *                8B 10B 12B 14B 16B 18B 23B      29B
+     *                                      /   \     /  \
+     *                                    21B   25R  28B 30B
+     *                                      \   /  \       \
+     *                                     22R 24B 26B     31R
+     */
+    // remove 20 ...
+    needle.value = 20;
+    assert_true(rock_red_black_tree_node_init(&needle.node));
+    assert_true(rock_red_black_tree_find(&object, NULL, &needle.node, &p));
+    assert_true(rock_red_black_tree_remove(&object, p));
+    assert_red_black_tree(&object);
+    /*
+     *                   7B
+     *                /       \
+     *             3B           15R
+     *           /  \          /     \
+     *         1B   5B     11B          21B
+     *        / \   / \   /   \         /   \
+     *       0B 2B 4B 6B 9B   13B     17B      27R
+     *                  / \   /  \    /  \    /    \
+     *                8B 10B 12B 14B 16B 18B 23B     29B
+     *                                       / \     / \
+     *                                     22B 25R  28B 30B
+     *                                         / \       \
+     *                                       24B 26B     31R
+     */
+    // remove 18
+    needle.value = 18;
+    assert_true(rock_red_black_tree_node_init(&needle.node));
+    assert_true(rock_red_black_tree_find(&object, NULL, &needle.node, &p));
+    assert_true(rock_red_black_tree_remove(&object, p));
+    assert_red_black_tree(&object);
+    /*
+     *                   7B
+     *                /       \
+     *             3B           15R
+     *           /  \          /      \
+     *         1B   5B     11B           27B
+     *        / \   / \   /   \          /     \
+     *       0B 2B 4B 6B 9B   13B       23R       29B
+     *                  / \   /  \     /   \      /  \
+     *                8B 10B 12B 14B 21B    25B  28B 30B
+     *                               /  \   /  \       \
+     *                             17B 22B 24B 26B     31R
+     *                             /
+     *                           16R
+     */
+    // remove 9
+    needle.value = 9;
+    assert_true(rock_red_black_tree_node_init(&needle.node));
+    assert_true(rock_red_black_tree_find(&object, NULL, &needle.node, &p));
+    assert_true(rock_red_black_tree_remove(&object, p));
+    assert_red_black_tree(&object);
+
+
     assert_true(rock_red_black_tree_invalidate(&object, NULL));
     rock_error = ROCK_ERROR_NONE;
 }
 
 static void check_tree(void **state) {
     rock_error = ROCK_ERROR_NONE;
-    struct rock_red_black_tree object = {};
+    struct rock_red_black_tree object;
     assert_true(rock_red_black_tree_init(&object, compare_entry));
     struct rock_red_black_tree_node *p = NULL;
     for (uintmax_t i = 0; i < 10000; i++) {
@@ -2570,6 +3134,7 @@ static void check_tree(void **state) {
         assert_int_equal(1 + i, object.count);
         p = &n->node;
     }
+    assert_red_black_tree(&object);
     for (uintmax_t i = 0; i < 10000; i++) {
         assert_int_equal(10000 - i, object.count);
         p = object.root;
@@ -2580,6 +3145,78 @@ static void check_tree(void **state) {
     }
     assert_null(object.root);
     assert_int_equal(0, object.count);
+    assert_true(rock_red_black_tree_invalidate(&object, NULL));
+    rock_error = ROCK_ERROR_NONE;
+}
+
+static void fuzz_tree(void **state) {
+    srand(time(NULL));
+    rock_error = ROCK_ERROR_NONE;
+    const uintmax_t LIMIT = 10000;
+    uintmax_t size;
+    assert_true(seagrass_uintmax_t_multiply(LIMIT,
+                                            sizeof(uintmax_t),
+                                            &size));
+    uintmax_t *const values = malloc(size);
+    assert_non_null(values);
+    for (uintmax_t i = 0; i < LIMIT; i++) {
+        values[i] = i;
+    }
+    /* shuffle array */
+    for (uintmax_t i = 0; i < LIMIT; i++) {
+        const uintmax_t o = rand() % (LIMIT - i);
+        if (!o) {
+            continue;
+        }
+        const uintmax_t q = values[i + o];
+        values[i + o] = values[i];
+        values[i] = q;
+    }
+    /* insertion sequence */
+    fprintf(stdout, "insert = {");
+    struct rock_red_black_tree object;
+    assert_true(rock_red_black_tree_init(&object, compare_entry));
+    struct rock_red_black_tree_node *p = NULL;
+    for (uintmax_t i = 0; i < LIMIT; i++) {
+        struct entry *n = calloc(1, sizeof(*n));
+        assert_non_null(n);
+        assert_true(rock_red_black_tree_node_init(&n->node));
+        n->value = values[i];
+        fprintf(stdout, "%ju, ", n->value);
+        fflush(stdout);
+        assert_false(rock_red_black_tree_find(&object, NULL, &n->node, &p));
+        assert_int_equal(ROCK_RED_BLACK_TREE_ERROR_NODE_NOT_FOUND, rock_error);
+        assert_true(rock_red_black_tree_insert(&object, p, &n->node));
+        assert_red_black_tree(&object);
+    }
+    fprintf(stdout, "}\n");
+    /* shuffle array */
+    for (uintmax_t i = 0; i < LIMIT; i++) {
+        const uintmax_t o = rand() % (LIMIT - i);
+        if (!o) {
+            continue;
+        }
+        const uintmax_t q = values[i + o];
+        values[i + o] = values[i];
+        values[i] = q;
+    }
+    /* removal sequence */
+    fprintf(stdout, "remove = {");
+    for (uintmax_t i = 0; object.count; i++) {
+        struct entry needle = {
+                .value = values[i]
+        };
+        assert_true(rock_red_black_tree_node_init(&needle.node));
+        fprintf(stdout, "%ju, ", needle.value);
+        fflush(stdout);
+        assert_true(rock_red_black_tree_find(&object, NULL, &needle.node, &p));
+        assert_true(rock_red_black_tree_remove(&object, p));
+        free(rock_container_of(p, struct entry, node));
+        assert_red_black_tree(&object);
+    }
+    fprintf(stdout, "}\n");
+    assert_true(rock_red_black_tree_invalidate(&object, NULL));
+    free(values);
     rock_error = ROCK_ERROR_NONE;
 }
 
@@ -2677,14 +3314,21 @@ int main(int argc, char *argv[]) {
             cmocka_unit_test(check_next_error_on_out_is_null),
             cmocka_unit_test(check_next),
             cmocka_unit_test(check_prev_error_on_node_is_null),
-            cmocka_unit_test(check_get_prev_error_on_out_is_null),
+            cmocka_unit_test(check_prev_error_on_out_is_null),
             cmocka_unit_test(check_prev),
             cmocka_unit_test(check_remove_error_on_object_is_null),
             cmocka_unit_test(check_remove_error_on_node_is_null),
             cmocka_unit_test(check_remove_leaf_nodes),
             cmocka_unit_test(check_remove_node_with_single_child),
             cmocka_unit_test(check_remove_node_with_two_children),
-            cmocka_unit_test(check_tree)
+            cmocka_unit_test(check_remove_node_case_red_leaf),
+            cmocka_unit_test(check_remove_node_case_4),
+            cmocka_unit_test(check_remove_node_case_3_1),
+            cmocka_unit_test(check_remove_node_case_2),
+            cmocka_unit_test(check_remove_node_case_3_5_6),
+            cmocka_unit_test(check_remove_node_regression_1),
+            cmocka_unit_test(check_tree),
+            cmocka_unit_test(fuzz_tree),
     };
     //cmocka_set_message_output(CM_OUTPUT_XML);
     return cmocka_run_group_tests(tests, NULL, NULL);

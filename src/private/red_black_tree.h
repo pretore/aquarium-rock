@@ -117,7 +117,7 @@ bool rock_red_black_tree_node_set_left(
  * @param [out] out receive the right child node.
  * @return On success true, otherwise false if an error has occurred.
  * @throws ROCK_RED_BLACK_TREE_ERROR_OUT_IS_NULL if out is <i>NULL</i>.
- * @throws ROCK_REF_BLACK_TREE_ERROR_END_OF_SEQUENCE if trying to get right
+ * @throws ROCK_RED_BLACK_TREE_ERROR_END_OF_SEQUENCE if trying to get right
  * child node from a NIL node.
  */
 bool rock_red_black_tree_node_get_right(
