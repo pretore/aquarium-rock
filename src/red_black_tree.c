@@ -879,7 +879,7 @@ bool rock_red_black_tree_remove(struct rock_red_black_tree *const object,
      *         S - sibling         (B)- DOUBLE BLACK
      *                             ...- SUBTREE
      */
-    while (true) {
+    for (uintmax_t i = 0; true; ) {
         /* case 1: root is double black
          *          N((B))
          *     drop double black
@@ -889,9 +889,16 @@ bool rock_red_black_tree_remove(struct rock_red_black_tree *const object,
         if (double_black == object->root) {
             break;
         }
-        struct rock_red_black_tree_node *sibling;
         /* is 'double black' on left or right */
-        bool is_left = parent->left == double_black || !parent->left;
+        bool is_left;
+        if (i) {
+            is_left = rock_red_black_tree_node_is_on_left(parent, double_black);
+        } else {
+            is_left = parent->left == double_black
+                      || (parent->right != double_black && !parent->left);
+        }
+        /* sibling is on the other side of 'double black' in parent */
+        struct rock_red_black_tree_node *sibling;
         if (is_left) {
             sibling = parent->right;
         } else {
@@ -966,6 +973,7 @@ bool rock_red_black_tree_remove(struct rock_red_black_tree *const object,
             double_black = parent;
             seagrass_required_true(rock_red_black_tree_node_get_parent(
                     parent, &parent));
+            seagrass_required_true(seagrass_uintmax_t_add(1, i, &i));
             continue; /* go to case 1 as parent is now double black */
         }
         /* case 4: if parent is RED while sibling and children are BLACK

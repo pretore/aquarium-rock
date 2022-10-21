@@ -3121,10 +3121,11 @@ static void check_remove_node_regression_1(void **state) {
 
 static void check_tree(void **state) {
     rock_error = ROCK_ERROR_NONE;
+    const uintmax_t LIMIT = 1000000;
     struct rock_red_black_tree object;
     assert_true(rock_red_black_tree_init(&object, compare_entry));
     struct rock_red_black_tree_node *p = NULL;
-    for (uintmax_t i = 0; i < 10000; i++) {
+    for (uintmax_t i = 0; i < LIMIT; i++) {
         struct entry *n = calloc(1, sizeof(*n));
         assert_non_null(n);
         assert_true(rock_red_black_tree_node_init(&n->node));
@@ -3135,11 +3136,11 @@ static void check_tree(void **state) {
         p = &n->node;
     }
     assert_red_black_tree(&object);
-    for (uintmax_t i = 0; i < 10000; i++) {
-        assert_int_equal(10000 - i, object.count);
+    for (uintmax_t i = 0; i < LIMIT; i++) {
+        assert_int_equal(LIMIT - i, object.count);
         p = object.root;
         assert_true(rock_red_black_tree_remove(&object, object.root));
-        assert_int_equal(9999 - i, object.count);
+        assert_int_equal((LIMIT - 1) - i, object.count);
         struct entry *n = rock_container_of(p, struct entry, node);
         free(n);
     }
