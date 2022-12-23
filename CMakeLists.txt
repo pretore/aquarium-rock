@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.22)
-project(aquarium-rock VERSION 3.5.2
+project(aquarium-rock VERSION 4.0.0
         LANGUAGES C
         DESCRIPTION "Data structures in C")
 
@@ -17,26 +17,19 @@ include(cmake/FetchAquariumSeagrass.cmake)
 set(EXPORTED_HEADER_FILES
         include/rock/array.h
         include/rock/error.h
-        include/rock/hash_table.h
+        include/rock/forward_list.h
         include/rock/linked_list.h
-        include/rock/linked_red_black_tree_set.h
         include/rock/red_black_tree.h
-        include/rock/red_black_tree_map.h
-        include/rock/red_black_tree_set.h
         include/rock.h)
 set(SOURCES
         ${EXPORTED_HEADER_FILES}
         src/private/array.h
-        src/private/hash_table.h
         src/private/red_black_tree.h
         src/array.c
         src/error.c
-        src/hash_table.c
+        src/forward_list.c
         src/linked_list.c
-        src/linked_red_black_tree_set.c
         src/red_black_tree.c
-        src/red_black_tree_map.c
-        src/red_black_tree_set.c
         src/rock.c)
 
 if(DOXYGEN_FOUND)
@@ -54,7 +47,6 @@ if(CMAKE_BUILD_TYPE STREQUAL "Debug")
             PRIVATE
                 ${SOURCES}
                 src/test/cmocka.h
-                src/test/cmocka.c
                 src/test/red_black_tree.h
                 src/test/red_black_tree.c)
     target_link_libraries(${PROJECT_NAME}
@@ -88,28 +80,6 @@ if(CMAKE_BUILD_TYPE STREQUAL "Debug")
                 ${PROJECT_NAME})
     add_test(${PROJECT_NAME}-red-black-tree-unit-test
             ${PROJECT_NAME}-red-black-tree-unit-test)
-    # aquarium-rock-red-black-tree-set-unit-test
-    add_executable(${PROJECT_NAME}-red-black-tree-set-unit-test
-            test/test_red_black_tree_set.c)
-    target_include_directories(${PROJECT_NAME}-red-black-tree-set-unit-test
-            PRIVATE
-                "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/src>")
-    target_link_libraries(${PROJECT_NAME}-red-black-tree-set-unit-test
-            PRIVATE
-                ${PROJECT_NAME})
-    add_test(${PROJECT_NAME}-red-black-tree-set-unit-test
-            ${PROJECT_NAME}-red-black-tree-set-unit-test)
-    # aquarium-rock-red-black-tree-map-unit-test
-    add_executable(${PROJECT_NAME}-red-black-tree-map-unit-test
-            test/test_red_black_tree_map.c)
-    target_include_directories(${PROJECT_NAME}-red-black-tree-map-unit-test
-            PRIVATE
-                "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/src>")
-    target_link_libraries(${PROJECT_NAME}-red-black-tree-map-unit-test
-            PRIVATE
-                ${PROJECT_NAME})
-    add_test(${PROJECT_NAME}-red-black-tree-map-unit-test
-            ${PROJECT_NAME}-red-black-tree-map-unit-test)
     # aquarium-rock-array-unit-test
     add_executable(${PROJECT_NAME}-array-unit-test test/test_array.c)
     target_include_directories(${PROJECT_NAME}-array-unit-test
@@ -119,16 +89,6 @@ if(CMAKE_BUILD_TYPE STREQUAL "Debug")
             PRIVATE
                 ${PROJECT_NAME})
     add_test(${PROJECT_NAME}-array-unit-test ${PROJECT_NAME}-array-unit-test)
-    # aquarium-rock-hash-table-unit-test
-    add_executable(${PROJECT_NAME}-hash-table-unit-test test/test_hash_table.c)
-    target_include_directories(${PROJECT_NAME}-hash-table-unit-test
-            PRIVATE
-                "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/src>")
-    target_link_libraries(${PROJECT_NAME}-hash-table-unit-test
-            PRIVATE
-                ${PROJECT_NAME})
-    add_test(${PROJECT_NAME}-hash-table-unit-test
-            ${PROJECT_NAME}-hash-table-unit-test)
     # aquarium-linked-list-unit-test
     add_executable(${PROJECT_NAME}-linked-list-unit-test
             test/test_linked_list.c)
@@ -140,17 +100,17 @@ if(CMAKE_BUILD_TYPE STREQUAL "Debug")
                 ${PROJECT_NAME})
     add_test(${PROJECT_NAME}-linked-list-unit-test
             ${PROJECT_NAME}-linked-list-unit-test)
-    # aquarium-linked-red-black-tree-set-unit-test
-    add_executable(${PROJECT_NAME}-linked-red-black-tree-set-unit-test
-            test/test_linked_red_black_tree_set.c)
-    target_include_directories(${PROJECT_NAME}-linked-red-black-tree-set-unit-test
+    # aquarium-forward-list-unit-test
+    add_executable(${PROJECT_NAME}-forward-list-unit-test
+            test/test_forward_list.c)
+    target_include_directories(${PROJECT_NAME}-forward-list-unit-test
             PRIVATE
                 "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/src>")
-    target_link_libraries(${PROJECT_NAME}-linked-red-black-tree-set-unit-test
+    target_link_libraries(${PROJECT_NAME}-forward-list-unit-test
             PRIVATE
                 ${PROJECT_NAME})
-    add_test(${PROJECT_NAME}-linked-red-black-tree-set-unit-test
-            ${PROJECT_NAME}-linked-red-black-tree-set-unit-test)
+    add_test(${PROJECT_NAME}-forward-list-unit-test
+            ${PROJECT_NAME}-forward-list-unit-test)
 else()
     add_library(${PROJECT_NAME} "")
     target_sources(${PROJECT_NAME}

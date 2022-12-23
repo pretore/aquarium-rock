@@ -31,7 +31,7 @@ being used.
 
 ```c
 struct student bob = {};
-seagrass_required_true(rock_linked_list_node(&bob.by_insertion_order));
+seagrass_required_true(rock_linked_list_node_init(&bob.by_insertion_order));
 ```
 
 ### Memory

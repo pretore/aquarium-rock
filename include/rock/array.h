@@ -34,8 +34,8 @@ struct rock_array {
  * @throws ROCK_ARRAY_ERROR_MEMORY_ALLOCATION_FAILED if there is
  * insufficient memory to initialize the array instance.
  */
-bool
-rock_array_init(struct rock_array *object, size_t size, uintmax_t capacity);
+bool rock_array_init(struct rock_array *object, size_t size,
+                     uintmax_t capacity);
 
 /**
  * @brief Invalidate the array.

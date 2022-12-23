@@ -1,5 +1,5 @@
-#ifndef _ROCK_LINKED_LIST_TREE_H_
-#define _ROCK_LINKED_LIST_TREE_H_
+#ifndef _ROCK_LINKED_LIST_H_
+#define _ROCK_LINKED_LIST_H_
 
 #include <stddef.h>
 #include <stdint.h>
@@ -23,7 +23,7 @@ struct rock_linked_list_node {
 bool rock_linked_list_node_init(struct rock_linked_list_node *object);
 
 /**
- * @brief Insert node after the given object.
+ * @brief Insert after the given node.
  * @param [in] object where node will be inserted after.
  * @param [in] node to be inserted.
  * @return On success true, otherwise false if an error has occurred.
@@ -34,7 +34,7 @@ bool rock_linked_list_insert_after(struct rock_linked_list_node *object,
                                    struct rock_linked_list_node *node);
 
 /**
- * @brief Insert node before the given object.
+ * @brief Insert before the given node.
  * @param [in] object where node will be inserted before.
  * @param [in] node to be inserted.
  * @return On success true, otherwise false if an error has occurred.
@@ -74,4 +74,4 @@ bool rock_linked_list_next(const struct rock_linked_list_node *node,
 bool rock_linked_list_prev(const struct rock_linked_list_node *node,
                            struct rock_linked_list_node **out);
 
-#endif /* _ROCK_LINKED_LIST_TREE_H_ */
+#endif /* _ROCK_LINKED_LIST_H_ */

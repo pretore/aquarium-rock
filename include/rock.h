@@ -7,12 +7,9 @@
 
 #include <rock/array.h>
 #include <rock/error.h>
-#include <rock/hash_table.h>
+#include <rock/forward_list.h>
 #include <rock/linked_list.h>
-#include <rock/linked_red_black_tree_set.h>
 #include <rock/red_black_tree.h>
-#include <rock/red_black_tree_map.h>
-#include <rock/red_black_tree_set.h>
 
 /**
  * @brief Return the container of the given pointer.
