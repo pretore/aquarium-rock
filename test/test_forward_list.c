@@ -105,6 +105,16 @@ static void check_next_error_on_out_is_null(void **state) {
     rock_error = ROCK_ERROR_NONE;
 }
 
+static void check_next_error_on_end_of_sequence(void **state) {
+    rock_error = ROCK_ERROR_NONE;
+    struct rock_forward_list_node object;
+    assert_true(rock_forward_list_node_init(&object));
+    struct rock_forward_list_node *out;
+    assert_false(rock_forward_list_next(&object, &out));
+    assert_int_equal(ROCK_FORWARD_LIST_ERROR_END_OF_SEQUENCE, rock_error);
+    rock_error = ROCK_ERROR_NONE;
+}
+
 static void check_next(void **state) {
     rock_error = ROCK_ERROR_NONE;
     struct rock_forward_list_node object;
@@ -131,6 +141,7 @@ int main(int argc, char *argv[]) {
             cmocka_unit_test(check_remove),
             cmocka_unit_test(check_next_error_on_node_is_null),
             cmocka_unit_test(check_next_error_on_out_is_null),
+            cmocka_unit_test(check_next_error_on_end_of_sequence),
             cmocka_unit_test(check_next),
     };
     //cmocka_set_message_output(CM_OUTPUT_XML);

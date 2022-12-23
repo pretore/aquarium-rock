@@ -76,6 +76,10 @@ bool rock_forward_list_next(const struct rock_forward_list_node *const node,
         rock_error = ROCK_FORWARD_LIST_ERROR_OUT_IS_NULL;
         return false;
     }
+    if (!node->next) {
+        rock_error = ROCK_FORWARD_LIST_ERROR_END_OF_SEQUENCE;
+        return false;
+    }
     *out = node->next;
     return true;
 }
