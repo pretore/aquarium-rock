@@ -52,6 +52,21 @@ static void check_insert(void **state) {
     rock_error = ROCK_ERROR_NONE;
 }
 
+static void check_insert_case_prepend(void **state) {
+    rock_error = ROCK_ERROR_NONE;
+    struct rock_forward_list_node node[2];
+    assert_true(rock_forward_list_node_init(&node[0]));
+    assert_true(rock_forward_list_node_init(&node[1]));
+    assert_true(rock_forward_list_insert(&node[0], &node[1]));
+    struct rock_forward_list_node object;
+    assert_true(rock_forward_list_node_init(&object));
+    assert_true(rock_forward_list_insert(&object, &node[0]));
+    assert_ptr_equal(object.next, &node[0]);
+    assert_ptr_equal(node[0].next, &node[1]);
+    assert_null(node[1].next);
+    rock_error = ROCK_ERROR_NONE;
+}
+
 static void check_remove_error_on_object_is_null(void **state) {
     rock_error = ROCK_ERROR_NONE;
     assert_false(rock_forward_list_remove(NULL, (void *)1));
@@ -135,6 +150,7 @@ int main(int argc, char *argv[]) {
             cmocka_unit_test(check_insert_error_on_object_is_null),
             cmocka_unit_test(check_insert_error_on_node_is_null),
             cmocka_unit_test(check_insert),
+            cmocka_unit_test(check_insert_case_prepend),
             cmocka_unit_test(check_remove_error_on_object_is_null),
             cmocka_unit_test(check_remove_error_on_node_is_null),
             cmocka_unit_test(check_remove_error_on_node_is_not_next_of_object),

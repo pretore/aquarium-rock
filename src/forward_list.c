@@ -32,7 +32,9 @@ bool rock_forward_list_insert(struct rock_forward_list_node *const A,
      * .next = C
      */
     struct rock_forward_list_node *const B = A->next;
-    C->next = B;
+    if (B) {
+        C->next = B;
+    }
     A->next = C;
     return true;
 }
