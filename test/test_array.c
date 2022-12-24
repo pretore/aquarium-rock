@@ -3,6 +3,7 @@
 #include <setjmp.h>
 #include <cmocka.h>
 #include <string.h>
+#include <time.h>
 #include <rock.h>
 
 #include "private/array.h"
@@ -29,6 +30,10 @@ static void check_init_error_on_memory_allocation_failed(void **state) {
     assert_int_equal(ROCK_ARRAY_ERROR_MEMORY_ALLOCATION_FAILED, rock_error);
     assert_false(rock_array_init(&object, SIZE_MAX, sizeof(void *)));
     assert_int_equal(ROCK_ARRAY_ERROR_MEMORY_ALLOCATION_FAILED, rock_error);
+    calloc_is_overridden = malloc_is_overridden = realloc_is_overridden = true;
+    assert_false(rock_array_init(&object, sizeof(void *), 10));
+    assert_int_equal(ROCK_ARRAY_ERROR_MEMORY_ALLOCATION_FAILED, rock_error);
+    calloc_is_overridden = malloc_is_overridden = realloc_is_overridden = false;
     rock_error = ROCK_ERROR_NONE;
 }
 
@@ -89,14 +94,14 @@ static void check_capacity_error_on_out_is_null(void **state) {
 }
 
 static void check_capacity(void **state) {
+    srand(time(NULL));
     rock_error = ROCK_ERROR_NONE;
-    struct rock_array object = {};
-    uintmax_t capacity;
-    assert_true(rock_array_capacity(&object, &capacity));
-    assert_int_equal(object.capacity, capacity);
-    object.capacity = 25241;
-    assert_true(rock_array_capacity(&object, &capacity));
-    assert_int_equal(object.capacity, capacity);
+    struct rock_array object = {
+            .capacity = rand() % UINTMAX_MAX
+    };
+    uintmax_t out;
+    assert_true(rock_array_capacity(&object, &out));
+    assert_int_equal(out, object.capacity);
     rock_error = ROCK_ERROR_NONE;
 }
 
@@ -113,7 +118,9 @@ check_set_capacity_error_on_memory_allocation_failed(void **state) {
     struct rock_array object = {
             .size = sizeof(void *)
     };
-    assert_false(rock_array_set_capacity(&object, SIZE_MAX));
+    malloc_is_overridden = calloc_is_overridden = realloc_is_overridden = true;
+    assert_false(rock_array_set_capacity(&object, 10));
+    malloc_is_overridden = calloc_is_overridden = realloc_is_overridden = false;
     assert_int_equal(ROCK_ARRAY_ERROR_MEMORY_ALLOCATION_FAILED, rock_error);
     rock_error = ROCK_ERROR_NONE;
 }
@@ -155,14 +162,14 @@ static void check_get_length_error_on_out_is_null(void **state) {
 }
 
 static void check_get_length(void **state) {
+    srand(time(NULL));
     rock_error = ROCK_ERROR_NONE;
-    struct rock_array object = {};
-    uintmax_t length;
-    assert_true(rock_array_get_length(&object, &length));
-    assert_int_equal(object.length, length);
-    object.length = 12341;
-    assert_true(rock_array_get_length(&object, &length));
-    assert_int_equal(object.length, length);
+    struct rock_array object = {
+            .length = rand() % UINTMAX_MAX
+    };
+    uintmax_t out;
+    assert_true(rock_array_get_length(&object, &out));
+    assert_int_equal(out, object.length);
     rock_error = ROCK_ERROR_NONE;
 }
 
@@ -175,9 +182,11 @@ static void check_set_length_error_on_object_is_null(void **state) {
 
 static void check_set_length_error_on_memory_allocation_failed(void **state) {
     rock_error = ROCK_ERROR_NONE;
-    struct rock_array object = {};
+    struct rock_array object;
     assert_true(rock_array_init(&object, sizeof(void *), 0));
-    assert_false(rock_array_set_length(&object, SIZE_MAX));
+    malloc_is_overridden = calloc_is_overridden = realloc_is_overridden = true;
+    assert_false(rock_array_set_length(&object, 1));
+    malloc_is_overridden = calloc_is_overridden = realloc_is_overridden = false;
     assert_int_equal(ROCK_ARRAY_ERROR_MEMORY_ALLOCATION_FAILED, rock_error);
     assert_true(rock_array_invalidate(&object, NULL));
     rock_error = ROCK_ERROR_NONE;
@@ -211,14 +220,14 @@ static void check_size_error_on_out_is_null(void **state) {
 }
 
 static void check_size(void **state) {
+    srand(time(NULL));
     rock_error = ROCK_ERROR_NONE;
-    struct rock_array object = {};
-    uintmax_t size;
-    assert_true(rock_array_size(&object, &size));
-    assert_int_equal(object.size, size);
-    object.size = 2763;
-    assert_true(rock_array_size(&object, &size));
-    assert_int_equal(object.size, size);
+    struct rock_array object = {
+            .size = rand() % UINTMAX_MAX
+    };
+    uintmax_t out;
+    assert_true(rock_array_size(&object, &out));
+    assert_int_equal(object.size, out);
     rock_error = ROCK_ERROR_NONE;
 }
 
@@ -252,30 +261,35 @@ static void check_add_error_on_object_is_null(void **state) {
 
 static void check_add_error_on_memory_allocation_failed(void **state) {
     rock_error = ROCK_ERROR_NONE;
-    struct rock_array object = {};
-    object.capacity = SIZE_MAX;
+    struct rock_array object;
+    assert_true(rock_array_init(&object, sizeof(uintmax_t), 0));
+    malloc_is_overridden = calloc_is_overridden = realloc_is_overridden = true;
     assert_false(rock_array_add(&object, &rock_error));
+    malloc_is_overridden = calloc_is_overridden = realloc_is_overridden = false;
     assert_int_equal(ROCK_ARRAY_ERROR_MEMORY_ALLOCATION_FAILED, rock_error);
+    assert_true(rock_array_invalidate(&object, NULL));
     rock_error = ROCK_ERROR_NONE;
 }
 
 static void check_add(void **state) {
     rock_error = ROCK_ERROR_NONE;
-    struct rock_array object = {};
-    assert_true(rock_array_init(&object, sizeof(void *), 0));
-    unsigned char values[] = {
-            0, 2, 2, 4, 4, 6, 6, 10, 10,
-            10, 10, 16, 16, 16, 16, 16, 16,
-            24
+    struct rock_array object;
+    assert_true(rock_array_init(&object, sizeof(uintmax_t), 0));
+    const uintmax_t values[] = {
+            rand() % UINTMAX_MAX,
+            rand() % UINTMAX_MAX,
+            rand() % UINTMAX_MAX,
+            rand() % UINTMAX_MAX,
+            rand() % UINTMAX_MAX,
+            rand() % UINTMAX_MAX,
     };
-    for (uintmax_t i = 0, c; 1 + i < sizeof(values); i++) {
-        assert_true(rock_array_get_length(&object, &c));
-        assert_int_equal(c, i);
-        assert_true(rock_array_add(&object, check_add + i));
-        assert_true(rock_array_capacity(&object, &c));
-        assert_int_equal(c, values[1 + i]);
+    const uintmax_t count = sizeof(values) / sizeof(uintmax_t);
+    for (uintmax_t i = 0; i < count; i++) {
+        assert_int_equal(object.length, i);
+        assert_true(rock_array_add(&object, &values[i]));
+        assert_int_equal(object.length, 1 + i);
         assert_memory_equal(rock_array_address(&object, i),
-                            check_add + i,
+                            &values[i],
                             object.size);
     }
     assert_true(rock_array_invalidate(&object, NULL));
@@ -284,7 +298,9 @@ static void check_add(void **state) {
 
 static void check_add_all_error_on_object_is_null(void **state) {
     rock_error = ROCK_ERROR_NONE;
-    const void *items[] = {0};
+    const void *items[] = {
+            NULL
+    };
     assert_false(rock_array_add_all(NULL, 1, items));
     assert_int_equal(ROCK_ARRAY_ERROR_OBJECT_IS_NULL, rock_error);
     rock_error = ROCK_ERROR_NONE;
@@ -292,7 +308,9 @@ static void check_add_all_error_on_object_is_null(void **state) {
 
 static void check_add_all_error_on_count_is_zero(void **state) {
     rock_error = ROCK_ERROR_NONE;
-    const void *items[] = {0};
+    const void *items[] = {
+            NULL
+    };
     assert_false(rock_array_add_all((void *)1, 0, items));
     assert_int_equal(ROCK_ARRAY_ERROR_COUNT_IS_ZERO, rock_error);
     rock_error = ROCK_ERROR_NONE;
@@ -306,38 +324,51 @@ static void check_add_all_error_on_items_is_null(void **state) {
 }
 
 static void check_add_all_error_on_memory_allocation_failed(void **state) {
+    srand(time(NULL));
     rock_error = ROCK_ERROR_NONE;
-    struct rock_array object = {};
-    assert_true(rock_array_init(&object, sizeof(void *), 0));
-    object.capacity = SIZE_MAX;
-    const void *items[] = {
-            &check_add_all_error_on_object_is_null,
-            &check_add_all_error_on_items_is_null,
-            &check_add
+    struct rock_array object;
+    assert_true(rock_array_init(&object, sizeof(uintmax_t), 0));
+    const uintmax_t values[] = {
+            rand() % UINTMAX_MAX,
+            rand() % UINTMAX_MAX,
+            rand() % UINTMAX_MAX
     };
-    const uintmax_t count = sizeof(items) / object.size;
+    const void *items[] = {
+            &values[0],
+            &values[1],
+            &values[2]
+    };
+    const uintmax_t count = sizeof(items) / sizeof(uintmax_t *);
+    malloc_is_overridden = calloc_is_overridden = realloc_is_overridden = true;
     assert_false(rock_array_add_all(&object, count, items));
+    malloc_is_overridden = calloc_is_overridden = realloc_is_overridden = false;
     assert_int_equal(ROCK_ARRAY_ERROR_MEMORY_ALLOCATION_FAILED, rock_error);
     assert_true(rock_array_invalidate(&object, NULL));
     rock_error = ROCK_ERROR_NONE;
 }
 
 static void check_add_all(void **state) {
+    srand(time(NULL));
     rock_error = ROCK_ERROR_NONE;
-    struct rock_array object = {};
-    assert_true(rock_array_init(&object, sizeof(void *), 1));
+    struct rock_array object;
+    assert_true(rock_array_init(&object, sizeof(uintmax_t), 1));
     assert_non_null(object.data);
-    assert_int_equal(1, object.capacity);
-    assert_int_equal(0, object.length);
-    const void *items[] = {
-            &check_add_all_error_on_object_is_null,
-            &check_add_all_error_on_items_is_null,
-            &check_add
+    assert_int_equal(object.capacity, 1);
+    assert_int_equal(object.length, 0);
+    const uintmax_t values[] = {
+            rand() % UINTMAX_MAX,
+            rand() % UINTMAX_MAX,
+            rand() % UINTMAX_MAX
     };
-    const uintmax_t count = sizeof(items) / object.size;
+    const void *items[] = {
+            &values[0],
+            &values[1],
+            &values[2]
+    };
+    const uintmax_t count = sizeof(items) / sizeof(void *);
     assert_true(rock_array_add_all(&object, count, items));
     assert_non_null(object.data);
-    assert_int_equal(4, object.capacity);
+    assert_int_equal(object.capacity, 4);
     assert_int_equal(count, object.length);
     for (uintmax_t i = 0; i < count; i++) {
         assert_memory_equal(items[i],
@@ -364,7 +395,7 @@ static void check_remove_last_error_on_array_is_empty(void **state) {
 
 static void check_remove_last(void **state) {
     rock_error = ROCK_ERROR_NONE;
-    struct rock_array object = {};
+    struct rock_array object;
     assert_true(rock_array_init(&object, sizeof(void *), 0));
     assert_true(rock_array_add(&object, check_remove_last));
     uintmax_t length;
@@ -393,32 +424,45 @@ static void check_insert_error_on_index_is_out_of_bounds(void **state) {
 }
 
 static void check_insert_error_on_memory_allocation_failed(void **state) {
+    srand(time(NULL));
     rock_error = ROCK_ERROR_NONE;
-    struct rock_array object = {};
+    struct rock_array object;
     assert_true(rock_array_init(&object, sizeof(void *), 0));
-    void *items[] = {
-            &check_insert_error_on_object_is_null,
-            &check_insert_error_on_index_is_out_of_bounds
+    const uintmax_t values[] = {
+            rand() % UINTMAX_MAX,
+            rand() % UINTMAX_MAX,
+    };
+    const void *items[] = {
+            &values[0],
+            &values[1],
     };
     assert_true(rock_array_add(&object, items[0]));
-    object.capacity = SIZE_MAX;
+    object.capacity = 1;
+    malloc_is_overridden = calloc_is_overridden = realloc_is_overridden = true;
     assert_false(rock_array_insert(&object, 0, items[1]));
+    malloc_is_overridden = calloc_is_overridden = realloc_is_overridden = false;
     assert_int_equal(ROCK_ARRAY_ERROR_MEMORY_ALLOCATION_FAILED, rock_error);
     assert_true(rock_array_invalidate(&object, NULL));
     rock_error = ROCK_ERROR_NONE;
 }
 
 static void check_insert(void **state) {
+    srand(time(NULL));
     rock_error = ROCK_ERROR_NONE;
-    struct rock_array object = {};
-    assert_true(rock_array_init(&object, sizeof(void *), 0));
-    void *items[] = {
-            &check_insert_error_on_object_is_null,
-            &check_insert_error_on_index_is_out_of_bounds
+    struct rock_array object;
+    assert_true(rock_array_init(&object, sizeof(uintmax_t), 0));
+    const uintmax_t values[] = {
+            rand() % UINTMAX_MAX,
+            rand() % UINTMAX_MAX
     };
+    const void *items[] = {
+            &values[0],
+            &values[1]
+    };
+    const uintmax_t count = sizeof(items) / sizeof(void *);
     assert_true(rock_array_add(&object, items[0]));
     assert_true(rock_array_insert(&object, 0, items[1]));
-    for (uintmax_t i = 0; i < sizeof(items) / object.size; i++) {
+    for (uintmax_t i = 0; i < count; i++) {
         assert_memory_equal(rock_array_address(&object, i),
                             items[1 - i],
                             object.size);
@@ -429,7 +473,9 @@ static void check_insert(void **state) {
 
 static void check_insert_all_error_on_object_is_null(void **state) {
     rock_error = ROCK_ERROR_NONE;
-    const void *items[] = {0};
+    const void *items[] = {
+            NULL
+    };
     assert_false(rock_array_insert_all(NULL, 0, 1, items));
     assert_int_equal(ROCK_ARRAY_ERROR_OBJECT_IS_NULL, rock_error);
     rock_error = ROCK_ERROR_NONE;
@@ -438,7 +484,9 @@ static void check_insert_all_error_on_object_is_null(void **state) {
 static void check_insert_all_error_on_index_is_out_of_bounds(void **state) {
     rock_error = ROCK_ERROR_NONE;
     struct rock_array object = {};
-    const void *items[] = {0};
+    const void *items[] = {
+            NULL
+    };
     assert_false(rock_array_insert_all(&object, 0, 1, items));
     assert_int_equal(ROCK_ARRAY_ERROR_INDEX_IS_OUT_OF_BOUNDS, rock_error);
     rock_error = ROCK_ERROR_NONE;
@@ -449,7 +497,9 @@ static void check_insert_all_error_on_count_is_zero(void **state) {
     struct rock_array object = {
             .length = 1
     };
-    const void *items[] = {0};
+    const void *items[] = {
+             NULL
+    };
     assert_false(rock_array_insert_all(&object, 0, 0, items));
     assert_int_equal(ROCK_ARRAY_ERROR_COUNT_IS_ZERO, rock_error);
     rock_error = ROCK_ERROR_NONE;
@@ -466,18 +516,25 @@ static void check_insert_all_error_on_items_is_null(void **state) {
 }
 
 static void check_insert_all_error_on_memory_allocation_failed(void **state) {
+    srand(time(NULL));
     rock_error = ROCK_ERROR_NONE;
-    struct rock_array object = {};
-    assert_true(rock_array_init(&object, sizeof(void *), 0));
-    object.capacity = SIZE_MAX;
+    struct rock_array object;
+    assert_true(rock_array_init(&object, sizeof(uintmax_t), 0));
     object.length = 1;
-    const void *items[] = {
-            check_insert_all_error_on_memory_allocation_failed,
-            check_insert_all_error_on_items_is_null,
-            check_insert_all_error_on_count_is_zero
+    const uintmax_t values[] = {
+            rand() % UINTMAX_MAX,
+            rand() % UINTMAX_MAX,
+            rand() % UINTMAX_MAX,
     };
-    const uintmax_t count = sizeof(items) / object.size;
+    const void *items[] = {
+            &values[0],
+            &values[1],
+            &values[2]
+    };
+    const uintmax_t count = sizeof(items) / sizeof(void *);
+    malloc_is_overridden = calloc_is_overridden = realloc_is_overridden = true;
     assert_false(rock_array_insert_all(&object, 0, count, items));
+    malloc_is_overridden = calloc_is_overridden = realloc_is_overridden = false;
     assert_int_equal(ROCK_ARRAY_ERROR_MEMORY_ALLOCATION_FAILED, rock_error);
     assert_true(rock_array_invalidate(&object, NULL));
     rock_error = ROCK_ERROR_NONE;
@@ -485,15 +542,21 @@ static void check_insert_all_error_on_memory_allocation_failed(void **state) {
 
 static void check_insert_all(void **state) {
     rock_error = ROCK_ERROR_NONE;
-    struct rock_array object = {};
-    assert_true(rock_array_init(&object, sizeof(void *), 0));
-    assert_true(rock_array_add(&object, &check_insert_all));
-    const void *items[] = {
-            &check_insert_all_error_on_memory_allocation_failed,
-            &check_insert_all_error_on_items_is_null,
-            &check_insert_all_error_on_count_is_zero
+    struct rock_array object;
+    assert_true(rock_array_init(&object, sizeof(uintmax_t), 0));
+    const uintmax_t value = rand() % UINTMAX_MAX;
+    assert_true(rock_array_add(&object, &value));
+    const uintmax_t values[] = {
+            rand() % UINTMAX_MAX,
+            rand() % UINTMAX_MAX,
+            rand() % UINTMAX_MAX,
     };
-    const uintmax_t count = sizeof(items) / object.size;
+    const void *items[] = {
+            &values[0],
+            &values[1],
+            &values[2]
+    };
+    const uintmax_t count = sizeof(items) / sizeof(void *);
     assert_true(rock_array_insert_all(&object, 0, count, items));
     for (uintmax_t i = 0; i < count; i++) {
         assert_memory_equal(rock_array_address(&object, i),
@@ -501,7 +564,7 @@ static void check_insert_all(void **state) {
                             object.size);
     }
     assert_memory_equal(rock_array_address(&object, count),
-                        &check_insert_all,
+                        &value,
                         object.size);
     assert_true(rock_array_invalidate(&object, NULL));
     rock_error = ROCK_ERROR_NONE;
@@ -523,15 +586,21 @@ static void check_remove_error_on_index_is_out_of_bounds(void **state) {
 }
 
 static void check_remove(void **state) {
+    srand(time(NULL));
     rock_error = ROCK_ERROR_NONE;
-    struct rock_array object = {};
-    assert_true(rock_array_init(&object, sizeof(void *), 0));
-    assert_true(rock_array_add(&object, &check_remove));
-    const void *items[] = {
-            &check_remove_error_on_index_is_out_of_bounds,
-            &check_remove_error_on_object_is_null
+    struct rock_array object;
+    assert_true(rock_array_init(&object, sizeof(uintmax_t), 0));
+    const uintmax_t value = rand() % UINTMAX_MAX;
+    assert_true(rock_array_add(&object, &value));
+    const uintmax_t values[] = {
+            rand() % UINTMAX_MAX,
+            rand() % UINTMAX_MAX,
     };
-    const uintmax_t count = sizeof(items) / object.size;
+    const void *items[] = {
+            &values[0],
+            &values[1]
+    };
+    const uintmax_t count = sizeof(items) / sizeof(void *);
     assert_true(rock_array_insert_all(&object, 0, count, items));
     assert_int_equal(3, object.length);
     assert_true(rock_array_remove(&object, 0));
@@ -540,7 +609,7 @@ static void check_remove(void **state) {
                         items[1],
                         object.size);
     assert_memory_equal(rock_array_address(&object, 1),
-                        &check_remove,
+                        &value,
                         object.size);
     assert_true(rock_array_remove(&object, 1));
     assert_int_equal(1, object.length);
@@ -578,15 +647,21 @@ static void check_remove_all_error_on_index_is_out_of_bounds(void **state) {
 
 static void check_remove_all(void **state) {
     rock_error = ROCK_ERROR_NONE;
-    struct rock_array object = {};
-    assert_true(rock_array_init(&object, sizeof(void *), 0));
-    const void *items[] = {
-            &check_remove_all,
-            &check_remove_all_error_on_index_is_out_of_bounds,
-            &check_remove_all_error_on_count_is_zero,
-            &check_remove_all_error_on_object_is_null
+    struct rock_array object;
+    assert_true(rock_array_init(&object, sizeof(uintmax_t), 0));
+    const uintmax_t values[] = {
+            rand() % UINTMAX_MAX,
+            rand() % UINTMAX_MAX,
+            rand() % UINTMAX_MAX,
+            rand() % UINTMAX_MAX,
     };
-    uintmax_t count = sizeof(items) / object.size;
+    const void *items[] = {
+            &values[0],
+            &values[1],
+            &values[2],
+            &values[3]
+    };
+    uintmax_t count = sizeof(items) / sizeof(void *);
     assert_true(rock_array_add_all(&object, count, items));
     assert_int_equal(4, object.length);
     assert_true(rock_array_remove_all(&object, 1, 672532));
@@ -634,15 +709,21 @@ static void check_get_error_on_index_is_out_of_bounds(void **state) {
 
 static void check_get(void **state) {
     rock_error = ROCK_ERROR_NONE;
-    struct rock_array object = {};
-    assert_true(rock_array_init(&object, sizeof(void *), 0));
-    const void *items[] = {
-            &check_get,
-            &check_get_error_on_index_is_out_of_bounds,
-            &check_get_error_on_out_is_null,
-            &check_get_error_on_object_is_null
+    struct rock_array object;
+    assert_true(rock_array_init(&object, sizeof(uintmax_t), 0));
+    const uintmax_t values[] = {
+            rand() % UINTMAX_MAX,
+            rand() % UINTMAX_MAX,
+            rand() % UINTMAX_MAX,
+            rand() % UINTMAX_MAX,
     };
-    uintmax_t count = sizeof(items) / object.size;
+    const void *items[] = {
+            &values[0],
+            &values[1],
+            &values[2],
+            &values[3]
+    };
+    const uintmax_t count = sizeof(items) / sizeof(void *);
     assert_true(rock_array_add_all(&object, count, items));
     for (uintmax_t i = 0; i < count; i++) {
         void *out;
@@ -671,19 +752,26 @@ static void check_set_error_on_index_is_out_of_bounds(void **state) {
 }
 
 static void check_set(void **state) {
+    srand(time(NULL));
     rock_error = ROCK_ERROR_NONE;
-    struct rock_array object = {};
-    assert_true(rock_array_init(&object, sizeof(void *), 0));
-    const void *items[] = {
-            &check_set,
-            &check_set_error_on_index_is_out_of_bounds,
-            &check_set_error_on_object_is_null
+    struct rock_array object;
+    assert_true(rock_array_init(&object, sizeof(uintmax_t), 0));
+    const uintmax_t values[] = {
+            rand() % UINTMAX_MAX,
+            rand() % UINTMAX_MAX,
+            rand() % UINTMAX_MAX,
     };
-    uintmax_t count = sizeof(items) / object.size;
+    const void *items[] = {
+            &values[0],
+            &values[1],
+            &values[2]
+    };
+    uintmax_t count = sizeof(items) / sizeof(void *);
     assert_true(rock_array_add_all(&object, count, items));
     assert_true(rock_array_set(&object, 0, NULL));
-    void *out, *null = NULL;
-    assert_true(rock_array_get(&object, 0, &out));
+    const uintmax_t null = 0;
+    uintmax_t *out;
+    assert_true(rock_array_get(&object, 0, (void **) &out));
     assert_memory_equal(out, &null, object.size);
     assert_true(rock_array_invalidate(&object, NULL));
     rock_error = ROCK_ERROR_NONE;
@@ -712,18 +800,22 @@ static void check_first_error_on_array_is_empty(void **state) {
 }
 
 static void check_first(void **state) {
+    srand(time(NULL));
     rock_error = ROCK_ERROR_NONE;
-    struct rock_array object = {};
+    struct rock_array object;
     assert_true(rock_array_init(&object, sizeof(void *), 0));
-    assert_true(rock_array_add(&object, check_first));
+    const void *values[] = {
+            (const void *) (rand() % UINTMAX_MAX),
+            (const void *) (rand() % UINTMAX_MAX)
+    };
     void *first;
-    assert_true(rock_array_first(&object, &first));
-    assert_memory_equal(first, check_first, sizeof(void *));
+    assert_true(rock_array_add(&object, &values[0]));
+    assert_true(rock_array_first(&object, (void **) &first));
+    assert_memory_equal(first, &values[0], sizeof(void *));
     assert_true(rock_array_remove(&object, 0));
-    assert_true(rock_array_add(
-            &object,  check_first_error_on_array_is_empty));
-    assert_true(rock_array_first(&object, &first));
-    assert_memory_equal(first, check_first_error_on_array_is_empty, sizeof(void *));
+    assert_true(rock_array_add(&object,  &values[1]));
+    assert_true(rock_array_first(&object, (void **) &first));
+    assert_memory_equal(first, &values[1], sizeof(void *));
     assert_true(rock_array_invalidate(&object, NULL));
     rock_error = ROCK_ERROR_NONE;
 }
@@ -751,19 +843,22 @@ static void check_last_error_on_array_is_empty(void **state) {
 }
 
 static void check_last(void **state) {
+    srand(time(NULL));
     rock_error = ROCK_ERROR_NONE;
-    struct rock_array object = {};
-    assert_true(rock_array_init(&object, sizeof(void *), 0));
-    assert_true(rock_array_add(&object, check_last));
-    void *last;
-    assert_true(rock_array_last(&object, &last));
-    assert_memory_equal(last, check_last, sizeof(void *));
+    struct rock_array object;
+    assert_true(rock_array_init(&object, sizeof(uintmax_t), 0));
+    const uintmax_t values[] = {
+            rand() % UINTMAX_MAX,
+            rand() % UINTMAX_MAX,
+    };
+    assert_true(rock_array_add(&object, &values[0]));
+    uintmax_t *last;
+    assert_true(rock_array_last(&object, (void **) &last));
+    assert_memory_equal(last, &values[0], sizeof(uintmax_t));
     assert_true(rock_array_remove(&object, 0));
-    assert_true(rock_array_add(
-            &object, check_last_error_on_array_is_empty));
-    assert_true(rock_array_last(&object, &last));
-    assert_memory_equal(last, check_first_error_on_array_is_empty,
-                        sizeof(void *));
+    assert_true(rock_array_add(&object, &values[1]));
+    assert_true(rock_array_last(&object, (void **) &last));
+    assert_memory_equal(last, &values[1], sizeof(uintmax_t));
     assert_true(rock_array_invalidate(&object, NULL));
     rock_error = ROCK_ERROR_NONE;
 }
@@ -792,7 +887,7 @@ static void check_next_error_on_out_is_null(void **state) {
 static void check_next_error_on_item_is_out_of_bounds(void **state) {
     rock_error = ROCK_ERROR_NONE;
     struct rock_array object = {
-            .data = check_next_error_on_item_is_out_of_bounds,
+            .data = (void *) 0x1000,
             .length = 1
     };
     assert_false(rock_array_next(&object, (void *)1, (void *)1));
@@ -801,14 +896,15 @@ static void check_next_error_on_item_is_out_of_bounds(void **state) {
 }
 
 static void check_next_error_on_end_of_sequence(void **state) {
+    srand(time(NULL));
     rock_error = ROCK_ERROR_NONE;
-    struct rock_array object = {};
-    assert_true(rock_array_init(&object, sizeof(void *), 0));
-    assert_true(rock_array_add(&object,
-                               check_next_error_on_end_of_sequence));
-    void *item;
-    assert_true(rock_array_first(&object, &item));
-    assert_false(rock_array_next(&object, item, &item));
+    struct rock_array object;
+    assert_true(rock_array_init(&object, sizeof(uintmax_t), 0));
+    const uintmax_t value = rand() % UINTMAX_MAX;
+    assert_true(rock_array_add(&object, &value));
+    uintmax_t *item;
+    assert_true(rock_array_first(&object, (void **) &item));
+    assert_false(rock_array_next(&object, item, (void **) &item));
     assert_int_equal(ROCK_ARRAY_ERROR_END_OF_SEQUENCE, rock_error);
     assert_true(rock_array_invalidate(&object, NULL));
     rock_error = ROCK_ERROR_NONE;
@@ -816,13 +912,17 @@ static void check_next_error_on_end_of_sequence(void **state) {
 
 static void check_next(void **state) {
     rock_error = ROCK_ERROR_NONE;
-    struct rock_array object = {};
-    assert_true(rock_array_init(&object, sizeof(void *), 0));
-    const void *items[] = {
-            check_next,
-            check_next_error_on_end_of_sequence
+    struct rock_array object;
+    assert_true(rock_array_init(&object, sizeof(uintmax_t), 0));
+    const uintmax_t values[] = {
+            rand() % UINTMAX_MAX,
+            rand() % UINTMAX_MAX,
     };
-    const uintmax_t count = sizeof(items) / object.size;
+    const void *items[] = {
+            &values[0],
+            &values[1]
+    };
+    const uintmax_t count = sizeof(items) / sizeof(void *);
     assert_true(rock_array_add_all(&object, count, items));
     void *item;
     assert_true(rock_array_first(&object, &item));
@@ -857,7 +957,7 @@ static void check_prev_error_on_out_is_null(void **state) {
 static void check_prev_error_on_item_is_out_of_bounds(void **state) {
     rock_error = ROCK_ERROR_NONE;
     struct rock_array object = {
-            .data = check_prev_error_on_item_is_out_of_bounds,
+            .data = (void *) 0x2000,
             .length = 1
     };
     assert_false(rock_array_prev(&object, (void *)1, (void *)1));
@@ -866,11 +966,12 @@ static void check_prev_error_on_item_is_out_of_bounds(void **state) {
 }
 
 static void check_prev_error_on_end_of_sequence(void **state) {
+    srand(time(NULL));
     rock_error = ROCK_ERROR_NONE;
-    struct rock_array object = {};
-    assert_true(rock_array_init(&object, sizeof(void *), 0));
-    assert_true(rock_array_add(&object,
-                               check_prev_error_on_end_of_sequence));
+    struct rock_array object;
+    assert_true(rock_array_init(&object, sizeof(uintmax_t), 0));
+    const uintmax_t value = rand() % UINTMAX_MAX;
+    assert_true(rock_array_add(&object, &value));
     void *item;
     assert_true(rock_array_last(&object, &item));
     assert_false(rock_array_prev(&object, item, &item));
@@ -881,13 +982,17 @@ static void check_prev_error_on_end_of_sequence(void **state) {
 
 static void check_prev(void **state) {
     rock_error = ROCK_ERROR_NONE;
-    struct rock_array object = {};
-    assert_true(rock_array_init(&object, sizeof(void *), 0));
-    const void *items[] = {
-            check_prev,
-            check_prev_error_on_end_of_sequence
+    struct rock_array object;
+    assert_true(rock_array_init(&object, sizeof(uintmax_t), 0));
+    const uintmax_t values[] = {
+            rand() % UINTMAX_MAX,
+            rand() % UINTMAX_MAX,
     };
-    const uintmax_t count = sizeof(items) / object.size;
+    const void *items[] = {
+            &values[0],
+            &values[1]
+    };
+    const uintmax_t count = sizeof(items) / sizeof(void *);
     assert_true(rock_array_add_all(&object, count, items));
     void *item;
     assert_true(rock_array_last(&object, &item));

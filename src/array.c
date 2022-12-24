@@ -18,12 +18,12 @@ bool rock_array_init(struct rock_array *const object, const size_t size,
     }
     *object = (struct rock_array) {0};
     object->size = size;
-    if (!rock_array_set_capacity(object, capacity)) {
+    const bool result = rock_array_set_capacity(object, capacity);
+    if (!result) {
         seagrass_required_true(ROCK_ARRAY_ERROR_MEMORY_ALLOCATION_FAILED
                                == rock_error);
-        return false;
     }
-    return true;
+    return result;
 }
 
 bool rock_array_invalidate(struct rock_array *const object,
@@ -161,26 +161,21 @@ bool rock_array_adjust_capacity(struct rock_array *const object,
         rock_error = ROCK_ARRAY_ERROR_COUNT_IS_ZERO;
         return false;
     }
-    if (SIZE_MAX == object->capacity) {
-        rock_error = ROCK_ARRAY_ERROR_MEMORY_ALLOCATION_FAILED;
-        return false;
-    }
     uintmax_t limit;
-    uintmax_t capacity;
     if (!seagrass_uintmax_t_add(count, object->length, &limit)) {
         seagrass_required_true(SEAGRASS_UINTMAX_T_ERROR_RESULT_IS_INCONSISTENT
                                == seagrass_error);
-        capacity = SIZE_MAX;
-    } else {
-        for (capacity = object->capacity; limit > capacity;) {
-            seagrass_required_true(seagrass_uintmax_t_times_and_a_half_even(
-                    capacity, &capacity));
-        }
+        rock_error = ROCK_ARRAY_ERROR_MEMORY_ALLOCATION_FAILED;
+        return false;
+    }
+    uintmax_t capacity = object->capacity;
+    while (limit > capacity) {
+        seagrass_required_true(seagrass_uintmax_t_times_and_a_half_even(
+                capacity, &capacity));
     }
     /* apply the calculated capacity increase */
     if (capacity > object->capacity
-        && !rock_array_set_capacity(object,
-                                    capacity)) {
+        && !rock_array_set_capacity(object, capacity)) {
         seagrass_required_true(ROCK_ARRAY_ERROR_MEMORY_ALLOCATION_FAILED
                                == rock_error);
         return false;

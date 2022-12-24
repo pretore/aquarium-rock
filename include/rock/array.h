@@ -121,7 +121,7 @@ bool rock_array_add(struct rock_array *object, const void *item);
  * @throws ROCK_ARRAY_ERROR_COUNT_IS_ZERO if count is zero.
  * @throws ROCK_ARRAY_ERROR_ITEMS_IS_NULL is items is <i>NULL</i>.
  * @throws ROCK_ARRAY_ERROR_MEMORY_ALLOCATION_FAILED if there is not enough
- * memory to all the items.
+ * memory to add all the items.
  */
 bool rock_array_add_all(struct rock_array *object, uintmax_t count,
                         const void **items);
