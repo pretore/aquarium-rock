@@ -13,8 +13,9 @@
 #define ROCK_ARRAY_ERROR_ARRAY_IS_EMPTY                         6
 #define ROCK_ARRAY_ERROR_COUNT_IS_ZERO                          7
 #define ROCK_ARRAY_ERROR_ITEMS_IS_NULL                          8
-#define ROCK_ARRAY_ERROR_ITEM_IS_OUT_OF_BOUNDS                  9
-#define ROCK_ARRAY_ERROR_END_OF_SEQUENCE                        10
+#define ROCK_ARRAY_ERROR_ITEM_IS_NULL                           9
+#define ROCK_ARRAY_ERROR_ITEM_IS_OUT_OF_BOUNDS                  10
+#define ROCK_ARRAY_ERROR_END_OF_SEQUENCE                        11
 
 struct rock_array {
     void *data;

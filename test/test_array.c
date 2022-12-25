@@ -873,7 +873,7 @@ static void check_next_error_on_object_is_null(void **state) {
 static void check_next_error_on_item_is_null(void **state) {
     rock_error = ROCK_ERROR_NONE;
     assert_false(rock_array_next((void *)1, NULL, (void *)1));
-    assert_int_equal(ROCK_ARRAY_ERROR_ITEMS_IS_NULL, rock_error);
+    assert_int_equal(ROCK_ARRAY_ERROR_ITEM_IS_NULL, rock_error);
     rock_error = ROCK_ERROR_NONE;
 }
 
@@ -943,7 +943,7 @@ static void check_prev_error_on_object_is_null(void **state) {
 static void check_prev_error_on_item_is_null(void **state) {
     rock_error = ROCK_ERROR_NONE;
     assert_false(rock_array_prev((void *)1, NULL, (void *)1));
-    assert_int_equal(ROCK_ARRAY_ERROR_ITEMS_IS_NULL, rock_error);
+    assert_int_equal(ROCK_ARRAY_ERROR_ITEM_IS_NULL, rock_error);
     rock_error = ROCK_ERROR_NONE;
 }
 

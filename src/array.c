@@ -426,7 +426,7 @@ bool rock_array_next(const struct rock_array *const object,
         return false;
     }
     if (!item) {
-        rock_error = ROCK_ARRAY_ERROR_ITEMS_IS_NULL;
+        rock_error = ROCK_ARRAY_ERROR_ITEM_IS_NULL;
         return false;
     }
     if (!out) {
@@ -470,7 +470,7 @@ bool rock_array_prev(const struct rock_array *const object,
         return false;
     }
     if (!item) {
-        rock_error = ROCK_ARRAY_ERROR_ITEMS_IS_NULL;
+        rock_error = ROCK_ARRAY_ERROR_ITEM_IS_NULL;
         return false;
     }
     if (!out) {
