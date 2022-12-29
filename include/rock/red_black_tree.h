@@ -94,7 +94,7 @@ bool rock_red_black_tree_count(const struct rock_red_black_tree *object,
  * @throws ROCK_RED_BLACK_TREE_ERROR_OBJECT_IS_NULL if object is <i>NULL</i>.
  * @throws ROCK_RED_BLACK_TREE_ERROR_NEEDLE_IS_NULL if needle is <i>NULL</i>.
  * @throws ROCK_RED_BLACK_TREE_ERROR_OUT_IS_NULL if out is <i>NULL</i>.
- * @throws ROCK_RED_BLACK_TREE_ERROR_ITEM_NOT_FOUND if node was not found.
+ * @throws ROCK_RED_BLACK_TREE_ERROR_NODE_NOT_FOUND if node was not found.
  */
 bool rock_red_black_tree_find(const struct rock_red_black_tree *object,
                               const struct rock_red_black_tree_node *root,

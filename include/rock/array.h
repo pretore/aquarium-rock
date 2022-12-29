@@ -25,8 +25,8 @@ struct rock_array {
 };
 
 /**
- * @brief Initialise array.
- * @param [in] object instance to be initialised.
+ * @brief Initialize array.
+ * @param [in] object instance to be initialized.
  * @param [in] size of an item in the array.
  * @param [in] capacity set the initial capacity.
  * @return On success true, otherwise false if an error has occurred.
