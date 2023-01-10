@@ -2,7 +2,9 @@
 #include <seagrass.h>
 #include <rock.h>
 
+#ifdef TEST
 #include <test/cmocka.h>
+#endif
 
 bool rock_linked_list_node_init(struct rock_linked_list_node *const object) {
     if (!object) {

@@ -3,7 +3,10 @@
 #include <rock.h>
 
 #include "private/red_black_tree.h"
+
+#ifdef TEST
 #include <test/cmocka.h>
+#endif
 
 bool rock_red_black_tree_node_init(
         struct rock_red_black_tree_node *const node) {
@@ -879,7 +882,7 @@ bool rock_red_black_tree_remove(struct rock_red_black_tree *const object,
      *         S - sibling         (B)- DOUBLE BLACK
      *                             ...- SUBTREE
      */
-    for (uintmax_t i = 0; true; ) {
+    for (uintmax_t i = 0; true;) {
         /* case 1: root is double black
          *          N((B))
          *     drop double black
