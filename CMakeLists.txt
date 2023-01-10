@@ -40,19 +40,18 @@ endif()
 
 if(CMAKE_BUILD_TYPE STREQUAL "Debug")
     include(CTest)
-    include(cmake/FetchCMocka.cmake)
+    include(cmake/FetchAquariumCMocka.cmake)
     add_library(${PROJECT_NAME} STATIC "")
     add_compile_definitions(TEST)
     target_sources(${PROJECT_NAME}
             PRIVATE
                 ${SOURCES}
-                src/test/cmocka.h
                 src/test/red_black_tree.h
                 src/test/red_black_tree.c)
     target_link_libraries(${PROJECT_NAME}
             PUBLIC
                 ${CMAKE_THREAD_LIBS_INIT}
-                ${CMOCKA_SHARED_LIBRARY}
+                aquarium-cmocka
                 aquarium-seagrass)
     target_include_directories(${PROJECT_NAME}
             PUBLIC

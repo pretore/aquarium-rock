@@ -9,7 +9,8 @@
 #include <stdio.h>
 
 #include "private/red_black_tree.h"
-#include "test/cmocka.h"
+
+#include <test/cmocka.h>
 #include "test/red_black_tree.h"
 
 static void check_node_init_error_on_node_is_null(void **state) {

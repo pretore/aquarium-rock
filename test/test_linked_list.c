@@ -5,7 +5,7 @@
 #include <string.h>
 #include <rock.h>
 
-#include "test/cmocka.h"
+#include <test/cmocka.h>
 
 static void check_node_init_error_on_object_is_null(void **state) {
     rock_error = ROCK_ERROR_NONE;
