@@ -4,7 +4,10 @@
 #include <rock.h>
 
 #include "private/array.h"
+
+#ifdef TEST
 #include <test/cmocka.h>
+#endif
 
 bool rock_array_init(struct rock_array *const object, const size_t size,
                      const uintmax_t capacity) {
