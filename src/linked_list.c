@@ -2,6 +2,8 @@
 #include <seagrass.h>
 #include <rock.h>
 
+#include <test/cmocka.h>
+
 bool rock_linked_list_node_init(struct rock_linked_list_node *const object) {
     if (!object) {
         rock_error = ROCK_LINKED_LIST_ERROR_OBJECT_IS_NULL;

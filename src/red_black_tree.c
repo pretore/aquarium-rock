@@ -3,7 +3,7 @@
 #include <rock.h>
 
 #include "private/red_black_tree.h"
-#include "test/cmocka.h"
+#include <test/cmocka.h>
 
 bool rock_red_black_tree_node_init(
         struct rock_red_black_tree_node *const node) {
