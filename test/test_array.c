@@ -30,10 +30,12 @@ static void check_init_error_on_memory_allocation_failed(void **state) {
     assert_int_equal(ROCK_ARRAY_ERROR_MEMORY_ALLOCATION_FAILED, rock_error);
     assert_false(rock_array_init(&object, SIZE_MAX, sizeof(void *)));
     assert_int_equal(ROCK_ARRAY_ERROR_MEMORY_ALLOCATION_FAILED, rock_error);
-    calloc_is_overridden = malloc_is_overridden = realloc_is_overridden = true;
+    malloc_is_overridden = calloc_is_overridden = realloc_is_overridden
+            = posix_memalign_is_overridden = true;
     assert_false(rock_array_init(&object, sizeof(void *), 10));
     assert_int_equal(ROCK_ARRAY_ERROR_MEMORY_ALLOCATION_FAILED, rock_error);
-    calloc_is_overridden = malloc_is_overridden = realloc_is_overridden = false;
+    malloc_is_overridden = calloc_is_overridden = realloc_is_overridden
+            = posix_memalign_is_overridden = false;
     rock_error = ROCK_ERROR_NONE;
 }
 
@@ -69,7 +71,7 @@ static void array_on_destroy(void *item) {
 
 static void check_invalidate(void **state) {
     rock_error = ROCK_ERROR_NONE;
-    struct rock_array object = {};
+    struct rock_array object;
     assert_true(rock_array_init(&object, sizeof(void *), 10));
     assert_true(rock_array_invalidate(&object, array_on_destroy));
     assert_true(rock_array_init(&object, sizeof(void *), 10));
@@ -184,9 +186,11 @@ static void check_set_length_error_on_memory_allocation_failed(void **state) {
     rock_error = ROCK_ERROR_NONE;
     struct rock_array object;
     assert_true(rock_array_init(&object, sizeof(void *), 0));
-    malloc_is_overridden = calloc_is_overridden = realloc_is_overridden = true;
+    malloc_is_overridden = calloc_is_overridden = realloc_is_overridden
+            = posix_memalign_is_overridden = true;
     assert_false(rock_array_set_length(&object, 1));
-    malloc_is_overridden = calloc_is_overridden = realloc_is_overridden = false;
+    malloc_is_overridden = calloc_is_overridden = realloc_is_overridden
+            = posix_memalign_is_overridden = false;
     assert_int_equal(ROCK_ARRAY_ERROR_MEMORY_ALLOCATION_FAILED, rock_error);
     assert_true(rock_array_invalidate(&object, NULL));
     rock_error = ROCK_ERROR_NONE;
@@ -263,15 +267,18 @@ static void check_add_error_on_memory_allocation_failed(void **state) {
     rock_error = ROCK_ERROR_NONE;
     struct rock_array object;
     assert_true(rock_array_init(&object, sizeof(uintmax_t), 0));
-    malloc_is_overridden = calloc_is_overridden = realloc_is_overridden = true;
+    malloc_is_overridden = calloc_is_overridden = realloc_is_overridden
+            = posix_memalign_is_overridden = true;
     assert_false(rock_array_add(&object, &rock_error));
-    malloc_is_overridden = calloc_is_overridden = realloc_is_overridden = false;
+    malloc_is_overridden = calloc_is_overridden = realloc_is_overridden
+            = posix_memalign_is_overridden = false;
     assert_int_equal(ROCK_ARRAY_ERROR_MEMORY_ALLOCATION_FAILED, rock_error);
     assert_true(rock_array_invalidate(&object, NULL));
     rock_error = ROCK_ERROR_NONE;
 }
 
 static void check_add(void **state) {
+    srand(time(NULL));
     rock_error = ROCK_ERROR_NONE;
     struct rock_array object;
     assert_true(rock_array_init(&object, sizeof(uintmax_t), 0));
@@ -339,9 +346,11 @@ static void check_add_all_error_on_memory_allocation_failed(void **state) {
             &values[2]
     };
     const uintmax_t count = sizeof(items) / sizeof(uintmax_t *);
-    malloc_is_overridden = calloc_is_overridden = realloc_is_overridden = true;
+    malloc_is_overridden = calloc_is_overridden = realloc_is_overridden
+            = posix_memalign_is_overridden = true;
     assert_false(rock_array_add_all(&object, count, items));
-    malloc_is_overridden = calloc_is_overridden = realloc_is_overridden = false;
+    malloc_is_overridden = calloc_is_overridden = realloc_is_overridden
+            = posix_memalign_is_overridden = false;
     assert_int_equal(ROCK_ARRAY_ERROR_MEMORY_ALLOCATION_FAILED, rock_error);
     assert_true(rock_array_invalidate(&object, NULL));
     rock_error = ROCK_ERROR_NONE;
@@ -438,9 +447,11 @@ static void check_insert_error_on_memory_allocation_failed(void **state) {
     };
     assert_true(rock_array_add(&object, items[0]));
     object.capacity = 1;
-    malloc_is_overridden = calloc_is_overridden = realloc_is_overridden = true;
+    malloc_is_overridden = calloc_is_overridden = realloc_is_overridden
+            = posix_memalign_is_overridden = true;
     assert_false(rock_array_insert(&object, 0, items[1]));
-    malloc_is_overridden = calloc_is_overridden = realloc_is_overridden = false;
+    malloc_is_overridden = calloc_is_overridden = realloc_is_overridden
+            = posix_memalign_is_overridden = false;
     assert_int_equal(ROCK_ARRAY_ERROR_MEMORY_ALLOCATION_FAILED, rock_error);
     assert_true(rock_array_invalidate(&object, NULL));
     rock_error = ROCK_ERROR_NONE;
@@ -541,6 +552,7 @@ static void check_insert_all_error_on_memory_allocation_failed(void **state) {
 }
 
 static void check_insert_all(void **state) {
+    srand(time(NULL));
     rock_error = ROCK_ERROR_NONE;
     struct rock_array object;
     assert_true(rock_array_init(&object, sizeof(uintmax_t), 0));
@@ -646,6 +658,7 @@ static void check_remove_all_error_on_index_is_out_of_bounds(void **state) {
 }
 
 static void check_remove_all(void **state) {
+    srand(time(NULL));
     rock_error = ROCK_ERROR_NONE;
     struct rock_array object;
     assert_true(rock_array_init(&object, sizeof(uintmax_t), 0));
@@ -708,6 +721,7 @@ static void check_get_error_on_index_is_out_of_bounds(void **state) {
 }
 
 static void check_get(void **state) {
+    srand(time(NULL));
     rock_error = ROCK_ERROR_NONE;
     struct rock_array object;
     assert_true(rock_array_init(&object, sizeof(uintmax_t), 0));
@@ -769,10 +783,10 @@ static void check_set(void **state) {
     uintmax_t count = sizeof(items) / sizeof(void *);
     assert_true(rock_array_add_all(&object, count, items));
     assert_true(rock_array_set(&object, 0, NULL));
-    const uintmax_t null = 0;
+    const uintmax_t expected = 0;
     uintmax_t *out;
     assert_true(rock_array_get(&object, 0, (void **) &out));
-    assert_memory_equal(out, &null, object.size);
+    assert_memory_equal(out, &expected, object.size);
     assert_true(rock_array_invalidate(&object, NULL));
     rock_error = ROCK_ERROR_NONE;
 }
@@ -981,6 +995,7 @@ static void check_prev_error_on_end_of_sequence(void **state) {
 }
 
 static void check_prev(void **state) {
+    srand(time(NULL));
     rock_error = ROCK_ERROR_NONE;
     struct rock_array object;
     assert_true(rock_array_init(&object, sizeof(uintmax_t), 0));
@@ -999,6 +1014,86 @@ static void check_prev(void **state) {
     assert_memory_equal(item, items[1], object.size);
     assert_true(rock_array_prev(&object, item, &item));
     assert_memory_equal(item, items[0], object.size);
+    assert_true(rock_array_invalidate(&object, NULL));
+    rock_error = ROCK_ERROR_NONE;
+}
+
+static void check_at_error_on_object_is_null(void **state) {
+    rock_error = ROCK_ERROR_NONE;
+    assert_false(rock_array_at(NULL, (void *) 1, (void *) 1));
+    assert_int_equal(ROCK_ARRAY_ERROR_OBJECT_IS_NULL,
+                     rock_error);
+    rock_error = ROCK_ERROR_NONE;
+}
+
+static void check_at_error_on_item_is_null(void **state) {
+    rock_error = ROCK_ERROR_NONE;
+    assert_false(rock_array_at((void *) 1, NULL, (void *) 1));
+    assert_int_equal(ROCK_ARRAY_ERROR_ITEM_IS_NULL,
+                     rock_error);
+    rock_error = ROCK_ERROR_NONE;
+}
+
+static void check_at_error_on_out_is_null(void **state) {
+    rock_error = ROCK_ERROR_NONE;
+    assert_false(rock_array_at((void *) 1, (void *) 1, NULL));
+    assert_int_equal(ROCK_ARRAY_ERROR_OUT_IS_NULL,
+                     rock_error);
+    rock_error = ROCK_ERROR_NONE;
+}
+
+static void check_at(void **state) {
+    srand(time(NULL));
+    rock_error = ROCK_ERROR_NONE;
+    struct rock_array object;
+    assert_true(rock_array_init(&object, sizeof(uintmax_t), 0));
+    const uintmax_t values[] = {
+            rand() % UINTMAX_MAX,
+            rand() % UINTMAX_MAX,
+            rand() % UINTMAX_MAX,
+            rand() % UINTMAX_MAX,
+    };
+    const void *items[] = {
+            &values[0],
+            &values[1],
+            &values[2],
+            &values[3]
+    };
+    const uintmax_t count = sizeof(items) / sizeof(void *);
+    assert_true(rock_array_add_all(&object, count, items));
+    void *item;
+    assert_true(rock_array_first(&object, &item));
+    for (uintmax_t i = 0; i < count; i++) {
+        uintmax_t at;
+        assert_true(rock_array_at(&object, item, &at));
+        assert_int_equal(at, i);
+        if (1 + i < count) {
+            assert_true(rock_array_next(&object, item, &item));
+        }
+    }
+    assert_true(rock_array_invalidate(&object, NULL));
+    rock_error = ROCK_ERROR_NONE;
+}
+
+static void check_at_error_on_item_is_out_of_bounds(void **state) {
+    srand(time(NULL));
+    rock_error = ROCK_ERROR_NONE;
+    struct rock_array object;
+    assert_true(rock_array_init(&object, sizeof(uintmax_t), 0));
+    const uintmax_t values[] = {
+            rand() % UINTMAX_MAX,
+            rand() % UINTMAX_MAX,
+    };
+    const void *items[] = {
+            &values[0],
+            &values[1],
+    };
+    const uintmax_t count = sizeof(items) / sizeof(void *);
+    assert_true(rock_array_add_all(&object, count, items));
+    uintmax_t at;
+    assert_false(rock_array_at(&object, (void *) 1, &at));
+    assert_int_equal(ROCK_ARRAY_ERROR_ITEM_IS_OUT_OF_BOUNDS,
+                     rock_error);
     assert_true(rock_array_invalidate(&object, NULL));
     rock_error = ROCK_ERROR_NONE;
 }
@@ -1082,6 +1177,11 @@ int main(int argc, char *argv[]) {
             cmocka_unit_test(check_prev_error_on_item_is_out_of_bounds),
             cmocka_unit_test(check_prev_error_on_end_of_sequence),
             cmocka_unit_test(check_prev),
+            cmocka_unit_test(check_at_error_on_object_is_null),
+            cmocka_unit_test(check_at_error_on_item_is_null),
+            cmocka_unit_test(check_at_error_on_out_is_null),
+            cmocka_unit_test(check_at),
+            cmocka_unit_test(check_at_error_on_item_is_out_of_bounds),
     };
     //cmocka_set_message_output(CM_OUTPUT_XML);
     return cmocka_run_group_tests(tests, NULL, NULL);

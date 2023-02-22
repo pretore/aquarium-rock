@@ -35,7 +35,8 @@ struct rock_array {
  * @throws ROCK_ARRAY_ERROR_MEMORY_ALLOCATION_FAILED if there is
  * insufficient memory to initialize the array instance.
  */
-bool rock_array_init(struct rock_array *object, size_t size,
+bool rock_array_init(struct rock_array *object,
+                     size_t size,
                      uintmax_t capacity);
 
 /**
@@ -60,7 +61,8 @@ bool rock_array_invalidate(struct rock_array *object,
  * @throws ROCK_ARRAY_ERROR_OBJECT_IS_NULL if object is <i>NULL</i>.
  * @throws ROCK_ARRAY_ERROR_OUT_IS_NULL if out is <i>NULL</i>.
  */
-bool rock_array_capacity(const struct rock_array *object, uintmax_t *out);
+bool rock_array_capacity(const struct rock_array *object,
+                         uintmax_t *out);
 
 /**
  * @brief Retrieve the length.
@@ -70,7 +72,8 @@ bool rock_array_capacity(const struct rock_array *object, uintmax_t *out);
  * @throws ROCK_ARRAY_ERROR_OBJECT_IS_NULL if object is <i>NULL</i>.
  * @throws ROCK_ARRAY_ERROR_OUT_IS_NULL if out is <i>NULL</i>.
  */
-bool rock_array_get_length(const struct rock_array *object, uintmax_t *out);
+bool rock_array_get_length(const struct rock_array *object,
+                           uintmax_t *out);
 
 /**
  * @brief Set the length.
@@ -81,7 +84,8 @@ bool rock_array_get_length(const struct rock_array *object, uintmax_t *out);
  * @throws ROCK_ARRAY_ERROR_MEMORY_ALLOCATION_FAILED if there is not enough
  * memory to set the array length.
  */
-bool rock_array_set_length(struct rock_array *object, uintmax_t length);
+bool rock_array_set_length(struct rock_array *object,
+                           uintmax_t length);
 
 /**
  * @brief Retrieve the size of an item.
@@ -91,7 +95,8 @@ bool rock_array_set_length(struct rock_array *object, uintmax_t length);
  * @throws ROCK_ARRAY_ERROR_OBJECT_IS_NULL if object is <i>NULL</i>.
  * @throws ROCK_ARRAY_ERROR_OUT_IS_NULL if out is <i>NULL</i>.
  */
-bool rock_array_size(const struct rock_array *object, size_t *out);
+bool rock_array_size(const struct rock_array *object,
+                     size_t *out);
 
 /**
  * @brief Release excess capacity.
@@ -110,7 +115,8 @@ bool rock_array_shrink(struct rock_array *object);
  * @throws ROCK_ARRAY_ERROR_MEMORY_ALLOCATION_FAILED if there is not enough
  * memory to add another item.
  */
-bool rock_array_add(struct rock_array *object, const void *item);
+bool rock_array_add(struct rock_array *object,
+                    const void *item);
 
 /**
  * @brief Add all the items at the end.
@@ -124,7 +130,8 @@ bool rock_array_add(struct rock_array *object, const void *item);
  * @throws ROCK_ARRAY_ERROR_MEMORY_ALLOCATION_FAILED if there is not enough
  * memory to add all the items.
  */
-bool rock_array_add_all(struct rock_array *object, uintmax_t count,
+bool rock_array_add_all(struct rock_array *object,
+                        uintmax_t count,
                         const void **items);
 
 /**
@@ -148,7 +155,8 @@ bool rock_array_remove_last(struct rock_array *object);
  * @throws ROCK_ARRAY_ERROR_MEMORY_ALLOCATION_FAILED if there is not enough
  * memory to add another item.
  */
-bool rock_array_insert(struct rock_array *object, uintmax_t at,
+bool rock_array_insert(struct rock_array *object,
+                       uintmax_t at,
                        const void *item);
 
 /**
@@ -166,8 +174,10 @@ bool rock_array_insert(struct rock_array *object, uintmax_t at,
  * @throws ROCK_ARRAY_ERROR_MEMORY_ALLOCATION_FAILED if there is not enough
  * memory to add all the items to the array.
  */
-bool rock_array_insert_all(struct rock_array *object, uintmax_t at,
-                           uintmax_t count, const void **items);
+bool rock_array_insert_all(struct rock_array *object,
+                           uintmax_t at,
+                           uintmax_t count,
+                           const void **items);
 
 /**
  * @brief Remove an item at the given index.
@@ -178,7 +188,8 @@ bool rock_array_insert_all(struct rock_array *object, uintmax_t at,
  * @throws ROCK_ARRAY_ERROR_INDEX_IS_OUT_OF_BOUNDS if at does not refer to an
  * item contained within the array.
  */
-bool rock_array_remove(struct rock_array *object, uintmax_t at);
+bool rock_array_remove(struct rock_array *object,
+                       uintmax_t at);
 
 /**
  * @brief Remove all the items from the given index up to count items.
@@ -191,7 +202,8 @@ bool rock_array_remove(struct rock_array *object, uintmax_t at);
  * @throws ROCK_ARRAY_ERROR_INDEX_IS_OUT_OF_BOUNDS if at does not refer to an
  * item contained within the array.
  */
-bool rock_array_remove_all(struct rock_array *object, uintmax_t at,
+bool rock_array_remove_all(struct rock_array *object,
+                           uintmax_t at,
                            uintmax_t count);
 
 /**
@@ -205,7 +217,9 @@ bool rock_array_remove_all(struct rock_array *object, uintmax_t at,
  * @throws ROCK_ARRAY_ERROR_INDEX_IS_OUT_OF_BOUNDS if at does not refer to an
  * item contained within the array.
  */
-bool rock_array_get(const struct rock_array *object, uintmax_t at, void **out);
+bool rock_array_get(const struct rock_array *object,
+                    uintmax_t at,
+                    void **out);
 
 /**
  * @brief Set the item at the given index.
@@ -218,7 +232,9 @@ bool rock_array_get(const struct rock_array *object, uintmax_t at, void **out);
  * @throws ROCK_ARRAY_ERROR_INDEX_IS_OUT_OF_BOUNDS if at does not refer to an
  * item contained within the array.
  */
-bool rock_array_set(struct rock_array *object, uintmax_t at, const void *item);
+bool rock_array_set(struct rock_array *object,
+                    uintmax_t at,
+                    const void *item);
 
 /**
  * @brief First item of the array.
@@ -229,7 +245,8 @@ bool rock_array_set(struct rock_array *object, uintmax_t at, const void *item);
  * @throws ROCK_ARRAY_ERROR_OUT_IS_NULL if out is <i>NULL</i>.
  * @throws ROCK_ARRAY_ERROR_ARRAY_IS_EMPTY if the array is empty.
  */
-bool rock_array_first(const struct rock_array *object, void **out);
+bool rock_array_first(const struct rock_array *object,
+                      void **out);
 
 /**
  * @brief Last item of the array.
@@ -240,7 +257,8 @@ bool rock_array_first(const struct rock_array *object, void **out);
  * @throws ROCK_ARRAY_ERROR_OUT_IS_NULL if out is <i>NULL</i>.
  * @throws ROCK_ARRAY_ERROR_ARRAY_IS_EMPTY if the array is empty.
  */
-bool rock_array_last(const struct rock_array *object, void **out);
+bool rock_array_last(const struct rock_array *object,
+                     void **out);
 
 /**
  * @brief Retrieve next item.
@@ -256,7 +274,8 @@ bool rock_array_last(const struct rock_array *object, void **out);
  * @throws ROCK_ARRAY_ERROR_END_OF_SEQUENCE if there is no next item.
  */
 bool rock_array_next(const struct rock_array *object,
-                     const void *item, void **out);
+                     const void *item,
+                     void **out);
 
 /**
  * @brief Retrieve previous item.
@@ -272,6 +291,23 @@ bool rock_array_next(const struct rock_array *object,
  * @throws ROCK_ARRAY_ERROR_END_OF_SEQUENCE if there is no previous item.
  */
 bool rock_array_prev(const struct rock_array *object,
-                     const void *item, void **out);
+                     const void *item,
+                     void **out);
+
+/**
+ * @brief Receive the index of item.
+ * @param [in] object array instance.
+ * @param [in] item whose index we would like.
+ * @param [out] out receive the index of item.
+ * @return On success true, otherwise false if an error has occurred.
+ * @throws ROCK_ARRAY_ERROR_OBJECT_IS_NULL if object is <i>NULL</i>.
+ * @throws ROCK_ARRAY_ERROR_ITEM_IS_NULL if item is <i>NULL</i>.
+ * @throws ROCK_ARRAY_ERROR_OUT_IS_NULL if out is <i>NULL</i>.
+ * @throws ROCK_ARRAY_ERROR_ITEM_IS_OUT_OF_BOUNDS if item is not contained
+ * within the array.
+ */
+bool rock_array_at(const struct rock_array *object,
+                   const void *item,
+                   uintmax_t *out);
 
 #endif /* _ROCK_ARRAY_H_ */

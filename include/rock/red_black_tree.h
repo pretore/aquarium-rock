@@ -86,8 +86,7 @@ bool rock_red_black_tree_count(const struct rock_red_black_tree *object,
  * <p>Find the node in the red black tree instance or the point at which the
  * node will be been inserted.</p>
  * @param [in] object instance to be searched.
- * @param [in] root scope the search if not specified then whole red black
- * tree will be searched for node.
+ * @param [in] root restrict the search to subtree, if not provided.
  * @param [in] needle used to find the node.
  * @param [out] out receive the node or node's insertion point.
  * @return If exact match found true, otherwise false if an error has occurred.
