@@ -31,7 +31,7 @@ being used.
 
 ```c
 struct student bob = {};
-seagrass_required_true(rock_red_black_tree_node_init(&bob.by_name));
+seagrass_required_true(!rock_red_black_tree_node_init(&bob.by_name));
 ```
 
 When we initialize a red-black tree instance, we need to provide a compare
@@ -40,7 +40,7 @@ function for the red-black tree to order the nodes accordingly.
 ```c
 struct rock_red_black_tree student_by_name;
 
-seagrass_required_true(rock_red_black_tree_init(
+seagrass_required_true(!rock_red_black_tree_init(
         &student_by_name,
         student_name_compare));
 ```
@@ -78,6 +78,6 @@ the structure once you have removed the ``struct rock_reed_black_tree_node``
 from the associated ``struct rock_red_black_tree`` instance.
 
 ```c
-seagrass_required_true(rock_red_black_tree_remove(
+seagrass_required_true(!rock_red_black_tree_remove(
         &student_by_name, &bob.by_name));
 ```

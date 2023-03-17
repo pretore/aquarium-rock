@@ -31,7 +31,7 @@ being used.
 
 ```c
 struct student bob = {};
-seagrass_required_true(rock_linked_list_node_init(&bob.by_insertion_order));
+seagrass_required_true(!rock_linked_list_node_init(&bob.by_insertion_order));
 ```
 
 ### Memory
@@ -43,5 +43,5 @@ the structure once you have removed the ``struct rock_linked_list_node``
 from the linked list instance.
 
 ```c
-seagrass_required_true(rock_linked_list_remove(&bob.by_insertion_order));
+seagrass_required_true(!rock_linked_list_remove(&bob.by_insertion_order));
 ```
