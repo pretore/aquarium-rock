@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.22)
-project(aquarium-rock VERSION 4.2.0
+project(aquarium-rock VERSION 5.0.0
         LANGUAGES C
         DESCRIPTION "Data structures in C")
 
@@ -11,12 +11,15 @@ set(CMAKE_THREAD_PREFER_PTHREAD TRUE)
 set(THREADS_PREFER_PTHREAD_FLAG TRUE)
 find_package(Threads REQUIRED)
 find_package(Doxygen OPTIONAL_COMPONENTS dot mscgen dia)
+if(CMAKE_BUILD_TYPE STREQUAL "Debug")
+    include(cmake/FetchAquariumCMocka.cmake)
+endif()
+include(cmake/FetchAquariumSeaUrchin.cmake)
 include(cmake/FetchAquariumSeagrass.cmake)
 
 # Sources
 set(EXPORTED_HEADER_FILES
         include/rock/array.h
-        include/rock/error.h
         include/rock/forward_list.h
         include/rock/linked_list.h
         include/rock/red_black_tree.h
@@ -26,7 +29,6 @@ set(SOURCES
         src/private/array.h
         src/private/red_black_tree.h
         src/array.c
-        src/error.c
         src/forward_list.c
         src/linked_list.c
         src/red_black_tree.c
@@ -40,18 +42,19 @@ endif()
 
 if(CMAKE_BUILD_TYPE STREQUAL "Debug")
     include(CTest)
-    include(cmake/FetchAquariumCMocka.cmake)
     add_library(${PROJECT_NAME} STATIC "")
     add_compile_definitions(TEST)
     target_sources(${PROJECT_NAME}
             PRIVATE
                 ${SOURCES}
                 src/test/red_black_tree.h
-                src/test/red_black_tree.c)
+                src/test/red_black_tree.c
+            )
     target_link_libraries(${PROJECT_NAME}
             PUBLIC
                 ${CMAKE_THREAD_LIBS_INIT}
                 aquarium-cmocka
+                aquarium-sea-urchin
                 aquarium-seagrass)
     target_include_directories(${PROJECT_NAME}
             PUBLIC
@@ -122,6 +125,7 @@ else()
     target_link_libraries(${PROJECT_NAME}
             PUBLIC
                 ${CMAKE_THREAD_LIBS_INIT}
+                aquarium-sea-urchin
                 aquarium-seagrass)
     set_target_properties(${PROJECT_NAME}
             PROPERTIES

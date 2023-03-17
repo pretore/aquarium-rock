@@ -8,127 +8,117 @@
 #include <test/cmocka.h>
 #endif
 
-bool rock_red_black_tree_node_init(
+int rock_red_black_tree_node_init(
         struct rock_red_black_tree_node *const node) {
     if (!node) {
-        rock_error = ROCK_RED_BLACK_TREE_ERROR_NODE_IS_NULL;
-        return false;
+        return ROCK_RED_BLACK_TREE_ERROR_NODE_IS_NULL;
     }
     *node = (struct rock_red_black_tree_node) {0};
     node->parent = (void *) ROCK_RED_BLACK_TREE_COLOR_RED;
-    return true;
+    return 0;
 }
 
-bool rock_red_black_tree_node_get_parent(
+int rock_red_black_tree_node_get_parent(
         const struct rock_red_black_tree_node *const node,
         struct rock_red_black_tree_node **const out) {
     if (!node) {
-        rock_error = ROCK_RED_BLACK_TREE_ERROR_NODE_IS_NULL;
-        return false;
+        return ROCK_RED_BLACK_TREE_ERROR_NODE_IS_NULL;
     }
     if (!out) {
-        rock_error = ROCK_RED_BLACK_TREE_ERROR_OUT_IS_NULL;
-        return false;
+        return ROCK_RED_BLACK_TREE_ERROR_OUT_IS_NULL;
     }
     *out = (struct rock_red_black_tree_node *) ((uintptr_t) node->parent & ~1);
-    return true;
+    return 0;
 }
 
-bool rock_red_black_tree_node_set_parent(
+int rock_red_black_tree_node_set_parent(
         struct rock_red_black_tree_node *restrict const node,
         struct rock_red_black_tree_node *restrict const parent) {
     if (!node) {
-        rock_error = ROCK_RED_BLACK_TREE_ERROR_NODE_IS_NULL;
-        return false;
+        return ROCK_RED_BLACK_TREE_ERROR_NODE_IS_NULL;
     }
     seagrass_required_true(node != parent);
     bool color;
-    seagrass_required_true(rock_red_black_tree_node_get_color(
+    seagrass_required_true(!rock_red_black_tree_node_get_color(
             node, &color));
     const uintptr_t value = (uintptr_t) parent | color;
     node->parent = (struct rock_red_black_tree_node *) value;
-    return true;
+    return 0;
 }
 
-bool rock_red_black_tree_node_get_color(
+int rock_red_black_tree_node_get_color(
         const struct rock_red_black_tree_node *const node,
         bool *const out) {
     if (!out) {
-        rock_error = ROCK_RED_BLACK_TREE_ERROR_OUT_IS_NULL;
-        return false;
+        return ROCK_RED_BLACK_TREE_ERROR_OUT_IS_NULL;
     }
     if (!node) { /* NIL nodes are black */
         *out = ROCK_RED_BLACK_TREE_COLOR_BLACK;
-        return true;
+    } else {
+        *out = (uintmax_t) node->parent & 1;
     }
-    *out = (uintmax_t) node->parent & 1;
-    return true;
+    return 0;
 }
 
-bool rock_red_black_tree_node_set_color(
+int rock_red_black_tree_node_set_color(
         struct rock_red_black_tree_node *const node,
         const bool color) {
     if (!node) {
-        rock_error = ROCK_RED_BLACK_TREE_ERROR_NODE_IS_NULL;
-        return false;
+        return ROCK_RED_BLACK_TREE_ERROR_NODE_IS_NULL;
     }
     const uintmax_t value = (~1 & (uintmax_t) node->parent) | (uintmax_t) color;
     node->parent = (struct rock_red_black_tree_node *) value;
-    return true;
+    return 0;
 }
 
-bool rock_red_black_tree_node_get_left(
+int rock_red_black_tree_node_get_left(
         const struct rock_red_black_tree_node *const node,
         struct rock_red_black_tree_node **const out) {
     if (!out) {
-        rock_error = ROCK_RED_BLACK_TREE_ERROR_OUT_IS_NULL;
-        return false;
+        return ROCK_RED_BLACK_TREE_ERROR_OUT_IS_NULL;
     }
     if (!node) { /* NIL nodes have no children */
-        rock_error = ROCK_RED_BLACK_TREE_ERROR_END_OF_SEQUENCE;
-        return false;
+        return ROCK_RED_BLACK_TREE_ERROR_END_OF_SEQUENCE;
+    } else {
+        *out = node->left;
     }
-    *out = node->left;
-    return true;
+    return 0;
 }
 
-bool rock_red_black_tree_node_set_left(
+int rock_red_black_tree_node_set_left(
         struct rock_red_black_tree_node *restrict const node,
         struct rock_red_black_tree_node *restrict const left) {
     if (!node) {
-        rock_error = ROCK_RED_BLACK_TREE_ERROR_NODE_IS_NULL;
-        return false;
+        return ROCK_RED_BLACK_TREE_ERROR_NODE_IS_NULL;
     }
     seagrass_required_true(node != left);
     node->left = left;
-    return true;
+    return 0;
 }
 
-bool rock_red_black_tree_node_get_right(
+int rock_red_black_tree_node_get_right(
         const struct rock_red_black_tree_node *const node,
         struct rock_red_black_tree_node **const out) {
     if (!out) {
-        rock_error = ROCK_RED_BLACK_TREE_ERROR_OUT_IS_NULL;
-        return false;
+        return ROCK_RED_BLACK_TREE_ERROR_OUT_IS_NULL;
     }
     if (!node) { /* NIL nodes have no children */
-        rock_error = ROCK_RED_BLACK_TREE_ERROR_END_OF_SEQUENCE;
-        return false;
+        return ROCK_RED_BLACK_TREE_ERROR_END_OF_SEQUENCE;
+    } else {
+        *out = node->right;
     }
-    *out = node->right;
-    return true;
+    return 0;
 }
 
-bool rock_red_black_tree_node_set_right(
+int rock_red_black_tree_node_set_right(
         struct rock_red_black_tree_node *restrict const node,
         struct rock_red_black_tree_node *restrict const right) {
     if (!node) {
-        rock_error = ROCK_RED_BLACK_TREE_ERROR_NODE_IS_NULL;
-        return false;
+        return ROCK_RED_BLACK_TREE_ERROR_NODE_IS_NULL;
     }
     seagrass_required_true(node != right);
     node->right = right;
-    return true;
+    return 0;
 }
 
 bool rock_red_black_tree_node_is_on_left(
@@ -142,281 +132,257 @@ bool rock_red_black_tree_node_is_on_left(
     return is_left;
 }
 
-bool rock_red_black_tree_next(const struct rock_red_black_tree_node *node,
-                              struct rock_red_black_tree_node **const out) {
+int rock_red_black_tree_next(const struct rock_red_black_tree_node *node,
+                             struct rock_red_black_tree_node **const out) {
     if (!node) {
-        rock_error = ROCK_RED_BLACK_TREE_ERROR_NODE_IS_NULL;
-        return false;
+        return ROCK_RED_BLACK_TREE_ERROR_NODE_IS_NULL;
     }
     if (!out) {
-        rock_error = ROCK_RED_BLACK_TREE_ERROR_OUT_IS_NULL;
-        return false;
+        return ROCK_RED_BLACK_TREE_ERROR_OUT_IS_NULL;
     }
     struct rock_red_black_tree_node *right;
-    seagrass_required_true(rock_red_black_tree_node_get_right(
+    seagrass_required_true(!rock_red_black_tree_node_get_right(
             node, &right));
     if (right) {
         rock_red_black_tree_minimum(right, out);
-        return true;
+        return 0;
     }
     struct rock_red_black_tree_node *parent;
     while (true) {
-        seagrass_required_true(rock_red_black_tree_node_get_parent(
+        seagrass_required_true(!rock_red_black_tree_node_get_parent(
                 node, &parent));
         if (!parent) {
             break;
         }
-        seagrass_required_true(rock_red_black_tree_node_get_right(
+        seagrass_required_true(!rock_red_black_tree_node_get_right(
                 parent, &right));
         if (node != right) {
             *out = parent;
-            return true;
+            return 0;
         }
         node = parent;
     }
-    rock_error = ROCK_RED_BLACK_TREE_ERROR_END_OF_SEQUENCE;
-    return false;
+    return ROCK_RED_BLACK_TREE_ERROR_END_OF_SEQUENCE;
 }
 
-bool rock_red_black_tree_prev(const struct rock_red_black_tree_node *node,
-                              struct rock_red_black_tree_node **const out) {
+int rock_red_black_tree_prev(const struct rock_red_black_tree_node *node,
+                             struct rock_red_black_tree_node **const out) {
     if (!node) {
-        rock_error = ROCK_RED_BLACK_TREE_ERROR_NODE_IS_NULL;
-        return false;
+        return ROCK_RED_BLACK_TREE_ERROR_NODE_IS_NULL;
     }
     if (!out) {
-        rock_error = ROCK_RED_BLACK_TREE_ERROR_OUT_IS_NULL;
-        return false;
+        return ROCK_RED_BLACK_TREE_ERROR_OUT_IS_NULL;
     }
     struct rock_red_black_tree_node *left;
-    seagrass_required_true(rock_red_black_tree_node_get_left(
+    seagrass_required_true(!rock_red_black_tree_node_get_left(
             node, &left));
     if (left) {
         rock_red_black_tree_maximum(left, out);
-        return true;
+        return 0;
     }
     struct rock_red_black_tree_node *parent;
     while (true) {
-        seagrass_required_true(rock_red_black_tree_node_get_parent(
+        seagrass_required_true(!rock_red_black_tree_node_get_parent(
                 node, &parent));
         if (!parent) {
             break;
         }
-        seagrass_required_true(rock_red_black_tree_node_get_left(
+        seagrass_required_true(!rock_red_black_tree_node_get_left(
                 parent, &left));
         if (node != left) {
             *out = parent;
-            return true;
+            return 0;
         }
         node = parent;
     }
-    rock_error = ROCK_RED_BLACK_TREE_ERROR_END_OF_SEQUENCE;
-    return false;
+    return ROCK_RED_BLACK_TREE_ERROR_END_OF_SEQUENCE;
 }
 
-bool rock_red_black_tree_rotate_N(struct rock_red_black_tree_node *const Y,
-                                  const bool is_N_left) {
+int rock_red_black_tree_rotate_N(struct rock_red_black_tree_node *const Y,
+                                 const bool is_N_left) {
     seagrass_required(Y);
-    bool (*const get_P)(const struct rock_red_black_tree_node *,
-                        struct rock_red_black_tree_node **)
+    int (*const get_P)(const struct rock_red_black_tree_node *,
+                       struct rock_red_black_tree_node **)
     = rock_red_black_tree_node_get_parent;
-    bool (*const set_P)(struct rock_red_black_tree_node *,
-                        struct rock_red_black_tree_node *)
+    int (*const set_P)(struct rock_red_black_tree_node *,
+                       struct rock_red_black_tree_node *)
     = rock_red_black_tree_node_set_parent;
     struct rock_red_black_tree_node *X;
-    seagrass_required_true(get_P(Y, &X));
+    seagrass_required_true(!get_P(Y, &X));
     if (!X) {
-        rock_error = ROCK_RED_BLACK_TREE_ERROR_Y_HAS_NO_PARENT;
-        return false;
+        return ROCK_RED_BLACK_TREE_ERROR_Y_HAS_NO_PARENT;
     }
-    bool (*const get_N)(const struct rock_red_black_tree_node *,
-                        struct rock_red_black_tree_node **)
+    int (*const get_N)(const struct rock_red_black_tree_node *,
+                       struct rock_red_black_tree_node **)
     = is_N_left
       ? rock_red_black_tree_node_get_left
       : rock_red_black_tree_node_get_right;
-    bool (*const set_N)(struct rock_red_black_tree_node *,
-                        struct rock_red_black_tree_node *)
+    int (*const set_N)(struct rock_red_black_tree_node *,
+                       struct rock_red_black_tree_node *)
     = is_N_left
       ? rock_red_black_tree_node_set_left
       : rock_red_black_tree_node_set_right;
-    bool (*const get_O)(const struct rock_red_black_tree_node *,
-                        struct rock_red_black_tree_node **)
+    int (*const get_O)(const struct rock_red_black_tree_node *,
+                       struct rock_red_black_tree_node **)
     = is_N_left
       ? rock_red_black_tree_node_get_right
       : rock_red_black_tree_node_get_left;
-    bool (*const set_O)(struct rock_red_black_tree_node *,
-                        struct rock_red_black_tree_node *)
+    int (*const set_O)(struct rock_red_black_tree_node *,
+                       struct rock_red_black_tree_node *)
     = is_N_left
       ? rock_red_black_tree_node_set_right
       : rock_red_black_tree_node_set_left;
     struct rock_red_black_tree_node *y;
-    seagrass_required_true(get_O(X, &y));
+    seagrass_required_true(!get_O(X, &y));
     if (Y != y) {
-        rock_error = is_N_left
-                     ? ROCK_RED_BLACK_TREE_ERROR_Y_IS_NOT_RIGHT_CHILD_OF_X
-                     : ROCK_RED_BLACK_TREE_ERROR_Y_IS_NOT_LEFT_CHILD_OF_X;
-        return false;
+        return is_N_left
+               ? ROCK_RED_BLACK_TREE_ERROR_Y_IS_NOT_RIGHT_CHILD_OF_X
+               : ROCK_RED_BLACK_TREE_ERROR_Y_IS_NOT_LEFT_CHILD_OF_X;
     }
     struct rock_red_black_tree_node *b;
-    seagrass_required_true(get_N(Y, &b));
+    seagrass_required_true(!get_N(Y, &b));
     if (b) {
-        seagrass_required_true(set_P(b, X));
+        seagrass_required_true(!set_P(b, X));
     }
-    seagrass_required_true(set_O(X, b));
+    seagrass_required_true(!set_O(X, b));
     struct rock_red_black_tree_node *p;
-    seagrass_required_true(get_P(X, &p));
+    seagrass_required_true(!get_P(X, &p));
     if (!p) {
-        seagrass_required_true(set_P(Y, NULL));
+        seagrass_required_true(!set_P(Y, NULL));
     } else {
         struct rock_red_black_tree_node *x;
-        seagrass_required_true(get_N(p, &x));
+        seagrass_required_true(!get_N(p, &x));
         if (X == x) {
-            seagrass_required_true(set_N(p, Y));
+            seagrass_required_true(!set_N(p, Y));
         } else {
-            seagrass_required_true(set_O(p, Y));
+            seagrass_required_true(!set_O(p, Y));
         }
-        seagrass_required_true(set_P(Y, p));
+        seagrass_required_true(!set_P(Y, p));
     }
-    seagrass_required_true(set_N(Y, X) && set_P(X, Y));
-    return true;
+    seagrass_required_true(!set_N(Y, X) && !set_P(X, Y));
+    return 0;
 }
 
-bool rock_red_black_tree_rotate_left(
+int rock_red_black_tree_rotate_left(
         struct rock_red_black_tree_node *const Y) {
     if (!Y) {
-        rock_error = ROCK_RED_BLACK_TREE_ERROR_Y_IS_NULL;
-        return false;
+        return ROCK_RED_BLACK_TREE_ERROR_Y_IS_NULL;
     }
     return rock_red_black_tree_rotate_N(Y, true);
 }
 
-bool rock_red_black_tree_rotate_right(
+int rock_red_black_tree_rotate_right(
         struct rock_red_black_tree_node *const Y) {
     if (!Y) {
-        rock_error = ROCK_RED_BLACK_TREE_ERROR_Y_IS_NULL;
-        return false;
+        return ROCK_RED_BLACK_TREE_ERROR_Y_IS_NULL;
     }
     return rock_red_black_tree_rotate_N(Y, false);
 }
 
-bool rock_red_black_tree_rotate_N_O(struct rock_red_black_tree_node *const Y,
-                                    const bool is_N_left) {
+int rock_red_black_tree_rotate_N_O(struct rock_red_black_tree_node *const Y,
+                                   const bool is_N_left) {
     seagrass_required(Y);
-    bool (*const get_P)(const struct rock_red_black_tree_node *,
-                        struct rock_red_black_tree_node **)
+    int (*const get_P)(const struct rock_red_black_tree_node *,
+                       struct rock_red_black_tree_node **)
     = rock_red_black_tree_node_get_parent;
     struct rock_red_black_tree_node *X;
-    seagrass_required_true(get_P(Y, &X));
+    seagrass_required_true(!get_P(Y, &X));
     if (!X) {
-        rock_error = ROCK_RED_BLACK_TREE_ERROR_Y_HAS_NO_PARENT;
-        return false;
+        return ROCK_RED_BLACK_TREE_ERROR_Y_HAS_NO_PARENT;
     }
     struct rock_red_black_tree_node *Z;
-    seagrass_required_true(get_P(X, &Z));
+    seagrass_required_true(!get_P(X, &Z));
     if (!Z) {
-        rock_error = ROCK_RED_BLACK_TREE_ERROR_X_HAS_NO_PARENT;
-        return false;
+        return ROCK_RED_BLACK_TREE_ERROR_X_HAS_NO_PARENT;
     }
-    bool (*const rotate_N)(struct rock_red_black_tree_node *)
+    int (*const rotate_N)(struct rock_red_black_tree_node *)
     = is_N_left
       ? rock_red_black_tree_rotate_left
       : rock_red_black_tree_rotate_right;
-    bool (*const rotate_O)(struct rock_red_black_tree_node *)
+    int (*const rotate_O)(struct rock_red_black_tree_node *)
     = is_N_left
       ? rock_red_black_tree_rotate_right
       : rock_red_black_tree_rotate_left;
-    if (!rotate_N(Y)) {
-        return false;
+    int error;
+    if ((error = rotate_N(Y))) {
+        return error;
     }
-    if (!rotate_O(Y)) {
-        switch (rock_error) {
+    if ((error = rotate_O(Y))) {
+        switch (error) {
             /* disambiguate the error to be returned */
             case ROCK_RED_BLACK_TREE_ERROR_Y_HAS_NO_PARENT: {
-                rock_error = ROCK_RED_BLACK_TREE_ERROR_X_HAS_NO_PARENT;
-                break;
+                return ROCK_RED_BLACK_TREE_ERROR_X_HAS_NO_PARENT;
             }
             case ROCK_RED_BLACK_TREE_ERROR_Y_IS_NOT_RIGHT_CHILD_OF_X: {
-                rock_error =
-                        ROCK_RED_BLACK_TREE_ERROR_X_IS_NOT_RIGHT_CHILD_OF_Z;
-                break;
+                return ROCK_RED_BLACK_TREE_ERROR_X_IS_NOT_RIGHT_CHILD_OF_Z;
             }
             case ROCK_RED_BLACK_TREE_ERROR_Y_IS_NOT_LEFT_CHILD_OF_X: {
-                rock_error =
-                        ROCK_RED_BLACK_TREE_ERROR_X_IS_NOT_LEFT_CHILD_OF_Z;
-                break;
+                return ROCK_RED_BLACK_TREE_ERROR_X_IS_NOT_LEFT_CHILD_OF_Z;
             }
             default: {
-                /* no op */
+                return error;
             }
         }
-        return false;
     }
-    return true;
+    return 0;
 }
 
-bool
-rock_red_black_tree_rotate_left_right(
+int rock_red_black_tree_rotate_left_right(
         struct rock_red_black_tree_node *const Y) {
     if (!Y) {
-        rock_error = ROCK_RED_BLACK_TREE_ERROR_Y_IS_NULL;
-        return false;
+        return ROCK_RED_BLACK_TREE_ERROR_Y_IS_NULL;
     }
     return rock_red_black_tree_rotate_N_O(Y, true);
 }
 
-bool
-rock_red_black_tree_rotate_right_left(
+int rock_red_black_tree_rotate_right_left(
         struct rock_red_black_tree_node *const Y) {
     if (!Y) {
-        rock_error = ROCK_RED_BLACK_TREE_ERROR_Y_IS_NULL;
-        return false;
+        return ROCK_RED_BLACK_TREE_ERROR_Y_IS_NULL;
     }
     return rock_red_black_tree_rotate_N_O(Y, false);
 }
 
-bool rock_red_black_tree_init(
+int rock_red_black_tree_init(
         struct rock_red_black_tree *const object,
-        int (*compare)(const struct rock_red_black_tree_node *first,
-                       const struct rock_red_black_tree_node *second)) {
+        int (*const compare)(const struct rock_red_black_tree_node *first,
+                             const struct rock_red_black_tree_node *second)) {
     if (!object) {
-        rock_error = ROCK_RED_BLACK_TREE_ERROR_OBJECT_IS_NULL;
-        return false;
+        return ROCK_RED_BLACK_TREE_ERROR_OBJECT_IS_NULL;
     }
     if (!compare) {
-        rock_error = ROCK_RED_BLACK_TREE_ERROR_COMPARE_IS_NULL;
-        return false;
+        return ROCK_RED_BLACK_TREE_ERROR_COMPARE_IS_NULL;
     }
     *object = (struct rock_red_black_tree) {0};
     object->compare = compare;
-    return true;
+    return 0;
 }
 
-bool rock_red_black_tree_invalidate(
+int rock_red_black_tree_invalidate(
         struct rock_red_black_tree *const object,
         void (*const on_destroy)(struct rock_red_black_tree_node *node)) {
     if (!object) {
-        rock_error = ROCK_RED_BLACK_TREE_ERROR_OBJECT_IS_NULL;
-        return false;
+        return ROCK_RED_BLACK_TREE_ERROR_OBJECT_IS_NULL;
     }
     for (struct rock_red_black_tree_node *node = object->root; node;) {
         struct rock_red_black_tree_node *next;
-        seagrass_required_true(rock_red_black_tree_node_get_left(
+        seagrass_required_true(!rock_red_black_tree_node_get_left(
                 node, &next));
         if (next) {
-            seagrass_required_true(rock_red_black_tree_node_set_left(
+            seagrass_required_true(!rock_red_black_tree_node_set_left(
                     node, NULL));
             node = next;
             continue;
         }
-        seagrass_required_true(rock_red_black_tree_node_get_right(
+        seagrass_required_true(!rock_red_black_tree_node_get_right(
                 node, &next));
         if (next) {
-            seagrass_required_true(rock_red_black_tree_node_set_right(
+            seagrass_required_true(!rock_red_black_tree_node_set_right(
                     node, NULL));
             node = next;
             continue;
         }
-        seagrass_required_true(rock_red_black_tree_node_get_parent(
+        seagrass_required_true(!rock_red_black_tree_node_get_parent(
                 node, &next));
         if (on_destroy) {
             on_destroy(node);
@@ -424,57 +390,49 @@ bool rock_red_black_tree_invalidate(
         node = next;
     }
     *object = (struct rock_red_black_tree) {0};
-    return true;
+    return 0;
 }
 
-bool rock_red_black_tree_count(const struct rock_red_black_tree *const object,
-                               uintmax_t *const out) {
+int rock_red_black_tree_count(const struct rock_red_black_tree *const object,
+                              uintmax_t *const out) {
     if (!object) {
-        rock_error = ROCK_RED_BLACK_TREE_ERROR_OBJECT_IS_NULL;
-        return false;
+        return ROCK_RED_BLACK_TREE_ERROR_OBJECT_IS_NULL;
     }
     if (!out) {
-        rock_error = ROCK_RED_BLACK_TREE_ERROR_OUT_IS_NULL;
-        return false;
+        return ROCK_RED_BLACK_TREE_ERROR_OUT_IS_NULL;
     }
     *out = object->count;
-    return true;
+    return 0;
 }
 
-bool rock_red_black_tree_first(const struct rock_red_black_tree *const object,
-                               struct rock_red_black_tree_node **const out) {
-    if (!object) {
-        rock_error = ROCK_RED_BLACK_TREE_ERROR_OBJECT_IS_NULL;
-        return false;
-    }
-    if (!out) {
-        rock_error = ROCK_RED_BLACK_TREE_ERROR_OUT_IS_NULL;
-        return false;
-    }
-    if (!object->root) {
-        rock_error = ROCK_RED_BLACK_TREE_ERROR_TREE_IS_EMPTY;
-        return false;
-    }
-    rock_red_black_tree_minimum(object->root, out);
-    return true;
-}
-
-bool rock_red_black_tree_last(const struct rock_red_black_tree *const object,
+int rock_red_black_tree_first(const struct rock_red_black_tree *const object,
                               struct rock_red_black_tree_node **const out) {
     if (!object) {
-        rock_error = ROCK_RED_BLACK_TREE_ERROR_OBJECT_IS_NULL;
-        return false;
+        return ROCK_RED_BLACK_TREE_ERROR_OBJECT_IS_NULL;
     }
     if (!out) {
-        rock_error = ROCK_RED_BLACK_TREE_ERROR_OUT_IS_NULL;
-        return false;
+        return ROCK_RED_BLACK_TREE_ERROR_OUT_IS_NULL;
     }
     if (!object->root) {
-        rock_error = ROCK_RED_BLACK_TREE_ERROR_TREE_IS_EMPTY;
-        return false;
+        return ROCK_RED_BLACK_TREE_ERROR_TREE_IS_EMPTY;
+    }
+    rock_red_black_tree_minimum(object->root, out);
+    return 0;
+}
+
+int rock_red_black_tree_last(const struct rock_red_black_tree *const object,
+                             struct rock_red_black_tree_node **const out) {
+    if (!object) {
+        return ROCK_RED_BLACK_TREE_ERROR_OBJECT_IS_NULL;
+    }
+    if (!out) {
+        return ROCK_RED_BLACK_TREE_ERROR_OUT_IS_NULL;
+    }
+    if (!object->root) {
+        return ROCK_RED_BLACK_TREE_ERROR_TREE_IS_EMPTY;
     }
     rock_red_black_tree_maximum(object->root, out);
-    return true;
+    return 0;
 }
 
 void rock_red_black_tree_minimum(const struct rock_red_black_tree_node *root,
@@ -483,7 +441,7 @@ void rock_red_black_tree_minimum(const struct rock_red_black_tree_node *root,
     seagrass_required(out);
     struct rock_red_black_tree_node *left;
     while (true) {
-        seagrass_required_true(rock_red_black_tree_node_get_left(
+        seagrass_required_true(!rock_red_black_tree_node_get_left(
                 root, &left));
         if (!left) {
             *out = (struct rock_red_black_tree_node *) root;
@@ -499,7 +457,7 @@ void rock_red_black_tree_maximum(const struct rock_red_black_tree_node *root,
     seagrass_required(out);
     struct rock_red_black_tree_node *right;
     while (true) {
-        seagrass_required_true(rock_red_black_tree_node_get_right(
+        seagrass_required_true(!rock_red_black_tree_node_get_right(
                 root, &right));
         if (!right) {
             *out = (struct rock_red_black_tree_node *) root;
@@ -509,22 +467,19 @@ void rock_red_black_tree_maximum(const struct rock_red_black_tree_node *root,
     }
 }
 
-bool rock_red_black_tree_find(
+int rock_red_black_tree_find(
         const struct rock_red_black_tree *const object,
         const struct rock_red_black_tree_node *const root,
         const struct rock_red_black_tree_node *const needle,
         struct rock_red_black_tree_node **const out) {
     if (!object) {
-        rock_error = ROCK_RED_BLACK_TREE_ERROR_OBJECT_IS_NULL;
-        return false;
+        return ROCK_RED_BLACK_TREE_ERROR_OBJECT_IS_NULL;
     }
     if (!needle) {
-        rock_error = ROCK_RED_BLACK_TREE_ERROR_NEEDLE_IS_NULL;
-        return false;
+        return ROCK_RED_BLACK_TREE_ERROR_NEEDLE_IS_NULL;
     }
     if (!out) {
-        rock_error = ROCK_RED_BLACK_TREE_ERROR_OUT_IS_NULL;
-        return false;
+        return ROCK_RED_BLACK_TREE_ERROR_OUT_IS_NULL;
     }
     *out = NULL;
     for (struct rock_red_black_tree_node *node
@@ -533,37 +488,33 @@ bool rock_red_black_tree_find(
         *out = node;
         const int result = object->compare(needle, node);
         if (!result) {
-            return true;
+            return 0;
         } else if (result < 0) {
-            seagrass_required_true(rock_red_black_tree_node_get_left(
+            seagrass_required_true(!rock_red_black_tree_node_get_left(
                     node, &node));
         } else {
-            seagrass_required_true(rock_red_black_tree_node_get_right(
+            seagrass_required_true(!rock_red_black_tree_node_get_right(
                     node, &node));
         }
     }
-    rock_error = ROCK_RED_BLACK_TREE_ERROR_NODE_NOT_FOUND;
-    return false;
+    return ROCK_RED_BLACK_TREE_ERROR_NODE_NOT_FOUND;
 }
 
-bool rock_red_black_tree_insert(struct rock_red_black_tree *const object,
-                                struct rock_red_black_tree_node *parent,
-                                struct rock_red_black_tree_node *child) {
+int rock_red_black_tree_insert(struct rock_red_black_tree *const object,
+                               struct rock_red_black_tree_node *parent,
+                               struct rock_red_black_tree_node *child) {
     if (!object) {
-        rock_error = ROCK_RED_BLACK_TREE_ERROR_OBJECT_IS_NULL;
-        return false;
+        return ROCK_RED_BLACK_TREE_ERROR_OBJECT_IS_NULL;
     }
     if (!child) {
-        rock_error = ROCK_RED_BLACK_TREE_ERROR_NODE_IS_NULL;
-        return false;
+        return ROCK_RED_BLACK_TREE_ERROR_NODE_IS_NULL;
     }
     if (!parent && object->root) {
-        rock_error = ROCK_RED_BLACK_TREE_ERROR_INSERTION_POINT_IS_NULL;
-        return false;
+        return ROCK_RED_BLACK_TREE_ERROR_INSERTION_POINT_IS_NULL;
     }
     /* required that child be RED */
     bool color;
-    seagrass_required_true(rock_red_black_tree_node_set_color(
+    seagrass_required_true(!rock_red_black_tree_node_set_color(
             child, ROCK_RED_BLACK_TREE_COLOR_RED));
     /* insert */
     if (!parent) {
@@ -574,67 +525,66 @@ bool rock_red_black_tree_insert(struct rock_red_black_tree *const object,
     } else {
         const int result = object->compare(child, parent);
         if (!result) { /* duplicates are not allowed */
-            rock_error = ROCK_RED_BLACK_TREE_ERROR_NODE_ALREADY_EXISTS;
-            return false;
+            return ROCK_RED_BLACK_TREE_ERROR_NODE_ALREADY_EXISTS;
         }
         const bool is_N_left = result < 0;
-        bool (*const get_N)(const struct rock_red_black_tree_node *,
-                            struct rock_red_black_tree_node **)
+        int (*const get_N)(const struct rock_red_black_tree_node *,
+                           struct rock_red_black_tree_node **)
         = is_N_left
           ? rock_red_black_tree_node_get_left
           : rock_red_black_tree_node_get_right;
-        bool (*const set_N)(struct rock_red_black_tree_node *,
+        int (*const set_N)(struct rock_red_black_tree_node *,
                             struct rock_red_black_tree_node *)
         = is_N_left
           ? rock_red_black_tree_node_set_left
           : rock_red_black_tree_node_set_right;
         struct rock_red_black_tree_node *node;
-        seagrass_required_true(get_N(parent, &node));
+        seagrass_required_true(!get_N(parent, &node));
         if (node) { /* replace existing node in parent */
-            seagrass_required_true(rock_red_black_tree_node_get_color(
+            seagrass_required_true(!rock_red_black_tree_node_get_color(
                     node, &color));
-            seagrass_required_true(rock_red_black_tree_node_set_color(
+            seagrass_required_true(!rock_red_black_tree_node_set_color(
                     node, ROCK_RED_BLACK_TREE_COLOR_RED));
-            seagrass_required_true(rock_red_black_tree_node_set_color(
+            seagrass_required_true(!rock_red_black_tree_node_set_color(
                     child, color));
-            seagrass_required_true(rock_red_black_tree_node_set_parent(
+            seagrass_required_true(!rock_red_black_tree_node_set_parent(
                     child, parent));
-            seagrass_required_true(set_N(parent, child));
+            seagrass_required_true(!set_N(parent, child));
             parent = child;
             child = node;
         }
-        seagrass_required_true(rock_red_black_tree_node_set_parent(
+        seagrass_required_true(!rock_red_black_tree_node_set_parent(
                 child, parent));
-        seagrass_required_true(set_N(parent, child));
+        seagrass_required_true(!set_N(parent, child));
     }
-    seagrass_required_true(seagrass_uintmax_t_add(
+    seagrass_required_true(!seagrass_uintmax_t_add(
             1, object->count, &object->count));
     /* repair */
     while (true) {
-        seagrass_required_true(rock_red_black_tree_node_get_color(
+        seagrass_required_true(!rock_red_black_tree_node_get_color(
                 child, &color));
         seagrass_required_true(ROCK_RED_BLACK_TREE_COLOR_RED == color);
         if (!parent) {
-            seagrass_required_true(rock_red_black_tree_node_set_color(
+            seagrass_required_true(!rock_red_black_tree_node_set_color(
                     child, ROCK_RED_BLACK_TREE_COLOR_BLACK));
-            return true;
+            return 0;
         }
-        seagrass_required_true(rock_red_black_tree_node_get_color(
+        seagrass_required_true(!rock_red_black_tree_node_get_color(
                 parent, &color));
         /* case 1: parent is BLACK */
         if (ROCK_RED_BLACK_TREE_COLOR_BLACK == color) {
-            return true;
+            return 0;
         }
         struct rock_red_black_tree_node *grandparent, *sibling;
-        seagrass_required_true(rock_red_black_tree_node_get_parent(
+        seagrass_required_true(!rock_red_black_tree_node_get_parent(
                 parent, &grandparent));
-        seagrass_required_true(rock_red_black_tree_node_get_left(
+        seagrass_required_true(!rock_red_black_tree_node_get_left(
                 grandparent, &sibling));
         if (sibling == parent) {
-            seagrass_required_true(rock_red_black_tree_node_get_right(
+            seagrass_required_true(!rock_red_black_tree_node_get_right(
                     grandparent, &sibling));
         }
-        seagrass_required_true(rock_red_black_tree_node_get_color(
+        seagrass_required_true(!rock_red_black_tree_node_get_color(
                 sibling, &color));
         /* Legend: C - child            B - BLACK
          *         P - parent           R - RED
@@ -655,18 +605,18 @@ bool rock_red_black_tree_insert(struct rock_red_black_tree *const object,
              *              \                         \
              *              C(R)                      C(R)
              */
-            seagrass_required_true(rock_red_black_tree_node_set_color(
+            seagrass_required_true(!rock_red_black_tree_node_set_color(
                     parent, ROCK_RED_BLACK_TREE_COLOR_BLACK));
-            seagrass_required_true(rock_red_black_tree_node_set_color(
+            seagrass_required_true(!rock_red_black_tree_node_set_color(
                     sibling, ROCK_RED_BLACK_TREE_COLOR_BLACK));
-            seagrass_required_true(rock_red_black_tree_node_set_color(
+            seagrass_required_true(!rock_red_black_tree_node_set_color(
                     grandparent, ROCK_RED_BLACK_TREE_COLOR_RED));
             /* Changing grandparent to RED may have introduced two consecutive
              * REDs - grandparent and possibly great-grandparent. We will
              * iterate to correct this violation.
              */
             child = grandparent;
-            seagrass_required_true(rock_red_black_tree_node_get_parent(
+            seagrass_required_true(!rock_red_black_tree_node_get_parent(
                     child, &parent));
             continue;
         }
@@ -690,16 +640,16 @@ bool rock_red_black_tree_insert(struct rock_red_black_tree *const object,
              */
             case 0:
             case 3: {
-                seagrass_required_true(rock_red_black_tree_rotate_N(
+                seagrass_required_true(!rock_red_black_tree_rotate_N(
                         parent, !is_parent_left));
-                seagrass_required_true(rock_red_black_tree_node_set_color(
+                seagrass_required_true(!rock_red_black_tree_node_set_color(
                         parent, ROCK_RED_BLACK_TREE_COLOR_BLACK));
-                seagrass_required_true(rock_red_black_tree_node_set_color(
+                seagrass_required_true(!rock_red_black_tree_node_set_color(
                         grandparent, ROCK_RED_BLACK_TREE_COLOR_RED));
                 if (object->root == grandparent) {
                     object->root = parent;
                 }
-                return true;
+                return 0;
             }
                 /*         G(B)                      C(B)
                  *         /  \                      /  \
@@ -715,54 +665,52 @@ bool rock_red_black_tree_insert(struct rock_red_black_tree *const object,
                  */
             case 1:
             case 2: {
-                seagrass_required_true(rock_red_black_tree_rotate_N_O(
+                seagrass_required_true(!rock_red_black_tree_rotate_N_O(
                         child, !is_child_left));
-                seagrass_required_true(rock_red_black_tree_node_set_color(
+                seagrass_required_true(!rock_red_black_tree_node_set_color(
                         child, ROCK_RED_BLACK_TREE_COLOR_BLACK));
-                seagrass_required_true(rock_red_black_tree_node_set_color(
+                seagrass_required_true(!rock_red_black_tree_node_set_color(
                         grandparent, ROCK_RED_BLACK_TREE_COLOR_RED));
                 if (object->root == grandparent) {
                     object->root = child;
                 }
-                return true;
+                return 0;
             }
         }
     }
 }
 
-bool rock_red_black_tree_remove(struct rock_red_black_tree *const object,
-                                struct rock_red_black_tree_node *const node) {
+int rock_red_black_tree_remove(struct rock_red_black_tree *const object,
+                               struct rock_red_black_tree_node *const node) {
     if (!object) {
-        rock_error = ROCK_RED_BLACK_TREE_ERROR_OBJECT_IS_NULL;
-        return false;
+        return ROCK_RED_BLACK_TREE_ERROR_OBJECT_IS_NULL;
     }
     if (!node) {
-        rock_error = ROCK_RED_BLACK_TREE_ERROR_NODE_IS_NULL;
-        return false;
+        return ROCK_RED_BLACK_TREE_ERROR_NODE_IS_NULL;
     }
     /* remove */
     bool color;
     struct rock_red_black_tree_node *left, *right, *parent, *double_black = NULL;
     while (!double_black) {
-        seagrass_required_true(rock_red_black_tree_node_get_color(
+        seagrass_required_true(!rock_red_black_tree_node_get_color(
                 node, &color));
-        seagrass_required_true(rock_red_black_tree_node_get_left(
+        seagrass_required_true(!rock_red_black_tree_node_get_left(
                 node, &left));
-        seagrass_required_true(rock_red_black_tree_node_get_right(
+        seagrass_required_true(!rock_red_black_tree_node_get_right(
                 node, &right));
-        seagrass_required_true(rock_red_black_tree_node_get_parent(
+        seagrass_required_true(!rock_red_black_tree_node_get_parent(
                 node, &parent));
         switch ((NULL == left) << 1 | (NULL == right)) {
             case 3: { /* node with no children */
                 if (parent) {
-                    bool (*const set_N)(struct rock_red_black_tree_node *,
-                                        struct rock_red_black_tree_node *)
+                    int (*const set_N)(struct rock_red_black_tree_node *,
+                                       struct rock_red_black_tree_node *)
                     = rock_red_black_tree_node_is_on_left(parent, node)
                       ? rock_red_black_tree_node_set_left
                       : rock_red_black_tree_node_set_right;
-                    seagrass_required_true(set_N(parent, NULL));
+                    seagrass_required_true(!set_N(parent, NULL));
                 }
-                seagrass_required_true(seagrass_uintmax_t_subtract(
+                seagrass_required_true(!seagrass_uintmax_t_subtract(
                         object->count, 1, &object->count));
                 if (node == object->root) {
                     object->root = NULL;
@@ -770,102 +718,102 @@ bool rock_red_black_tree_remove(struct rock_red_black_tree *const object,
                     double_black = node;
                     continue;
                 }
-                return true;
+                return 0;
             }
             case 2:
             case 1: { /* node with single child */
                 void *child = left ? left : right;
                 /* 'child' to replace 'node' */
                 bool color_;
-                seagrass_required_true(rock_red_black_tree_node_get_color(
+                seagrass_required_true(!rock_red_black_tree_node_get_color(
                         child, &color_));
                 if (parent) {
-                    bool (*const set_N)(struct rock_red_black_tree_node *,
-                                        struct rock_red_black_tree_node *)
+                    int (*const set_N)(struct rock_red_black_tree_node *,
+                                       struct rock_red_black_tree_node *)
                     = rock_red_black_tree_node_is_on_left(parent, node)
                       ? rock_red_black_tree_node_set_left
                       : rock_red_black_tree_node_set_right;
-                    seagrass_required_true(set_N(parent, child));
+                    seagrass_required_true(!set_N(parent, child));
                 }
-                seagrass_required_true(rock_red_black_tree_node_set_parent(
+                seagrass_required_true(!rock_red_black_tree_node_set_parent(
                         child, parent));
-                seagrass_required_true(rock_red_black_tree_node_set_color(
+                seagrass_required_true(!rock_red_black_tree_node_set_color(
                         child, ROCK_RED_BLACK_TREE_COLOR_BLACK));
                 if (node == object->root) {
                     object->root = child;
                 }
-                seagrass_required_true(seagrass_uintmax_t_subtract(
+                seagrass_required_true(!seagrass_uintmax_t_subtract(
                         object->count, 1, &object->count));
                 if (ROCK_RED_BLACK_TREE_COLOR_BLACK == color
                     && ROCK_RED_BLACK_TREE_COLOR_BLACK == color_) {
                     double_black = child;
                     continue;
                 }
-                return true;
+                return 0;
             }
             case 0: { /* node with two children */
                 struct rock_red_black_tree_node *next;
-                seagrass_required_true(rock_red_black_tree_next(
+                seagrass_required_true(!rock_red_black_tree_next(
                         node, &next));
                 /* swap 'next' with 'node' */
                 bool color_;
-                seagrass_required_true(rock_red_black_tree_node_get_color(
+                seagrass_required_true(!rock_red_black_tree_node_get_color(
                         next, &color_));
                 struct rock_red_black_tree_node *parent_, *left_, *right_;
-                seagrass_required_true(rock_red_black_tree_node_get_parent(
+                seagrass_required_true(!rock_red_black_tree_node_get_parent(
                         next, &parent_));
-                seagrass_required_true(rock_red_black_tree_node_get_left(
+                seagrass_required_true(!rock_red_black_tree_node_get_left(
                         next, &left_));
-                seagrass_required_true(rock_red_black_tree_node_get_right(
+                seagrass_required_true(!rock_red_black_tree_node_get_right(
                         next, &right_));
 
-                seagrass_required_true(rock_red_black_tree_node_set_parent(
+                seagrass_required_true(!rock_red_black_tree_node_set_parent(
                         node, node == parent_ ? next : parent_));
-                seagrass_required_true(rock_red_black_tree_node_set_parent(
+                seagrass_required_true(!rock_red_black_tree_node_set_parent(
                         next, next == parent ? node : parent));
-                seagrass_required_true(rock_red_black_tree_node_set_left(
+                seagrass_required_true(!rock_red_black_tree_node_set_left(
                         node, node == left_ ? next : left_));
-                seagrass_required_true(rock_red_black_tree_node_set_left(
+                seagrass_required_true(!rock_red_black_tree_node_set_left(
                         next, next == left ? node : left));
-                seagrass_required_true(rock_red_black_tree_node_set_right(
+                seagrass_required_true(!rock_red_black_tree_node_set_right(
                         node, node == right_ ? next : right_));
-                seagrass_required_true(rock_red_black_tree_node_set_right(
+                seagrass_required_true(!rock_red_black_tree_node_set_right(
                         next, next == right ? node : right));
-                seagrass_required_true(rock_red_black_tree_node_set_color(
+                seagrass_required_true(!rock_red_black_tree_node_set_color(
                         node, color_));
-                seagrass_required_true(rock_red_black_tree_node_set_color(
+                seagrass_required_true(!rock_red_black_tree_node_set_color(
                         next, color));
 
                 if (parent_ && node != parent_) {
-                    bool (*const set_N)(struct rock_red_black_tree_node *,
-                                        struct rock_red_black_tree_node *)
+                    int (*const set_N)(struct rock_red_black_tree_node *,
+                                       struct rock_red_black_tree_node *)
                     = rock_red_black_tree_node_is_on_left(parent_, next)
                       ? rock_red_black_tree_node_set_left
                       : rock_red_black_tree_node_set_right;
-                    seagrass_required_true(set_N(parent_, node));
+                    seagrass_required_true(!set_N(parent_, node));
                 }
                 if (parent && next != parent) {
-                    bool (*const set_N)(struct rock_red_black_tree_node *,
-                                        struct rock_red_black_tree_node *)
+                    int (*const set_N)(struct rock_red_black_tree_node *,
+                                       struct rock_red_black_tree_node *)
                     = rock_red_black_tree_node_is_on_left(parent, node)
                       ? rock_red_black_tree_node_set_left
                       : rock_red_black_tree_node_set_right;
-                    seagrass_required_true(set_N(parent, next));
+                    seagrass_required_true(!set_N(parent, next));
                 }
                 if (left_ && node != left_) {
-                    seagrass_required_true(rock_red_black_tree_node_set_parent(
+                    seagrass_required_true(!rock_red_black_tree_node_set_parent(
                             left_, node));
                 }
                 if (left && next != left) {
-                    seagrass_required_true(rock_red_black_tree_node_set_parent(
+                    seagrass_required_true(!rock_red_black_tree_node_set_parent(
                             left, next));
                 }
                 if (right_ && node != right_) {
-                    seagrass_required_true(rock_red_black_tree_node_set_parent(
+                    seagrass_required_true(!rock_red_black_tree_node_set_parent(
                             right_, node));
                 }
                 if (right && next != right) {
-                    seagrass_required_true(rock_red_black_tree_node_set_parent(
+                    seagrass_required_true(!rock_red_black_tree_node_set_parent(
                             right, next));
                 }
                 if (node == object->root) {
@@ -907,9 +855,9 @@ bool rock_red_black_tree_remove(struct rock_red_black_tree *const object,
         } else {
             sibling = parent->left;
         }
-        seagrass_required_true(rock_red_black_tree_node_get_left(
+        seagrass_required_true(!rock_red_black_tree_node_get_left(
                 sibling, &left));
-        seagrass_required_true(rock_red_black_tree_node_get_right(
+        seagrass_required_true(!rock_red_black_tree_node_get_right(
                 sibling, &right));
         /* case 2: if sibling is RED
          *           P(?)              |             P(?)
@@ -927,18 +875,18 @@ bool rock_red_black_tree_remove(struct rock_red_black_tree *const object,
          *     /  \                    |                    /  \
          *   ... ...                   |                  ...  ...
          */
-        if (rock_red_black_tree_node_get_color(sibling, &color)
+        if (!rock_red_black_tree_node_get_color(sibling, &color)
             && ROCK_RED_BLACK_TREE_COLOR_RED == color) {
-            seagrass_required_true(rock_red_black_tree_rotate_N(
+            seagrass_required_true(!rock_red_black_tree_rotate_N(
                     sibling, is_left));
             bool colors[2];
-            seagrass_required_true(rock_red_black_tree_node_get_color(
+            seagrass_required_true(!rock_red_black_tree_node_get_color(
                     parent, &colors[0]));
-            seagrass_required_true(rock_red_black_tree_node_get_color(
+            seagrass_required_true(!rock_red_black_tree_node_get_color(
                     sibling, &colors[1]));
-            seagrass_required_true(rock_red_black_tree_node_set_color(
+            seagrass_required_true(!rock_red_black_tree_node_set_color(
                     parent, colors[1]));
-            seagrass_required_true(rock_red_black_tree_node_set_color(
+            seagrass_required_true(!rock_red_black_tree_node_set_color(
                     sibling, colors[0]));
             if (parent == object->root) {
                 object->root = sibling;
@@ -963,20 +911,20 @@ bool rock_red_black_tree_remove(struct rock_red_black_tree *const object,
          *              / \  / \       |       / \  / \
          *            ... .... ...     |     ... .... ...
          */
-        if (rock_red_black_tree_node_get_color(parent, &color)
+        if (!rock_red_black_tree_node_get_color(parent, &color)
             && ROCK_RED_BLACK_TREE_COLOR_BLACK == color
-            && rock_red_black_tree_node_get_color(sibling, &color)
+            && !rock_red_black_tree_node_get_color(sibling, &color)
             && ROCK_RED_BLACK_TREE_COLOR_BLACK == color
-            && rock_red_black_tree_node_get_color(left, &color)
+            && !rock_red_black_tree_node_get_color(left, &color)
             && ROCK_RED_BLACK_TREE_COLOR_BLACK == color
-            && rock_red_black_tree_node_get_color(right, &color)
+            && !rock_red_black_tree_node_get_color(right, &color)
             && ROCK_RED_BLACK_TREE_COLOR_BLACK == color) {
-            seagrass_required_true(rock_red_black_tree_node_set_color(
+            seagrass_required_true(!rock_red_black_tree_node_set_color(
                     sibling, ROCK_RED_BLACK_TREE_COLOR_RED));
             double_black = parent;
-            seagrass_required_true(rock_red_black_tree_node_get_parent(
+            seagrass_required_true(!rock_red_black_tree_node_get_parent(
                     parent, &parent));
-            seagrass_required_true(seagrass_uintmax_t_add(1, i, &i));
+            seagrass_required_true(!seagrass_uintmax_t_add(1, i, &i));
             continue; /* go to case 1 as parent is now double black */
         }
         /* case 4: if parent is RED while sibling and children are BLACK
@@ -997,17 +945,17 @@ bool rock_red_black_tree_remove(struct rock_red_black_tree *const object,
          *            ... .... ...     |     ... .... ...
          *  [done]
          */
-        if (rock_red_black_tree_node_get_color(parent, &color)
+        if (!rock_red_black_tree_node_get_color(parent, &color)
             && ROCK_RED_BLACK_TREE_COLOR_RED == color
-            && rock_red_black_tree_node_get_color(sibling, &color)
+            && !rock_red_black_tree_node_get_color(sibling, &color)
             && ROCK_RED_BLACK_TREE_COLOR_BLACK == color
-            && rock_red_black_tree_node_get_color(left, &color)
+            && !rock_red_black_tree_node_get_color(left, &color)
             && ROCK_RED_BLACK_TREE_COLOR_BLACK == color
-            && rock_red_black_tree_node_get_color(right, &color)
+            && !rock_red_black_tree_node_get_color(right, &color)
             && ROCK_RED_BLACK_TREE_COLOR_BLACK == color) {
-            seagrass_required_true(rock_red_black_tree_node_set_color(
+            seagrass_required_true(!rock_red_black_tree_node_set_color(
                     parent, ROCK_RED_BLACK_TREE_COLOR_BLACK));
-            seagrass_required_true(rock_red_black_tree_node_set_color(
+            seagrass_required_true(!rock_red_black_tree_node_set_color(
                     sibling, ROCK_RED_BLACK_TREE_COLOR_RED));
             break;
         }
@@ -1036,17 +984,17 @@ bool rock_red_black_tree_remove(struct rock_red_black_tree *const object,
          *                     / \     |    / \
          *                   ... ...   |  ... ...
          */
-        if (rock_red_black_tree_node_get_color(sibling, &color)
+        if (!rock_red_black_tree_node_get_color(sibling, &color)
             && ROCK_RED_BLACK_TREE_COLOR_BLACK == color
-            && rock_red_black_tree_node_get_color(closest, &color)
+            && !rock_red_black_tree_node_get_color(closest, &color)
             && ROCK_RED_BLACK_TREE_COLOR_RED == color
-            && rock_red_black_tree_node_get_color(farthest, &color)
+            && !rock_red_black_tree_node_get_color(farthest, &color)
             && ROCK_RED_BLACK_TREE_COLOR_BLACK == color) {
-            seagrass_required_true(rock_red_black_tree_rotate_N(
+            seagrass_required_true(!rock_red_black_tree_rotate_N(
                     closest, !is_left));
-            seagrass_required_true(rock_red_black_tree_node_set_color(
+            seagrass_required_true(!rock_red_black_tree_node_set_color(
                     sibling, ROCK_RED_BLACK_TREE_COLOR_RED));
-            seagrass_required_true(rock_red_black_tree_node_set_color(
+            seagrass_required_true(!rock_red_black_tree_node_set_color(
                     closest, ROCK_RED_BLACK_TREE_COLOR_BLACK));
             continue;
         }
@@ -1070,19 +1018,19 @@ bool rock_red_black_tree_remove(struct rock_red_black_tree *const object,
          *   ... ...                   |                   ... ...
          *  [done]
          */
-        if (rock_red_black_tree_node_get_color(sibling, &color)
+        if (!rock_red_black_tree_node_get_color(sibling, &color)
             && ROCK_RED_BLACK_TREE_COLOR_BLACK == color
-            && rock_red_black_tree_node_get_color(farthest, &color)
+            && !rock_red_black_tree_node_get_color(farthest, &color)
             && ROCK_RED_BLACK_TREE_COLOR_RED == color) {
-            seagrass_required_true(rock_red_black_tree_rotate_N(
+            seagrass_required_true(!rock_red_black_tree_rotate_N(
                     sibling, is_left));
-            seagrass_required_true(rock_red_black_tree_node_get_color(
+            seagrass_required_true(!rock_red_black_tree_node_get_color(
                     parent, &color));
-            seagrass_required_true(rock_red_black_tree_node_set_color(
+            seagrass_required_true(!rock_red_black_tree_node_set_color(
                     sibling, color));
-            seagrass_required_true(rock_red_black_tree_node_set_color(
+            seagrass_required_true(!rock_red_black_tree_node_set_color(
                     parent, ROCK_RED_BLACK_TREE_COLOR_BLACK));
-            seagrass_required_true(rock_red_black_tree_node_set_color(
+            seagrass_required_true(!rock_red_black_tree_node_set_color(
                     farthest, ROCK_RED_BLACK_TREE_COLOR_BLACK));
             if (parent == object->root) {
                 object->root = sibling;
@@ -1091,5 +1039,5 @@ bool rock_red_black_tree_remove(struct rock_red_black_tree *const object,
         }
         seagrass_required_true(false);
     }
-    return true;
+    return 0;
 }

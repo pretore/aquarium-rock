@@ -6,25 +6,22 @@
 #include <test/cmocka.h>
 #endif
 
-bool rock_linked_list_node_init(struct rock_linked_list_node *const object) {
+int rock_linked_list_node_init(struct rock_linked_list_node *const object) {
     if (!object) {
-        rock_error = ROCK_LINKED_LIST_ERROR_OBJECT_IS_NULL;
-        return false;
+        return ROCK_LINKED_LIST_ERROR_OBJECT_IS_NULL;
     }
     object->prev = object;
     object->next = object;
-    return true;
+    return 0;
 }
 
-bool rock_linked_list_insert_after(struct rock_linked_list_node *const A,
-                                   struct rock_linked_list_node *const C) {
+int rock_linked_list_insert_after(struct rock_linked_list_node *const A,
+                                  struct rock_linked_list_node *const C) {
     if (!A) {
-        rock_error = ROCK_LINKED_LIST_ERROR_OBJECT_IS_NULL;
-        return false;
+        return ROCK_LINKED_LIST_ERROR_OBJECT_IS_NULL;
     }
     if (!C) {
-        rock_error = ROCK_LINKED_LIST_ERROR_NODE_IS_NULL;
-        return false;
+        return ROCK_LINKED_LIST_ERROR_NODE_IS_NULL;
     }
     /*
      * Before:
@@ -41,18 +38,16 @@ bool rock_linked_list_insert_after(struct rock_linked_list_node *const A,
     C->prev = A;
     C->next = B;
     B->prev = C;
-    return true;
+    return 0;
 }
 
-bool rock_linked_list_insert_before(struct rock_linked_list_node *const A,
-                                    struct rock_linked_list_node *const C) {
+int rock_linked_list_insert_before(struct rock_linked_list_node *const A,
+                                   struct rock_linked_list_node *const C) {
     if (!A) {
-        rock_error = ROCK_LINKED_LIST_ERROR_OBJECT_IS_NULL;
-        return false;
+        return ROCK_LINKED_LIST_ERROR_OBJECT_IS_NULL;
     }
     if (!C) {
-        rock_error = ROCK_LINKED_LIST_ERROR_NODE_IS_NULL;
-        return false;
+        return ROCK_LINKED_LIST_ERROR_NODE_IS_NULL;
     }
     /*
      * Before:
@@ -69,13 +64,12 @@ bool rock_linked_list_insert_before(struct rock_linked_list_node *const A,
     C->prev = B;
     C->next = A;
     A->prev = C;
-    return true;
+    return 0;
 }
 
-bool rock_linked_list_remove(struct rock_linked_list_node *const C) {
+int rock_linked_list_remove(struct rock_linked_list_node *const C) {
     if (!C) {
-        rock_error = ROCK_LINKED_LIST_ERROR_OBJECT_IS_NULL;
-        return false;
+        return ROCK_LINKED_LIST_ERROR_OBJECT_IS_NULL;
     }
     /*
      * Before:
@@ -92,34 +86,30 @@ bool rock_linked_list_remove(struct rock_linked_list_node *const C) {
     struct rock_linked_list_node *const B = C->next;
     A->next = B;
     B->prev = A;
-    seagrass_required_true(rock_linked_list_node_init(C));
-    return true;
+    seagrass_required_true(!rock_linked_list_node_init(C));
+    return 0;
 }
 
-bool rock_linked_list_next(const struct rock_linked_list_node *const node,
-                           struct rock_linked_list_node **const out) {
+int rock_linked_list_next(const struct rock_linked_list_node *const node,
+                          struct rock_linked_list_node **const out) {
     if (!node) {
-        rock_error = ROCK_LINKED_LIST_ERROR_NODE_IS_NULL;
-        return false;
+        return ROCK_LINKED_LIST_ERROR_NODE_IS_NULL;
     }
     if (!out) {
-        rock_error = ROCK_LINKED_LIST_ERROR_OUT_IS_NULL;
-        return false;
+        return ROCK_LINKED_LIST_ERROR_OUT_IS_NULL;
     }
     *out = node->next;
-    return true;
+    return 0;
 }
 
-bool rock_linked_list_prev(const struct rock_linked_list_node *const node,
-                           struct rock_linked_list_node **const out) {
+int rock_linked_list_prev(const struct rock_linked_list_node *const node,
+                          struct rock_linked_list_node **const out) {
     if (!node) {
-        rock_error = ROCK_LINKED_LIST_ERROR_NODE_IS_NULL;
-        return false;
+        return ROCK_LINKED_LIST_ERROR_NODE_IS_NULL;
     }
     if (!out) {
-        rock_error = ROCK_LINKED_LIST_ERROR_OUT_IS_NULL;
-        return false;
+        return ROCK_LINKED_LIST_ERROR_OUT_IS_NULL;
     }
     *out = node->prev;
-    return true;
+    return 0;
 }

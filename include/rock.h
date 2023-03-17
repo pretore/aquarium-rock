@@ -6,7 +6,6 @@
 #include <stdint.h>
 
 #include <rock/array.h>
-#include <rock/error.h>
 #include <rock/forward_list.h>
 #include <rock/linked_list.h>
 #include <rock/red_black_tree.h>
