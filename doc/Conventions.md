@@ -31,7 +31,7 @@ used for comparison functions.
 int memcmp(const void *s1, const void *s2, size_t n);
 ```
 
-#### Errors
+### Errors
 
 Errors are reported by returning the appropriate error code.
 
