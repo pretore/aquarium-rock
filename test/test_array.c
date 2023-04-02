@@ -977,6 +977,13 @@ static void check_at_error_on_item_is_out_of_bounds(void **state) {
     srand(time(NULL));
     struct rock_array object;
     assert_int_equal(rock_array_init(&object, sizeof(uintmax_t), 0), 0);
+    uintmax_t at;
+    assert_int_equal(
+            rock_array_at(&object, (void *) 1, &at),
+            ROCK_ARRAY_ERROR_ITEM_IS_OUT_OF_BOUNDS);
+    assert_int_equal(
+            rock_array_at(&object, (void *) UINTPTR_MAX, &at),
+            ROCK_ARRAY_ERROR_ITEM_IS_OUT_OF_BOUNDS);
     const uintmax_t values[] = {
             rand() % UINTMAX_MAX,
             rand() % UINTMAX_MAX,
@@ -987,9 +994,11 @@ static void check_at_error_on_item_is_out_of_bounds(void **state) {
     };
     const uintmax_t count = sizeof(items) / sizeof(void *);
     assert_int_equal(rock_array_add_all(&object, count, items), 0);
-    uintmax_t at;
     assert_int_equal(
             rock_array_at(&object, (void *) 1, &at),
+            ROCK_ARRAY_ERROR_ITEM_IS_OUT_OF_BOUNDS);
+    assert_int_equal(
+            rock_array_at(&object, (void *) UINTPTR_MAX, &at),
             ROCK_ARRAY_ERROR_ITEM_IS_OUT_OF_BOUNDS);
     assert_int_equal(rock_array_invalidate(&object, NULL), 0);
 }

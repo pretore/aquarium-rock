@@ -18,10 +18,11 @@ int rock_array_init(struct rock_array *const object,
     if (!size) {
         return ROCK_ARRAY_ERROR_SIZE_IS_ZERO;
     }
-    *object = (struct rock_array) {0};
-    object->size = size;
-    const int error = rock_array_set_capacity(object, capacity);
-    if (error) {
+    *object = (struct rock_array) {
+        .size = size,
+    };
+    int error;
+    if ((error = rock_array_set_capacity(object, capacity))) {
         seagrass_required_true(ROCK_ARRAY_ERROR_MEMORY_ALLOCATION_FAILED
                                == error);
     }
@@ -475,6 +476,9 @@ int rock_array_at(const struct rock_array *const object,
     }
     if (!out) {
         return ROCK_ARRAY_ERROR_OUT_IS_NULL;
+    }
+    if (!object->length) {
+        return ROCK_ARRAY_ERROR_ITEM_IS_OUT_OF_BOUNDS;
     }
     const void *begin = object->data;
     const void *end = rock_array_address(object, object->length - 1);
