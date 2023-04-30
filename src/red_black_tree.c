@@ -512,10 +512,10 @@ int rock_red_black_tree_insert(struct rock_red_black_tree *const object,
     if (!parent && object->root) {
         return ROCK_RED_BLACK_TREE_ERROR_INSERTION_POINT_IS_NULL;
     }
-    /* required that child be RED */
+    /* reset child node */
+    seagrass_required_true(!rock_red_black_tree_node_init(
+            child));
     bool color;
-    seagrass_required_true(!rock_red_black_tree_node_set_color(
-            child, ROCK_RED_BLACK_TREE_COLOR_RED));
     /* insert */
     if (!parent) {
         parent = object->root;
